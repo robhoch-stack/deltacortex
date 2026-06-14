@@ -986,11 +986,13 @@
         @media (max-width: 640px) {
             body { -webkit-text-size-adjust: 100%; }
             /* ── Dashboard: 2-col compact ── */
-            .dash { grid-template-columns: 1fr 1fr !important; gap: 8px; padding: 10px 10px 4px !important; }
-            .dash-value { font-size: 1.15rem; }
-            .dash-label { font-size: 0.6rem; }
-            .dash-sub { font-size: 0.64rem; }
-            .status-strip { justify-content: flex-start; gap: 8px 14px; padding: 8px 10px 12px; font-size: 0.66rem; }
+            .dash { grid-template-columns: 1fr 1fr !important; gap: 7px; padding: 8px 10px 2px !important; }
+            .dash-card { padding: 9px 11px !important; border-radius: 8px; }
+            .dash-value { font-size: 1.05rem; margin: 1px 0; }
+            .dash-label { font-size: 0.58rem; }
+            .dash-sub { font-size: 0.62rem; }
+            .dash-bar { margin-top: 5px; }
+            .status-strip { justify-content: flex-start; gap: 7px 13px; padding: 7px 10px 10px; font-size: 0.64rem; }
 
             /* ── Position cards: vertical stack, tight ── */
             .pos-card { margin-bottom: 10px; }
@@ -1030,9 +1032,12 @@
             .controls { flex-wrap: wrap; gap: 8px; width: 100%; }
             /* Each button-group wraps; tab group scrolls horizontally if tight */
             .controls .button-group { flex-wrap: wrap; gap: 6px; }
-            .controls .button-group button { min-height: 44px; }
-            /* Add/IV/CSV row buttons size to content, not full width */
+            .controls .button-group button { min-height: 44px; padding: 9px 14px; font-size: 0.9rem; line-height: 1; }
+            /* Add/trash row buttons size to content, not full width */
             .controls .button-group button { width: auto; flex: 0 1 auto; }
+            /* Nav tabs (first group) fit 4 across on one scrollable row */
+            .controls .button-group:first-child { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; }
+            .controls .button-group:first-child button { flex: 1 0 auto; white-space: nowrap; }
 
             /* ── Remaining tables (Performance drawer legs, earnings mgr) scroll ── */
             .table-container, .perf-table-wrap, #closedPositionsBody { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -1177,8 +1182,6 @@
             </div>
             <div class="button-group">
                 <button class="btn-primary" onclick="openAddModal()" style="background: var(--success-color);">+ Add</button>
-                <button onclick="backfillEntryIV()" style="padding: 8px 14px; font-size: 0.82em; background: var(--signal-teal); color: white; border: none; border-radius: 6px; cursor: pointer;" title="Fetch historical IV from MarketData.app">📈 Backfill IV</button>
-                <button class="btn-success" onclick="exportToCSV()" style="font-size: 0.82em;">📥 CSV</button>
                 <button class="btn-danger" onclick="clearAllPositions()" style="font-size: 0.82em;">🗑️</button>
             </div>
         </div>
@@ -6688,13 +6691,41 @@
             if (!yieldData) return null;
             const fdrxx = (portfolioConfig && portfolioConfig.fdrxxRate) || 3.98;
             const ann = yieldData.annualizedYield;
-            
-            // Efficiency ratio: how many times the risk-free rate is this position earning?
             const ratio = fdrxx > 0 ? ann / fdrxx : 0;
-            
-            // The "spread" — extra annualized return earned for taking on assignment risk
             const spread = ann - fdrxx;
             
+            // ── GATING: the yield formula treats remaining premium as capturable.
+            // That's only true for a healthy OTM position decaying in your favor.
+            // For deep-ITM or underwater positions, "remaining premium" is mostly
+            // intrinsic buyback cost (a liability), so a high annualized yield is a
+            // FALSE POSITIVE. Suppress/invert the verdict in those cases.
+            
+            // Deep ITM: remaining premium is buyback cost, not yield to capture
+            if (absDelta >= 0.55) {
+                return {
+                    tier: 'itm', color: 'var(--danger-color)',
+                    message: `deep ITM (Δ${absDelta.toFixed(2)}) — "premium" is buyback cost, not yield. Manage assignment risk.`,
+                    ann, fdrxx, ratio, spread
+                };
+            }
+            // Underwater chain: you're not earning on this capital, you're recovering a loss
+            if (plPercent <= -25) {
+                return {
+                    tier: 'underwater', color: 'var(--danger-color)',
+                    message: `down ${plPercent.toFixed(0)}% — capital is recovering a loss, not earning. Yield figure not meaningful.`,
+                    ann, fdrxx, ratio, spread
+                };
+            }
+            // Moderately ITM / pressured: flag caution, don't claim "strong"
+            if (absDelta >= 0.40) {
+                return {
+                    tier: 'pressured', color: 'var(--warning-color)',
+                    message: `Δ${absDelta.toFixed(2)} — near/at the money. Yield (${ann.toFixed(0)}%/yr) overstated by assignment risk.`,
+                    ann, fdrxx, ratio, spread
+                };
+            }
+            
+            // ── Normal case: healthy OTM position, yield is genuinely capturable ──
             let tier, color, message;
             if (ann < fdrxx) {
                 tier = 'idle';
