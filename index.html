@@ -827,29 +827,11 @@
         }
 
         @media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.8em;
-            }
-            
-            .stats-bar {
-                grid-template-columns: 1fr;
-            }
-
-            .button-group {
-                flex-direction: column;
-            }
-
-            button {
-                width: 100%;
-            }
-
-            table {
-                font-size: 0.75em;
-            }
-
-            th, td {
-                padding: 10px 5px;
-            }
+            .header h1 { font-size: 1.8em; }
+            .stats-bar { grid-template-columns: 1fr; }
+            /* Note: card buttons are sized in the mobile block below; no global button override here */
+            table { font-size: 0.75em; }
+            th, td { padding: 10px 5px; }
         }
 
         /* ═══════════════════════════════════════════════════════════════
@@ -1003,39 +985,68 @@
         /* ═══════════ MOBILE / PWA ═══════════ */
         @media (max-width: 640px) {
             body { -webkit-text-size-adjust: 100%; }
-            /* Dashboard: single column, compact */
-            .dash { grid-template-columns: 1fr 1fr !important; gap: 8px; padding: 12px 12px 4px !important; }
-            .dash-value { font-size: 1.2rem; }
-            .dash-label { font-size: 0.62rem; }
-            .dash-sub { font-size: 0.66rem; }
-            .status-strip { justify-content: flex-start; gap: 10px 14px; padding: 8px 12px 12px; font-size: 0.66rem; }
+            /* ── Dashboard: 2-col compact ── */
+            .dash { grid-template-columns: 1fr 1fr !important; gap: 8px; padding: 10px 10px 4px !important; }
+            .dash-value { font-size: 1.15rem; }
+            .dash-label { font-size: 0.6rem; }
+            .dash-sub { font-size: 0.64rem; }
+            .status-strip { justify-content: flex-start; gap: 8px 14px; padding: 8px 10px 12px; font-size: 0.66rem; }
 
-            /* Position cards: stack everything vertically */
-            .pos-main { grid-template-columns: 1fr !important; gap: 10px; padding: 14px; }
-            .pos-id .sym { font-size: 0.95rem; }
-            .pos-metrics { gap: 6px 14px; font-size: 0.74rem; }
+            /* ── Position cards: vertical stack, tight ── */
+            .pos-card { margin-bottom: 10px; }
+            .pos-main { grid-template-columns: 1fr !important; gap: 9px; padding: 13px 14px; }
+            .pos-id .sym { font-size: 0.98rem; }
+            .pos-id .sub { font-size: 0.72rem; }
+            .pos-metrics { gap: 5px 12px; font-size: 0.75rem; }
+            /* P&L and action share a row to save vertical space */
             .pos-pl { text-align: left; display: flex; align-items: baseline; gap: 8px; }
-            .pos-pl .plv { font-size: 1.1rem; }
+            .pos-pl .plv { font-size: 1.15rem; }
+            .pos-pl .plpct { font-size: 0.72rem; }
             .pos-action-col { gap: 4px; }
-            .pos-buttons { justify-content: flex-start; flex-wrap: wrap; }
-            .btn-pa { padding: 10px 16px; font-size: 0.85rem; }  /* bigger tap targets */
-            .pos-drawer { grid-template-columns: 1fr !important; padding: 14px; }
+            .action-text { font-size: 0.86rem; }
+            .why-line { font-size: 0.72rem !important; }
+            /* Buttons: primary action gets generous tap target, ⋯ stays compact */
+            .pos-buttons { justify-content: flex-start; flex-wrap: wrap; gap: 8px; }
+            .btn-pa { padding: 11px 18px; font-size: 0.88rem; min-height: 44px; }
+            .btn-pa[data-action="toggleDrawer"] { flex: 0 0 auto; min-width: 52px; }
+            /* Drawer: single column, comfortable rows */
+            .pos-drawer { grid-template-columns: 1fr !important; padding: 12px 14px; gap: 10px; }
+            .drawer-row { padding: 5px 0; font-size: 0.84rem; }
+            .drawer-actions { gap: 8px; }
+            .drawer-actions .btn-ghost { flex: 1 1 calc(50% - 4px); text-align: center; min-height: 42px; padding: 9px 10px; }
 
-            /* Header: shrink brand, wrap controls */
-            .header-content, .header { flex-wrap: wrap; gap: 10px; }
-            .controls { flex-wrap: wrap; gap: 8px; }
-            .controls button, .tab-button { flex: 1 1 auto; min-height: 44px; }  /* iOS min tap target */
+            /* ── Triage panel: stack each row's content ── */
+            #triagePanel .triage-row > div { flex-wrap: wrap; gap: 8px 10px !important; padding: 11px 13px !important; }
+            #triagePanel .triage-row > div > div:nth-child(2) { min-width: 0 !important; flex: 1 1 auto; }
+            #triagePanel .triage-row > div > div:nth-child(3) { flex: 1 1 100% !important; font-size: 0.8rem !important; }
+            #triagePanel .triage-row span[style*="tap to view"] { display: none; }
 
-            /* Tables that remain (Performance drawers, earnings) scroll horizontally */
-            .table-container, .perf-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            /* ── Shares cards same treatment ── */
+            #sharesBody .pos-main { grid-template-columns: 1fr !important; }
 
-            /* Modals full-width on phone */
-            #addModal, #rollModal, #importModal, #rollScannerModal { max-width: 100% !important; }
+            /* ── Header: brand left, controls wrap below ── */
+            .header, .header-content, .brand-container { flex-wrap: wrap; gap: 10px; }
+            .brand-logo { flex: 1 1 auto; }
+            .controls { flex-wrap: wrap; gap: 8px; width: 100%; }
+            /* Each button-group wraps; tab group scrolls horizontally if tight */
+            .controls .button-group { flex-wrap: wrap; gap: 6px; }
+            .controls .button-group button { min-height: 44px; }
+            /* Add/IV/CSV row buttons size to content, not full width */
+            .controls .button-group button { width: auto; flex: 0 1 auto; }
 
-            /* Tab buttons row scrolls if too wide */
-            .tabs, .tab-row { overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+            /* ── Remaining tables (Performance drawer legs, earnings mgr) scroll ── */
+            .table-container, .perf-table-wrap, #closedPositionsBody { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+            /* ── Modals full-width ── */
+            #addModal, #rollModal, #importModal, #rollScannerModal { max-width: 100% !important; width: 100% !important; }
+            .modal-content { padding: 18px 14px !important; }
+
+            /* ── Settings: stack the sync grid ── */
+            #settingsView .dash { grid-template-columns: 1fr !important; }
 
             h1, h2 { font-size: 1.3rem; }
+            /* Group-by headers wrap their stat spans */
+            .group-header-card { font-size: 0.8rem; line-height: 1.8; }
         }
 
         /* Safe-area insets for notch/home-bar (iPhone) */
@@ -1196,6 +1207,7 @@
 
         <div class="table-container">
             <div id="activePositionsView">
+                <div id="triagePanel" style="display: none;"></div>
                 <div id="positionsTable"><div id="positionsBody"></div></div>
                 
                 <!-- Assigned Shares Table -->
@@ -1438,6 +1450,81 @@
                                 <div style="color: white; font-weight: 700; margin-bottom: 5px;">4. Ignore Green</div>
                                 <div style="color: rgba(255,255,255,0.9); font-size: 0.9em;">Score 60+? Leave it alone. Theta is working.</div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Close Decision Guide (VADER-style, reflects engine logic) -->
+                    <div style="background: var(--card-bg); border-radius: 12px; padding: 25px; margin-bottom: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
+                        <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin-bottom: 6px;">🎯 When to Close — Profit-Taking Framework</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.92em;">The engine decides per-position, but here's the logic it follows. Profit alone never decides — it's always gated by <strong>delta</strong> (how much risk remains) and <strong>capital efficiency</strong> (what your collateral is still earning).</p>
+                        
+                        <div style="display: grid; gap: 10px;">
+                            <!-- header -->
+                            <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.1fr; gap: 10px; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; padding: 0 4px;">
+                                <span>Profit</span><span>Delta</span><span>DTE</span><span>Action</span>
+                            </div>
+                            
+                            <!-- Row: high delta winner -->
+                            <div style="border-radius: 8px; border-left: 3px solid var(--danger-color); background: rgba(239,68,68,0.06); padding: 12px 14px;">
+                                <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.1fr; gap: 10px; align-items: center;">
+                                    <span style="color: var(--warning-color); font-weight: 800;">40%+</span>
+                                    <span style="color: var(--danger-color); font-weight: 700;">&gt; 0.35</span>
+                                    <span style="color: var(--text-primary);">Any</span>
+                                    <span style="color: var(--danger-color); font-weight: 800;">CLOSE</span>
+                                </div>
+                                <div style="font-size: 0.82em; color: var(--text-secondary); margin-top: 8px;">High delta = still near the strike. A reversal erases this fast. Target drops to 40% — don't let it linger.</div>
+                            </div>
+                            
+                            <!-- Row: normal winner -->
+                            <div style="border-radius: 8px; border-left: 3px solid var(--warning-color); background: rgba(245,158,11,0.06); padding: 12px 14px;">
+                                <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.1fr; gap: 10px; align-items: center;">
+                                    <span style="color: var(--warning-color); font-weight: 800;">50–60%</span>
+                                    <span style="color: var(--success-color); font-weight: 700;">0.10–0.20</span>
+                                    <span style="color: var(--success-color); font-weight: 700;">&gt; 21</span>
+                                    <span style="color: var(--warning-color); font-weight: 800;">HOLD / TRIM</span>
+                                </div>
+                                <div style="font-size: 0.82em; color: var(--text-secondary); margin-top: 8px;">Comfortable distance, time on your side. Base target ~50%, but theta pace flexes it: ahead of pace, hold toward 60%+.</div>
+                            </div>
+                            
+                            <!-- Row: aggressive take-profit -->
+                            <div style="border-radius: 8px; border-left: 3px solid var(--success-color); background: rgba(16,185,129,0.06); padding: 12px 14px;">
+                                <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.1fr; gap: 10px; align-items: center;">
+                                    <span style="color: var(--success-color); font-weight: 800;">70%+ fast</span>
+                                    <span style="color: var(--success-color); font-weight: 700;">&lt; 0.25</span>
+                                    <span style="color: var(--text-primary);">held &lt; 14d</span>
+                                    <span style="color: var(--success-color); font-weight: 800;">TAKE PROFIT</span>
+                                </div>
+                                <div style="font-size: 0.82em; color: var(--text-secondary); margin-top: 8px;">Windfall from a sharp move or IV crush, captured early. Lock it in before mean reversion — unless premium is tiny and decaying fast.</div>
+                            </div>
+                            
+                            <!-- Row: safe expiry -->
+                            <div style="border-radius: 8px; border-left: 3px solid var(--signal-teal); background: rgba(42,166,161,0.06); padding: 12px 14px;">
+                                <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.1fr; gap: 10px; align-items: center;">
+                                    <span style="color: var(--success-color); font-weight: 800;">Any</span>
+                                    <span style="color: var(--success-color); font-weight: 700;">≤ 0.10</span>
+                                    <span style="color: var(--signal-teal); font-weight: 700;">≤ 20</span>
+                                    <span style="color: var(--signal-teal); font-weight: 800;">LET EXPIRE</span>
+                                </div>
+                                <div style="font-size: 0.82em; color: var(--text-secondary); margin-top: 8px;">Assignment risk minimal, theta is yours. Closing only burns capital — let it expire worthless and keep 100% of premium.</div>
+                            </div>
+                            
+                            <!-- Row: stop loss -->
+                            <div style="border-radius: 8px; border-left: 3px solid var(--danger-color); background: rgba(239,68,68,0.06); padding: 12px 14px;">
+                                <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.1fr; gap: 10px; align-items: center;">
+                                    <span style="color: var(--danger-color); font-weight: 800;">−100% to −200%</span>
+                                    <span style="color: var(--text-primary);">Any</span>
+                                    <span style="color: var(--text-primary);">Any</span>
+                                    <span style="color: var(--danger-color); font-weight: 800;">STOP / ROLL</span>
+                                </div>
+                                <div style="font-size: 0.82em; color: var(--text-secondary); margin-top: 8px;">Loss exceeds premium collected. At −100% evaluate close vs roll; at −200% it's a hard stop — cut immediately.</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Capital override -->
+                        <div style="margin-top: 16px; padding: 14px 16px; border-radius: 8px; background: rgba(42,166,161,0.1); border-left: 3px solid var(--signal-teal);">
+                            <div style="color: var(--signal-teal); font-weight: 800; font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">⚡ Capital Override — applies once green</div>
+                            <div style="color: var(--text-primary); font-weight: 600;">When remaining yield falls below ~2× FDRXX, close regardless of delta or DTE.</div>
+                            <div style="color: var(--text-secondary); font-size: 0.88em; margin-top: 4px;">Your collateral earns nothing sitting in a near-dead option. The "why" line on each card shows this live — when it turns red, the capital is better deployed elsewhere.</div>
                         </div>
                     </div>
 
@@ -2039,7 +2126,7 @@
                             <div class="brand-icon" style="width: 48px; height: 48px; font-size: 2em;">X</div>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.2 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.3 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2048,6 +2135,19 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.3 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.3</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Capital efficiency "why" line on every card — annualized return on remaining collateral vs FDRXX, color-coded (idle/thin/fair/strong)<br>
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> 🎯 Today\'s Decisions triage panel — positions ranked by decision urgency, tap to jump to the card<br>
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Close Decision Guide — profit-taking framework grid in the Guide tab with the capital override rule
+                                </div>
+                            </div>
+
                             <!-- v7.2 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -2938,6 +3038,7 @@
             const healthData = calculateHealthScore(pos.position, pos.delta, dte, plPercent, pos.iv, thetaPace, capitalYield, pos.ticker, pos.expiration, pos.entryIV, pos.optionType);
             const smartAction = generateSmartAction(pos.position, pos.delta, dte, plPercent, pos.iv, thetaPace, capitalYield, pos.ticker, pos.expiration, pos.currentPrice, pos.entryPrice, pos.strike, contracts, pos.optionType);
             const qualityScore = calculatePositionQuality(pos, dte);
+            const capEfficiency = capitalEfficiencyVerdict(capitalYield, plPercent, dte, Math.abs(pos.delta || 0));
             
             pos._metrics = {
                 dte,
@@ -2949,6 +3050,7 @@
                 rollChainLength: rollHistory.length,
                 thetaPace,
                 capitalYield,
+                capEfficiency,
                 healthData,
                 smartAction,
                 qualityScore,
@@ -6576,8 +6678,48 @@
             };
         }
 
+        // ═══════════════════════════════════════════════════════════════
+        // CAPITAL EFFICIENCY VERDICT
+        // Compares a position's annualized return on REMAINING capital
+        // against the FDRXX risk-free rate. The core "best decision" signal:
+        // if collateral is now earning near cash rates, redeploy it.
+        // ═══════════════════════════════════════════════════════════════
+        function capitalEfficiencyVerdict(yieldData, plPercent, dte, absDelta) {
+            if (!yieldData) return null;
+            const fdrxx = (portfolioConfig && portfolioConfig.fdrxxRate) || 3.98;
+            const ann = yieldData.annualizedYield;
+            
+            // Efficiency ratio: how many times the risk-free rate is this position earning?
+            const ratio = fdrxx > 0 ? ann / fdrxx : 0;
+            
+            // The "spread" — extra annualized return earned for taking on assignment risk
+            const spread = ann - fdrxx;
+            
+            let tier, color, message;
+            if (ann < fdrxx) {
+                tier = 'idle';
+                color = 'var(--danger-color)';
+                message = `capital earning ${ann.toFixed(0)}%/yr — below FDRXX ${fdrxx.toFixed(1)}%. Redeploy.`;
+            } else if (ratio < 2) {
+                tier = 'thin';
+                color = 'var(--warning-color)';
+                message = `only ${ann.toFixed(0)}%/yr left on capital vs FDRXX ${fdrxx.toFixed(1)}% — thin spread.`;
+            } else if (ratio < 4) {
+                tier = 'fair';
+                color = 'var(--signal-teal)';
+                message = `${ann.toFixed(0)}%/yr on remaining capital — fair (${ratio.toFixed(1)}× cash).`;
+            } else {
+                tier = 'strong';
+                color = 'var(--success-color)';
+                message = `${ann.toFixed(0)}%/yr on capital — strong (${ratio.toFixed(1)}× cash). Keep working.`;
+            }
+            
+            return { tier, color, message, ann, fdrxx, ratio, spread };
+        }
+
         // Determine graduated delta color class based on absolute delta value
         function getDeltaClass(delta) {
+
             const absDelta = Math.abs(delta);
             if (absDelta < 0.20) return 'delta-safe';
             if (absDelta < 0.35) return 'delta-comfort';
@@ -7427,6 +7569,10 @@
                 const rollLossPerShare = (m.plRealized || 0) / (100 * contracts);
                 const effEntry = pos.entryPrice + rollLossPerShare;
                 const gtcPrice = effEntry > 0 ? effEntry * 0.50 : Math.max(0, pos.entryPrice - Math.abs(rollLossPerShare));
+                // Eject price: buy-to-close price at which the CHAIN hits -200% of current-leg premium.
+                // plPercent = [(entry - X)*100*ct + realizedRollPL] / (entry*100*ct) * 100 = -200
+                //   →  X = entry + 2*entry + rollLossPerShare = entry*3 + rollLossPerShare
+                const ejectPrice = pos.entryPrice * 3 + rollLossPerShare;
                 const rollHistory = Array.isArray(pos.rollHistory) ? pos.rollHistory : [];
                 let chainPrem = pos.entryPrice;
                 rollHistory.forEach(leg => { chainPrem += (leg.entryPrice || 0) - (leg.exitPrice || 0); });
@@ -7442,6 +7588,7 @@
                         <div class="drawer-row"><span class="k">Entry</span><span class="v">$${pos.entryPrice.toFixed(2)}</span></div>
                         <div class="drawer-row"><span class="k">Current</span><span class="v">$${pos.currentPrice.toFixed(2)}</span></div>
                         <div class="drawer-row"><span class="k">50% GTC</span><span class="v" style="color: var(--signal-teal);">$${gtcPrice.toFixed(2)}</span></div>
+                        <div class="drawer-row"><span class="k" title="Buy-to-close price that hits your −200% stop (2× loss). Set this as a GTC order at your broker.">🛑 Eject (3×)</span><span class="v" style="color: var(--danger-color);">$${ejectPrice.toFixed(2)}</span></div>
                         <div class="drawer-row"><span class="k">${isCC ? 'Sale if called' : 'If assigned'}</span><span class="v">$${basisValue.toFixed(2)}/sh</span></div>
                         <div class="drawer-row"><span class="k">Contracts</span><span class="v">${contracts}</span></div>
                     </div>
@@ -7462,6 +7609,7 @@
                         ${ivDelta !== null ? `<div class="drawer-row"><span class="k">Entry IV → Δ</span><span class="v" style="color: ${ivDelta <= 0 ? 'var(--success-color)' : 'var(--warning-color)'};">${pos.entryIV.toFixed(1)} → ${ivDelta >= 0 ? '+' : ''}${ivDelta.toFixed(1)}</span></div>` : ''}
                         <div class="drawer-row"><span class="k">θ Pace</span><span class="v" title="${escapeHTML(thetaDisplay.title)}">${thetaDisplay.display}</span></div>
                         <div class="drawer-row"><span class="k">Cap. Yield</span><span class="v" title="${escapeHTML(yieldDisplay.title)}">${yieldDisplay.display}</span></div>
+                        ${m.capEfficiency ? `<div class="drawer-row"><span class="k">vs FDRXX ${m.capEfficiency.fdrxx.toFixed(1)}%</span><span class="v" style="color: ${m.capEfficiency.color};">${m.capEfficiency.ratio.toFixed(1)}× cash</span></div>` : ''}
                     </div>
                     <div class="drawer-group">
                         <div class="drawer-title">Quality ${q ? '· ' + q.composite + ' ' + q.grade : ''}</div>
@@ -7505,6 +7653,7 @@
                         </div>
                         <div class="pos-action-col">
                             <span class="action-text" style="color: ${actionColor};" title="${escapeHTML(smartAction.detail)}">${escapeHTML(smartAction.text)}</span>
+                            ${m.capEfficiency ? `<div class="why-line" style="font-size: 0.7rem; color: ${m.capEfficiency.color}; line-height: 1.3;">${escapeHTML(m.capEfficiency.message)}</div>` : ''}
                             <div class="health-mini">
                                 <div class="health-track"><div style="width: ${hs}%; background: ${hColor};"></div></div>
                                 <span>${hs} · ${escapeHTML(healthDisplay.band || '')}</span>
@@ -7578,6 +7727,103 @@
             updateStats();
             applyColumnVisibility();
             renderSharesTable();
+            renderTriagePanel();
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // TODAY'S DECISIONS — ranked triage of positions needing action
+        // Turns N independent Smart Actions into one prioritized worklist.
+        // ═══════════════════════════════════════════════════════════════
+        function computeDecisionUrgency(pos, m) {
+            // Higher score = more urgent decision. Returns {score, kind, why}
+            const a = (m.action || '').toUpperCase();
+            const at = (m.smartAction.text || '');
+            const absD = Math.abs(pos.delta || 0);
+            const dte = m.dte;
+            const plPct = m.plPercent || 0;
+            let score = 0;
+            let kind = 'hold';
+            let why = m.smartAction.text;
+            
+            // Loss stops — highest urgency
+            if (plPct <= -200) { score = 100; kind = 'close'; }
+            else if (plPct <= -100) { score = 92; kind = 'close'; }
+            // Explicit close signals
+            else if (/close|stop/i.test(at)) { score = 80; kind = 'close'; }
+            // Assignment risk: high delta + near expiry
+            else if (absD >= 0.45 && dte <= 7) { score = 78; kind = 'risk'; }
+            else if (absD >= 0.35 && dte <= 14) { score = 64; kind = 'risk'; }
+            // Roll signals
+            else if (/roll/i.test(at)) { score = 60; kind = 'roll'; }
+            // Capital efficiency: idle collateral
+            if (m.capEfficiency && m.capEfficiency.tier === 'idle') { score = Math.max(score, 70); if (kind === 'hold') { kind = 'redeploy'; why = 'Capital idle — ' + m.capEfficiency.message; } }
+            else if (m.capEfficiency && m.capEfficiency.tier === 'thin') { score = Math.max(score, 48); if (kind === 'hold') { kind = 'redeploy'; why = m.capEfficiency.message; } }
+            // Earnings crossing
+            if (pos.ticker && pos.expiration && earningsBeforeExpiration(pos.ticker, pos.expiration)) {
+                const d2e = getDaysToEarnings(pos.ticker);
+                if (d2e !== null && d2e >= 0 && d2e <= 10) { score = Math.max(score, 58); if (kind === 'hold') { kind = 'earnings'; why = `Earnings in ${d2e}d before expiry — gap risk`; } }
+            }
+            // Profit-take opportunity
+            if (/take profit|✅.*close|capture/i.test(at) && plPct >= 50) { score = Math.max(score, 55); if (kind === 'hold') kind = 'profit'; }
+            
+            return { score, kind, why };
+        }
+        
+        function renderTriagePanel() {
+            const panel = document.getElementById('triagePanel');
+            if (!panel) return;
+            
+            const ranked = positions
+                .filter(p => p.positionType !== 'shares' && p.position === 'Short')
+                .map(p => { const m = p._metrics || computePositionMetrics(p); return { pos: p, m, urg: computeDecisionUrgency(p, m) }; })
+                .filter(x => x.urg.score >= 48)  // only surface real decisions
+                .sort((a, b) => b.urg.score - a.urg.score);
+            
+            if (ranked.length === 0) {
+                panel.style.display = 'none';
+                return;
+            }
+            
+            panel.style.display = 'block';
+            
+            const kindMeta = {
+                close:    { icon: '🛑', label: 'Close', color: 'var(--danger-color)' },
+                risk:     { icon: '⚠️', label: 'Assignment risk', color: 'var(--danger-color)' },
+                roll:     { icon: '↻', label: 'Roll', color: 'var(--warning-color)' },
+                redeploy: { icon: '♻️', label: 'Redeploy capital', color: 'var(--warning-color)' },
+                earnings: { icon: '📅', label: 'Earnings', color: 'var(--warning-color)' },
+                profit:   { icon: '✅', label: 'Take profit', color: 'var(--success-color)' }
+            };
+            
+            const rows = ranked.map(({ pos, m, urg }) => {
+                const meta = kindMeta[urg.kind] || kindMeta.roll;
+                const sym = `${escapeHTML(pos.ticker)} $${pos.strike} ${escapeHTML((pos.optionType||'').toUpperCase())}`;
+                const sub = `${pos.contracts || 1}x · ${m.dte} DTE · Δ${Math.abs(pos.delta||0).toFixed(2)} · ${m.plPercent >= 0 ? '+' : ''}${m.plPercent.toFixed(0)}%`;
+                const idx = positions.indexOf(pos);
+                return `
+                <div class="triage-row" data-pos-index="${idx}" data-action="triageJump" style="cursor: pointer;">
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 8px; background: var(--dark-surface); border-left: 3px solid ${meta.color}; margin-bottom: 6px;">
+                        <span style="font-size: 1.1em;">${meta.icon}</span>
+                        <div style="min-width: 150px;">
+                            <div style="font-weight: 700; font-size: 0.9rem;">${sym}</div>
+                            <div style="font-size: 0.72rem; color: var(--text-muted);">${sub}</div>
+                        </div>
+                        <div style="flex: 1; font-size: 0.8rem; color: var(--text-secondary);">
+                            <span style="color: ${meta.color}; font-weight: 700;">${meta.label}</span> — ${escapeHTML(urg.why)}
+                        </div>
+                        <span style="font-size: 0.7rem; color: var(--text-muted); white-space: nowrap;">tap to view →</span>
+                    </div>
+                </div>`;
+            }).join('');
+            
+            panel.innerHTML = `
+                <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <span style="font-size: 1.05rem; font-weight: 800;">🎯 Today's Decisions</span>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">${ranked.length} ranked by urgency</span>
+                    </div>
+                    ${rows}
+                </div>`;
         }
         
         function renderSharesTable() {
@@ -9768,6 +10014,23 @@
                 case 'editBasis': editCostBasis(index); break;
                 case 'editRollHistory': editRollHistory(index); break;
             }
+        });
+
+        // ── Triage panel: tap a decision to jump to its card ──
+        document.getElementById('triagePanel').addEventListener('click', function(e) {
+            const row = e.target.closest('[data-pos-index]');
+            if (!row) return;
+            const index = parseInt(row.dataset.posIndex, 10);
+            const pos = positions[index];
+            if (!pos) return;
+            const key = pos.optionSymbol || (pos.ticker + pos.strike + pos.expiration);
+            openDrawers.add(key);
+            renderTable();
+            // Scroll to the card after render
+            setTimeout(() => {
+                const card = document.querySelector(`#positionsBody [data-pos-index="${index}"]`);
+                if (card) { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); card.style.transition = 'box-shadow 0.3s'; card.style.boxShadow = '0 0 0 2px var(--signal-teal)'; setTimeout(() => card.style.boxShadow = '', 1600); }
+            }, 60);
         });
 
         // ── Delegated event listener for shares table ──
