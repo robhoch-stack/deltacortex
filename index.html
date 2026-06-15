@@ -3091,7 +3091,8 @@
             const healthData = calculateHealthScore(pos.position, pos.delta, dte, plPercent, pos.iv, thetaPace, capitalYield, pos.ticker, pos.expiration, pos.entryIV, pos.optionType);
             const smartAction = generateSmartAction(pos.position, pos.delta, dte, plPercent, pos.iv, thetaPace, capitalYield, pos.ticker, pos.expiration, pos.currentPrice, pos.entryPrice, pos.strike, contracts, pos.optionType);
             const qualityScore = calculatePositionQuality(pos, dte);
-            const capEfficiency = capitalEfficiencyVerdict(capitalYield, plPercent, dte, Math.abs(pos.delta || 0));
+            const isCCpos = pos.position === 'Short' && pos.optionType === 'Call';
+            const capEfficiency = capitalEfficiencyVerdict(capitalYield, plPercent, dte, Math.abs(pos.delta || 0), isCCpos);
             
             pos._metrics = {
                 dte,
@@ -6897,7 +6898,7 @@
         // against the FDRXX risk-free rate. The core "best decision" signal:
         // if collateral is now earning near cash rates, redeploy it.
         // ═══════════════════════════════════════════════════════════════
-        function capitalEfficiencyVerdict(yieldData, plPercent, dte, absDelta) {
+        function capitalEfficiencyVerdict(yieldData, plPercent, dte, absDelta, isCC) {
             if (!yieldData) return null;
             const fdrxx = (portfolioConfig && portfolioConfig.fdrxxRate) || 3.98;
             const ann = yieldData.annualizedYield;
@@ -6910,23 +6911,23 @@
             // intrinsic buyback cost (a liability), so a high annualized yield is a
             // FALSE POSITIVE. Suppress/invert the verdict in those cases.
             
-            // Deep ITM: remaining premium is buyback cost, not yield to capture
+            // Deep ITM
             if (absDelta >= 0.55) {
                 return {
                     tier: 'itm', color: 'var(--danger-color)',
-                    message: `deep ITM (Δ${absDelta.toFixed(2)}) — "premium" is buyback cost, not yield. Manage assignment risk.`,
+                    message: `deep ITM (Δ${absDelta.toFixed(2)}) — "premium" is buyback cost, not yield. ${isCC ? 'Shares likely called away.' : 'Manage assignment risk.'}`,
                     ann, fdrxx, ratio, spread
                 };
             }
-            // Underwater chain: you're not earning on this capital, you're recovering a loss
+            // Underwater
             if (plPercent <= -25) {
                 return {
                     tier: 'underwater', color: 'var(--danger-color)',
-                    message: `down ${plPercent.toFixed(0)}% — capital is recovering a loss, not earning. Yield figure not meaningful.`,
+                    message: `down ${plPercent.toFixed(0)}% — ${isCC ? 'position recovering a loss' : 'capital is recovering a loss'}, not earning. Yield figure not meaningful.`,
                     ann, fdrxx, ratio, spread
                 };
             }
-            // Moderately ITM / pressured: flag caution, don't claim "strong"
+            // Pressured
             if (absDelta >= 0.40) {
                 return {
                     tier: 'pressured', color: 'var(--warning-color)',
@@ -6935,24 +6936,30 @@
                 };
             }
             
-            // ── Normal case: healthy OTM position, yield is genuinely capturable ──
+            // ── Normal case: healthy OTM position, yield genuinely capturable ──
+            // Wording differs for CC (closing frees no cash — you roll to a fresh call)
+            // vs CSP (closing frees collateral to redeploy elsewhere).
             let tier, color, message;
             if (ann < fdrxx) {
                 tier = 'idle';
                 color = 'var(--danger-color)';
-                message = `capital earning ${ann.toFixed(0)}%/yr — below FDRXX ${fdrxx.toFixed(1)}%. Redeploy.`;
+                message = isCC
+                    ? `only ${ann.toFixed(0)}%/yr left vs FDRXX ${fdrxx.toFixed(1)}% — call nearly spent. Close & write a fresh one for more premium.`
+                    : `capital earning ${ann.toFixed(0)}%/yr — below FDRXX ${fdrxx.toFixed(1)}%. Redeploy.`;
             } else if (ratio < 2) {
                 tier = 'thin';
                 color = 'var(--warning-color)';
-                message = `only ${ann.toFixed(0)}%/yr left on capital vs FDRXX ${fdrxx.toFixed(1)}% — thin spread.`;
+                message = isCC
+                    ? `safe to hold, but only ${ann.toFixed(0)}%/yr premium left (${ratio.toFixed(1)}× cash) — closing & rewriting a richer call earns more.`
+                    : `only ${ann.toFixed(0)}%/yr left on capital vs FDRXX ${fdrxx.toFixed(1)}% — thin spread.`;
             } else if (ratio < 4) {
                 tier = 'fair';
                 color = 'var(--signal-teal)';
-                message = `${ann.toFixed(0)}%/yr on remaining capital — fair (${ratio.toFixed(1)}× cash).`;
+                message = `${ann.toFixed(0)}%/yr ${isCC ? 'premium remaining' : 'on remaining capital'} — fair (${ratio.toFixed(1)}× cash).`;
             } else {
                 tier = 'strong';
                 color = 'var(--success-color)';
-                message = `${ann.toFixed(0)}%/yr on capital — strong (${ratio.toFixed(1)}× cash). Keep working.`;
+                message = `${ann.toFixed(0)}%/yr ${isCC ? 'premium' : 'on capital'} — strong (${ratio.toFixed(1)}× cash). Keep working.`;
             }
             
             return { tier, color, message, ann, fdrxx, ratio, spread };
