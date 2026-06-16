@@ -1190,6 +1190,7 @@
             </div>
             <div class="button-group">
                 <button class="btn-primary" onclick="openAddModal()" style="background: var(--success-color);">+ Add</button>
+                <button onclick="openCSPScanner()" style="padding: 8px 14px; font-size: 0.82em; background: var(--clarity-blue); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;" title="Scan for cash-secured puts to sell">🔍 Find Puts</button>
                 <button class="btn-danger" onclick="clearAllPositions()" style="font-size: 0.82em;">🗑️</button>
             </div>
         </div>
@@ -2141,7 +2142,7 @@
                             <div class="brand-icon" style="width: 48px; height: 48px; font-size: 2em;">X</div>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.4 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.5 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2150,6 +2151,18 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.5 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.5</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> CSP Scanner (\ud83d\udd0d Find Puts) \u2014 scan any ticker for cash-secured puts, ranked by balanced score, each checked against your T-bill hurdle, with if-assigned basis, ATR buffer, earnings flag, and one-tap Sell\u2192<br>
+                                    <span style="background: rgba(59,130,246,0.15); color: #3b82f6; padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">IMPROVED</span> Capital-efficiency why-line is now CC-aware (\"close &amp; rewrite a richer call\" vs \"redeploy\") and reconciled with the Hold smart action
+                                </div>
+                            </div>
+
                             <!-- v7.4 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -2665,6 +2678,44 @@
     </div>
 
     <!-- Roll Candidates Modal -->
+    <div id="cspScannerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="cspScanTitle">
+        <div class="modal-content" style="max-width: 1050px;">
+            <span class="close" onclick="closeCSPScannerModal()" aria-label="Close dialog" role="button" tabindex="0">&times;</span>
+            <h2 id="cspScanTitle">🔍 Cash-Secured Put Scanner</h2>
+            <p style="margin-bottom: 15px; color: var(--text-secondary);">Find puts to sell, ranked by a balanced score and checked against your T-bill hurdle.</p>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 15px;">
+                <div>
+                    <label style="display: block; font-size: 0.8em; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Ticker</label>
+                    <input type="text" id="cspScanTicker" placeholder="e.g. AAPL" style="padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--dark-surface); color: var(--text-primary); font-size: 1em; text-transform: uppercase; width: 130px;" onkeydown="if(event.key==='Enter') runCSPScan()">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.8em; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Target Δ</label>
+                    <select id="cspScanDelta" style="padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--dark-surface); color: var(--text-primary); font-size: 1em;">
+                        <option value="0.30">~0.30 (balanced)</option>
+                        <option value="0.20">~0.20 (conservative)</option>
+                        <option value="0.40">~0.40 (aggressive)</option>
+                    </select>
+                </div>
+                <button onclick="runCSPScan()" class="btn-primary" style="padding: 9px 20px;">Scan</button>
+            </div>
+            <div id="cspScanStatus" style="margin-bottom: 12px; padding: 10px; background: var(--dark-surface); border-radius: 6px;">
+                <span style="color: var(--text-muted);">Enter a ticker and scan...</span>
+            </div>
+            <div id="cspScannerResults"></div>
+            <div style="margin-top: 15px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color);">
+                <div onclick="const b=document.getElementById('cspGuideBody'); b.style.display = b.style.display==='none'?'block':'none'; this.querySelector('span').textContent=b.style.display==='none'?'\u25b8':'\u25be';"
+                     style="padding: 10px 14px; background: var(--dark-surface); cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9em; font-weight: 600; color: var(--text-primary);">
+                    <span>\u25b8</span> \ud83d\udccb How candidates are scored
+                </div>
+                <div id="cspGuideBody" style="display: none; padding: 14px; font-size: 0.85em; color: var(--text-secondary); line-height: 1.7; background: var(--card-bg);">
+                    <strong style="color: var(--accent-gold);">Balanced Score</strong> rewards annualized premium yield, a healthy ATR downside buffer, and distance OTM, while penalizing high assignment delta and expirations that cross earnings.<br><br>
+                    <strong style="color: var(--accent-gold);">Hurdle</strong> — each candidate's annualized yield is checked against your FDRXX \u00d7 hurdle-multiple bar (Settings). \ud83d\udfe2 clears it, \ud83d\udfe1 beats cash but is thin, \ud83d\udd34 fails the T-bill test.<br><br>
+                    <strong style="color: var(--accent-gold);">If Assigned</strong> = strike \u2212 premium, your effective cost basis if the put is assigned. Compare to where you'd be happy owning the stock.
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="ccScannerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="ccScanTitle">
         <div class="modal-content" style="max-width: 1000px;">
             <span class="close" onclick="closeCCScannerModal()" aria-label="Close dialog" role="button" tabindex="0">&times;</span>
@@ -3759,6 +3810,153 @@
         }
 
         // Scan roll viability for a position
+        function openCSPScanner() {
+            const modal = document.getElementById('cspScannerModal');
+            let overlay = document.getElementById('cspScanOverlay');
+            if (overlay) overlay.remove();
+            overlay = document.createElement('div');
+            overlay.id = 'cspScanOverlay';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:rgba(0,0,0,0.75);display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;';
+            overlay.onclick = function(e) { if (e.target === overlay) closeCSPScannerModal(); };
+            modal.style.display = 'block';
+            modal.style.position = 'static';
+            modal.style.background = 'none';
+            modal.style.width = '100%';
+            modal.style.maxWidth = '1050px';
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            setTimeout(() => { const t = document.getElementById('cspScanTicker'); if (t) t.focus(); }, 50);
+        }
+        
+        function closeCSPScannerModal() {
+            const overlay = document.getElementById('cspScanOverlay');
+            const modal = document.getElementById('cspScannerModal');
+            if (overlay && modal) { overlay.removeChild(modal); document.body.appendChild(modal); modal.style.display = 'none'; overlay.remove(); }
+            else if (modal) modal.style.display = 'none';
+        }
+        
+        async function runCSPScan() {
+            const ticker = (document.getElementById('cspScanTicker').value || '').trim().toUpperCase();
+            const targetDelta = parseFloat(document.getElementById('cspScanDelta').value) || 0.30;
+            const statusDiv = document.getElementById('cspScanStatus');
+            const resultsDiv = document.getElementById('cspScannerResults');
+            
+            if (!ticker) { statusDiv.innerHTML = '<span style="color: var(--warning-color);">Enter a ticker first.</span>'; return; }
+            if (!apiKey) { statusDiv.innerHTML = '<span style="color: var(--danger-color);">No API key — set it in Settings.</span>'; return; }
+            
+            statusDiv.innerHTML = `<span style="color: var(--signal-teal);">⏳ Fetching ${ticker} chain, price & ATR...</span>`;
+            resultsDiv.innerHTML = '';
+            
+            try {
+                const [expirations, atrData] = await Promise.all([fetchExpirations(ticker), fetchATR(ticker)]);
+                if (!expirations || expirations.length === 0) { statusDiv.innerHTML = '<span style="color: var(--danger-color);">❌ Could not fetch expirations (check ticker).</span>'; return; }
+                
+                const stockPrice = atrData ? atrData.lastClose : null;
+                const atr = atrData ? atrData.atr : null;
+                if (!stockPrice) { statusDiv.innerHTML = '<span style="color: var(--danger-color);">❌ Could not fetch stock price.</span>'; return; }
+                
+                const t30 = findTargetExpiration(expirations, 30);
+                const t45 = findTargetExpiration(expirations, 45);
+                const targets = [t30];
+                if (t45 && (!t30 || t45.date !== t30.date)) targets.push(t45);
+                if (!targets[0]) { statusDiv.innerHTML = '<span style="color: var(--danger-color);">❌ No suitable expiration 14+ days out.</span>'; return; }
+                
+                statusDiv.innerHTML = `<span style="color: var(--signal-teal);">⏳ Scanning ${ticker} puts at ${targets.length} expiration(s)...</span>`;
+                
+                const fdrxx = (portfolioConfig && portfolioConfig.fdrxxRate) || 3.98;
+                const hurdleMult = (portfolioConfig && portfolioConfig.hurdleMultiple) || 2;
+                const hurdle = fdrxx * hurdleMult;
+                
+                let analyzed = [];
+                for (const target of targets) {
+                    const candidates = await fetchRollCandidates(ticker, target.date, 'put');
+                    if (!candidates || candidates.length === 0) continue;
+                    const earningsCross = earningsBeforeExpiration(ticker, target.date);
+                    
+                    candidates.forEach(c => {
+                        const absDelta = Math.abs(c.delta || 0);
+                        // Only OTM puts (strike below stock), reasonable delta band
+                        if (c.strike >= stockPrice) return;
+                        if (absDelta < 0.05 || absDelta > 0.55) return;
+                        const premium = c.bid || c.mid || c.last || 0;
+                        if (premium <= 0) return;
+                        
+                        const collateral = c.strike * 100;
+                        const annYield = collateral > 0 && target.dte > 0 ? (premium * 100 / collateral) * (365 / target.dte) * 100 : 0;
+                        const ratio = fdrxx > 0 ? annYield / fdrxx : 0;
+                        const ifAssigned = c.strike - premium;
+                        const otmPct = ((stockPrice - c.strike) / stockPrice) * 100;
+                        const atrBuffer = atr && atr > 0 ? (stockPrice - c.strike) / atr : null;
+                        const deltaDist = Math.abs(absDelta - targetDelta);
+                        
+                        // Balanced score
+                        let score = 0;
+                        score += Math.min(annYield, 60) * 0.5;
+                        if (atrBuffer !== null) score += Math.max(0, Math.min(atrBuffer, 3)) * 8;
+                        score += Math.max(0, Math.min(otmPct, 25)) * 0.4;
+                        score -= deltaDist * 40;                          // closeness to target delta
+                        if (annYield >= hurdle) score += 12; else if (annYield < fdrxx) score -= 15;
+                        if (earningsCross) score -= 10;
+                        
+                        let hurdleIcon = annYield >= hurdle ? '🟢' : annYield >= fdrxx ? '🟡' : '🔴';
+                        
+                        analyzed.push({ ...c, premium, annYield, ratio, ifAssigned, otmPct, atrBuffer, absDelta, dte: target.dte, expiration: target.date, earningsCross, score, hurdleIcon });
+                    });
+                }
+                
+                if (analyzed.length === 0) { statusDiv.innerHTML = '<span style="color: var(--danger-color);">❌ No suitable put candidates found.</span>'; return; }
+                analyzed.sort((a, b) => b.score - a.score);
+                const top = analyzed.slice(0, 20);
+                
+                statusDiv.innerHTML = `<span style="color: var(--success-color);">✓ ${ticker} $${stockPrice.toFixed(2)}${atr ? ' · ATR $' + atr.toFixed(2) : ''} · hurdle ${hurdle.toFixed(1)}%/yr (${hurdleMult}× FDRXX)</span>`;
+                
+                const rows = top.map(c => {
+                    const expFmt = new Date(c.expiration + 'T00:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric'});
+                    const atrCell = c.atrBuffer !== null ? `${c.atrBuffer >= 1.5 ? '🟢' : c.atrBuffer >= 1.0 ? '🟡' : '🔴'} ${c.atrBuffer.toFixed(1)}×` : '—';
+                    return `<tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 7px 6px; font-weight: 700;">$${c.strike}</td>
+                        <td style="padding: 7px 6px;">${expFmt}<br><span style="font-size:0.8em;color:var(--text-muted);">${c.dte}d</span></td>
+                        <td style="padding: 7px 6px;">$${c.premium.toFixed(2)}</td>
+                        <td style="padding: 7px 6px; color: ${c.annYield >= 15 ? 'var(--success-color)' : c.annYield >= 8 ? 'var(--signal-teal)' : 'var(--text-secondary)'};">${c.hurdleIcon} ${c.annYield.toFixed(0)}%/yr</td>
+                        <td style="padding: 7px 6px;">${c.absDelta.toFixed(2)}</td>
+                        <td style="padding: 7px 6px;">${c.otmPct.toFixed(1)}%</td>
+                        <td style="padding: 7px 6px;">${atrCell}</td>
+                        <td style="padding: 7px 6px; font-weight: 700;">$${c.ifAssigned.toFixed(2)}</td>
+                        <td style="padding: 7px 6px;">${c.earningsCross ? '<span style="color: var(--danger-color);" title="Expiration crosses earnings">⚠️</span>' : '<span style="color: var(--success-color);">✓</span>'}</td>
+                        <td style="padding: 7px 6px;"><button onclick="writeCSPFromScan('${ticker}', ${c.strike}, '${c.expiration}', ${c.premium.toFixed(2)}, ${(c.delta||0)}, ${(c.iv||0)})" style="padding: 6px 12px; background: var(--success-color); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 0.82em; white-space: nowrap;">Sell →</button></td>
+                    </tr>`;
+                }).join('');
+                
+                resultsDiv.innerHTML = `<div style="overflow-x: auto;"><table style="width: 100%; border-collapse: collapse; font-size: 0.86em;">
+                    <thead><tr style="border-bottom: 2px solid var(--border-color); text-align: left; color: var(--text-muted); font-size: 0.78em; text-transform: uppercase;">
+                        <th style="padding: 8px 6px;">Strike</th><th style="padding: 8px 6px;">Expiry</th><th style="padding: 8px 6px;">Premium</th>
+                        <th style="padding: 8px 6px;">Yield</th><th style="padding: 8px 6px;">Δ</th><th style="padding: 8px 6px;">OTM</th>
+                        <th style="padding: 8px 6px;" title="ATR buffer">ATR</th><th style="padding: 8px 6px;" title="Cost basis if assigned">If Assigned</th>
+                        <th style="padding: 8px 6px;">Earn</th><th style="padding: 8px 6px;"></th>
+                    </tr></thead><tbody>${rows}</tbody></table></div>`;
+            } catch (err) {
+                console.error('CSP scan error:', err);
+                statusDiv.innerHTML = '<span style="color: var(--danger-color);">❌ Scan failed: ' + err.message + '</span>';
+            }
+        }
+        
+        function writeCSPFromScan(ticker, strike, expiration, premium, delta, iv) {
+            closeCSPScannerModal();
+            openAddModal();
+            setTimeout(() => {
+                document.getElementById('ticker').value = ticker;
+                document.getElementById('strike').value = strike;
+                document.getElementById('expiration').value = expiration;
+                document.getElementById('contracts').value = 1;
+                document.getElementById('optionType').value = 'Put';
+                document.getElementById('position').value = 'Short';
+                document.getElementById('entryPrice').value = premium;
+                if (delta) document.getElementById('delta').value = Math.abs(delta).toFixed(2);
+                if (iv) document.getElementById('iv').value = (iv * 100).toFixed(1);
+                if (typeof updatePositionSizingHint === 'function') updatePositionSizingHint();
+            }, 100);
+        }
+
         async function scanCoveredCalls(index) {
             const shares = positions[index];
             if (!shares || shares.positionType !== 'shares') { alert('CC scanner is for assigned share positions.'); return; }
