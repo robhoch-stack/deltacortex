@@ -2159,7 +2159,7 @@
                                     <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
                                 </div>
                                 <div style="line-height: 1.7;">
-                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> CSP Scanner (\ud83d\udd0d Find Puts) \u2014 scan any ticker for cash-secured puts, ranked by balanced score, each checked against your T-bill hurdle, with if-assigned basis, ATR buffer, earnings flag, and one-tap Sell\u2192<br>
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> CSP Scanner (🔍 Find Puts) — scan any ticker for cash-secured puts, ranked by balanced score, each checked against your T-bill hurdle, with if-assigned basis, ATR buffer, earnings flag, and one-tap Sell→<br>
                                     <span style="background: rgba(59,130,246,0.15); color: #3b82f6; padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">IMPROVED</span> Capital-efficiency why-line is now CC-aware (\"close &amp; rewrite a richer call\" vs \"redeploy\") and reconciled with the Hold smart action
                                 </div>
                             </div>
@@ -2171,7 +2171,7 @@
                                     <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
                                 </div>
                                 <div style="line-height: 1.7;">
-                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Covered Call Scanner (\ud83d\udcde Scan CCs on shares) \u2014 ranks strikes by balanced score, labeled by zone (Recovery/Income/Aggressive), with if-called P&amp;L, ATR buffer, earnings flag, and one-tap Write\u2192<br>
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Covered Call Scanner (📞 Scan CCs on shares) — ranks strikes by balanced score, labeled by zone (Recovery/Income/Aggressive), with if-called P&amp;L, ATR buffer, earnings flag, and one-tap Write→<br>
                                     <span style="background: rgba(59,130,246,0.15); color: #3b82f6; padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> Capital-efficiency verdict now gates on delta/P&amp;L \u2014 no more false \"strong yield\" on deep-ITM or underwater positions
                                 </div>
                             </div>
@@ -2535,8 +2535,8 @@
                 </div>
                 
                 <!-- Position Sizing Guidance -->
-                <div id="earningsHint" style="display: none;"></div>
                 <div id="hurdleHint" style="display: none;"></div>
+                <div id="earningsHint" style="display: none;"></div>
                 <div id="positionSizingHint" style="background: rgba(42, 166, 161, 0.08); border: 1px solid rgba(42, 166, 161, 0.2); border-radius: 8px; padding: 12px; margin-bottom: 14px; font-size: 0.88em; display: none;">
                     <div style="font-weight: 700; color: var(--signal-teal); margin-bottom: 6px;">📐 Position Sizing</div>
                     <div id="sizingDetails" style="color: var(--text-secondary); line-height: 1.6;"></div>
@@ -2704,14 +2704,14 @@
             </div>
             <div id="cspScannerResults"></div>
             <div style="margin-top: 15px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color);">
-                <div onclick="const b=document.getElementById('cspGuideBody'); b.style.display = b.style.display==='none'?'block':'none'; this.querySelector('span').textContent=b.style.display==='none'?'\u25b8':'\u25be';"
+                <div onclick="const b=document.getElementById('cspGuideBody'); b.style.display = b.style.display==='none'?'block':'none'; this.querySelector('span').textContent=b.style.display==='none'?'▸':'▾';"
                      style="padding: 10px 14px; background: var(--dark-surface); cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9em; font-weight: 600; color: var(--text-primary);">
-                    <span>\u25b8</span> \ud83d\udccb How candidates are scored
+                    <span>▸</span> 📋 How candidates are scored
                 </div>
                 <div id="cspGuideBody" style="display: none; padding: 14px; font-size: 0.85em; color: var(--text-secondary); line-height: 1.7; background: var(--card-bg);">
                     <strong style="color: var(--accent-gold);">Balanced Score</strong> rewards annualized premium yield, a healthy ATR downside buffer, and distance OTM, while penalizing high assignment delta and expirations that cross earnings.<br><br>
-                    <strong style="color: var(--accent-gold);">Hurdle</strong> — each candidate's annualized yield is checked against your FDRXX \u00d7 hurdle-multiple bar (Settings). \ud83d\udfe2 clears it, \ud83d\udfe1 beats cash but is thin, \ud83d\udd34 fails the T-bill test.<br><br>
-                    <strong style="color: var(--accent-gold);">If Assigned</strong> = strike \u2212 premium, your effective cost basis if the put is assigned. Compare to where you'd be happy owning the stock.
+                    <strong style="color: var(--accent-gold);">Hurdle</strong> — each candidate's annualized yield is checked against your FDRXX × hurdle-multiple bar (Settings). 🟢 clears it, 🟡 beats cash but is thin, 🔴 fails the T-bill test.<br><br>
+                    <strong style="color: var(--accent-gold);">If Assigned</strong> = strike − premium, your effective cost basis if the put is assigned. Compare to where you'd be happy owning the stock.
                 </div>
             </div>
         </div>
@@ -2727,15 +2727,15 @@
             </div>
             <div id="ccScannerResults"></div>
             <div style="margin-top: 15px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color);">
-                <div onclick="const b=document.getElementById('ccGuideBody'); b.style.display = b.style.display==='none'?'block':'none'; this.querySelector('span').textContent=b.style.display==='none'?'\u25b8':'\u25be';"
+                <div onclick="const b=document.getElementById('ccGuideBody'); b.style.display = b.style.display==='none'?'block':'none'; this.querySelector('span').textContent=b.style.display==='none'?'▸':'▾';"
                      style="padding: 10px 14px; background: var(--dark-surface); cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9em; font-weight: 600; color: var(--text-primary);">
-                    <span>\u25b8</span> \ud83d\udccb CC Strategy Zones
+                    <span>▸</span> 📋 CC Strategy Zones
                 </div>
                 <div id="ccGuideBody" style="display: none; padding: 14px; font-size: 0.85em; color: var(--text-secondary); line-height: 1.7; background: var(--card-bg);">
-                    <strong style="color: var(--success-color);">\ud83d\udfe2 Recovery (strike \u2265 basis)</strong> — Small premium, but if called you exit at or above breakeven. Safe; keeps upside to your cost basis. Best when you expect the stock to recover.<br><br>
-                    <strong style="color: var(--warning-color);">\ud83d\udfe1 Income (stock &lt; strike &lt; basis)</strong> — Meaningful premium, but if assigned you cap a share loss at that strike. You\'re betting it stays OTM. Best when you want income and think the stock stays flat/down.<br><br>
-                    <strong style="color: var(--danger-color);">\ud83d\udd34 Aggressive / ITM (strike \u2264 stock)</strong> — High premium, high assignment odds. Effectively a decision to exit the shares for premium plus the strike. Use when you want out and want max premium doing it.<br><br>
-                    <strong style="color: var(--accent-gold);">If-Called P&amp;L</strong> = (strike \u2212 basis) \u00d7 shares + premium. The bottom-line outcome if the shares get called away at that strike. Green = you net a gain; red = you lock a loss.<br><br>
+                    <strong style="color: var(--success-color);">🟢 Recovery (strike ≥ basis)</strong> — Small premium, but if called you exit at or above breakeven. Safe; keeps upside to your cost basis. Best when you expect the stock to recover.<br><br>
+                    <strong style="color: var(--warning-color);">🟡 Income (stock < strike < basis)</strong> — Meaningful premium, but if assigned you cap a share loss at that strike. You\'re betting it stays OTM. Best when you want income and think the stock stays flat/down.<br><br>
+                    <strong style="color: var(--danger-color);">🔴 Aggressive / ITM (strike ≤ stock)</strong> — High premium, high assignment odds. Effectively a decision to exit the shares for premium plus the strike. Use when you want out and want max premium doing it.<br><br>
+                    <strong style="color: var(--accent-gold);">If-Called P&amp;L</strong> = (strike − basis) × shares + premium. The bottom-line outcome if the shares get called away at that strike. Green = you net a gain; red = you lock a loss.<br><br>
                     <strong style="color: var(--accent-gold);">Balanced Score</strong> ranks candidates on premium yield, downside safety (ATR buffer + distance OTM), and how favorable the if-called outcome is relative to your basis.
                 </div>
             </div>
@@ -3920,6 +3920,7 @@
                         <td style="padding: 7px 6px;">$${c.premium.toFixed(2)}</td>
                         <td style="padding: 7px 6px; color: ${c.annYield >= 15 ? 'var(--success-color)' : c.annYield >= 8 ? 'var(--signal-teal)' : 'var(--text-secondary)'};">${c.hurdleIcon} ${c.annYield.toFixed(0)}%/yr</td>
                         <td style="padding: 7px 6px;">${c.absDelta.toFixed(2)}</td>
+                        <td style="padding: 7px 6px;">${c.iv ? c.iv.toFixed(0) + '%' : '—'}</td>
                         <td style="padding: 7px 6px;">${c.otmPct.toFixed(1)}%</td>
                         <td style="padding: 7px 6px;">${atrCell}</td>
                         <td style="padding: 7px 6px; font-weight: 700;">$${c.ifAssigned.toFixed(2)}</td>
@@ -3931,7 +3932,7 @@
                 resultsDiv.innerHTML = `<div style="overflow-x: auto;"><table style="width: 100%; border-collapse: collapse; font-size: 0.86em;">
                     <thead><tr style="border-bottom: 2px solid var(--border-color); text-align: left; color: var(--text-muted); font-size: 0.78em; text-transform: uppercase;">
                         <th style="padding: 8px 6px;">Strike</th><th style="padding: 8px 6px;">Expiry</th><th style="padding: 8px 6px;">Premium</th>
-                        <th style="padding: 8px 6px;">Yield</th><th style="padding: 8px 6px;">Δ</th><th style="padding: 8px 6px;">OTM</th>
+                        <th style="padding: 8px 6px;">Yield</th><th style="padding: 8px 6px;">Δ</th><th style="padding: 8px 6px;" title="Implied volatility">IV</th><th style="padding: 8px 6px;">OTM</th>
                         <th style="padding: 8px 6px;" title="ATR buffer">ATR</th><th style="padding: 8px 6px;" title="Cost basis if assigned">If Assigned</th>
                         <th style="padding: 8px 6px;">Earn</th><th style="padding: 8px 6px;"></th>
                     </tr></thead><tbody>${rows}</tbody></table></div>`;
@@ -3953,7 +3954,8 @@
                 document.getElementById('position').value = 'Short';
                 document.getElementById('entryPrice').value = premium;
                 if (delta) document.getElementById('delta').value = Math.abs(delta).toFixed(2);
-                if (iv) document.getElementById('iv').value = (iv * 100).toFixed(1);
+                if (iv) document.getElementById('iv').value = iv.toFixed(1);
+                if (typeof fetchUpcomingEarnings === 'function') fetchUpcomingEarnings(ticker);
                 if (typeof updatePositionSizingHint === 'function') updatePositionSizingHint();
             }, 100);
         }
@@ -4110,7 +4112,8 @@
                 document.getElementById('position').value = 'Short';
                 document.getElementById('entryPrice').value = premium;
                 if (delta) document.getElementById('delta').value = Math.abs(delta).toFixed(2);
-                if (iv) document.getElementById('iv').value = (iv * 100).toFixed(1);
+                if (iv) document.getElementById('iv').value = iv.toFixed(1);
+                if (typeof fetchUpcomingEarnings === 'function') fetchUpcomingEarnings(shares.ticker);
                 updatePositionSizingHint();
             }, 100);
         }
