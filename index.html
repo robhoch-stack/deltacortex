@@ -1111,6 +1111,7 @@
                         </svg>
                         Refresh All
                     </button>
+                    <span id="freshnessIndicator" style="font-size: 0.78em; color: var(--text-muted); white-space: nowrap; margin-left: 2px;" title="When option data was last refreshed"></span>
                     <button id="themeToggle" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Light/Dark Mode">
                         <svg id="sunIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
@@ -4645,6 +4646,8 @@
             
             button.disabled = false;
             button.innerHTML = originalHTML;
+            localStorage.setItem('optionsXQ_lastRefresh', new Date().toISOString());
+            updateFreshnessIndicator();
 
             if (positions.length > 0) {
                 const apiUsage = getApiCallCount();
@@ -7935,6 +7938,30 @@
         }
 
         // Render table
+        // Data freshness indicator next to Refresh All
+        function updateFreshnessIndicator() {
+            const el = document.getElementById('freshnessIndicator');
+            if (!el) return;
+            const last = localStorage.getItem('optionsXQ_lastRefresh');
+            if (!last) { el.textContent = '● never refreshed'; el.style.color = 'var(--text-muted)'; el.title = 'Click Refresh All to pull live data'; return; }
+            
+            const then = new Date(last);
+            const mins = Math.floor((Date.now() - then.getTime()) / 60000);
+            
+            let label, color;
+            if (mins < 1) { label = 'just now'; color = 'var(--success-color)'; }
+            else if (mins < 60) { label = `${mins}m ago`; color = mins <= 15 ? 'var(--success-color)' : mins <= 30 ? 'var(--signal-teal)' : 'var(--warning-color)'; }
+            else {
+                const hrs = Math.floor(mins / 60);
+                if (hrs < 24) { label = `${hrs}h ago`; color = 'var(--warning-color)'; }
+                else { const days = Math.floor(hrs / 24); label = `${days}d ago`; color = 'var(--danger-color)'; }
+            }
+            el.textContent = '● ' + label;
+            el.style.color = color;
+            el.title = 'Option data last refreshed: ' + then.toLocaleString();
+        }
+        setInterval(updateFreshnessIndicator, 30000);
+
         function renderTable() {
             // Recompute cached metrics for all positions before rendering
             recomputeAllMetrics();
@@ -10467,6 +10494,7 @@
         loadApiKey();
         loadPortfolioConfig();
         loadSyncSettings();
+        updateFreshnessIndicator();
         setTimeout(autoPullCheck, 1200);
         loadEarningsDates();
         loadMarketRegime();
