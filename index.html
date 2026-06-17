@@ -3471,10 +3471,22 @@
         // Format option symbol for MarketData.app
         function formatOptionSymbol(ticker, expiration, optionType, strike) {
             // Format: AAPL250117C00150000
-            const exp = new Date(expiration);
-            const year = exp.getFullYear().toString().slice(-2);
-            const month = String(exp.getMonth() + 1).padStart(2, '0');
-            const day = String(exp.getDate()).padStart(2, '0');
+            // Parse date components directly from the YYYY-MM-DD string to avoid
+            // timezone shifts — new Date("2026-07-17") parses as UTC midnight, which
+            // in negative-offset timezones rolls back to the PREVIOUS day when read
+            // via local getDate(). Splitting the string keeps the intended date.
+            let year, month, day;
+            const isoMatch = /^(\d{4})-(\d{2})-(\d{2})/.exec(expiration);
+            if (isoMatch) {
+                year = isoMatch[1].slice(-2);
+                month = isoMatch[2];
+                day = isoMatch[3];
+            } else {
+                const exp = new Date(expiration);
+                year = exp.getFullYear().toString().slice(-2);
+                month = String(exp.getMonth() + 1).padStart(2, '0');
+                day = String(exp.getDate()).padStart(2, '0');
+            }
             const type = optionType.charAt(0).toUpperCase();
             const strikeFormatted = String(Math.round(strike * 1000)).padStart(8, '0');
             return `${ticker}${year}${month}${day}${type}${strikeFormatted}`;
@@ -4488,8 +4500,14 @@
                 return;
             }
 
-            // Use the stored optionSymbol if available, otherwise build it
-            const symbol = pos.optionSymbol || formatOptionSymbol(pos.ticker, pos.expiration, pos.optionType, pos.strike);
+            // Always regenerate the option symbol from the position's authoritative
+            // fields rather than trusting a possibly-stale stored symbol (older saves
+            // may carry a timezone-shifted date). Self-heals the stored value.
+            const symbol = formatOptionSymbol(pos.ticker, pos.expiration, pos.optionType, pos.strike);
+            if (pos.optionSymbol && pos.optionSymbol !== symbol) {
+                console.log(`Repaired option symbol: ${pos.optionSymbol} → ${symbol}`);
+            }
+            pos.optionSymbol = symbol;
             
             // Fetch both options data and underlying stock price
             const [liveData, stockData] = await Promise.all([
