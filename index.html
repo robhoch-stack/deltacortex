@@ -8079,7 +8079,7 @@
                 <div class="pos-drawer" style="display: ${isOpen ? 'grid' : 'none'};">
                     <div class="drawer-group">
                         <div class="drawer-title">Pricing</div>
-                        <div class="drawer-row"><span class="k">Entry</span><span class="v">$${pos.entryPrice.toFixed(2)}</span></div>
+                        <div class="drawer-row"><span class="k">Entry</span><span class="v"><button data-action="editEntryPrice" style="background:none;border:none;cursor:pointer;padding:0;color:var(--text-primary);font-weight:700;font-family:inherit;font-size:inherit;" title="Click to edit entry price">$${pos.entryPrice.toFixed(2)} ✏️</button></span></div>
                         <div class="drawer-row"><span class="k">Current</span><span class="v">$${pos.currentPrice.toFixed(2)}</span></div>
                         <div class="drawer-row"><span class="k">50% GTC</span><span class="v" style="color: var(--signal-teal);">$${gtcPrice.toFixed(2)}</span></div>
                         <div class="drawer-row"><span class="k" title="Buy-to-close price that hits your −200% stop (2× loss). Set this as a GTC order at your broker.">🛑 Eject (3×)</span><span class="v" style="color: var(--danger-color);">$${ejectPrice.toFixed(2)}</span></div>
@@ -8121,6 +8121,7 @@
                         <button class="btn-ghost" data-action="roll">↻ Roll</button>
                         <button class="btn-ghost" data-action="close">✓ Close</button>
                         ${(!isCC && pos.position === 'Short') ? '<button class="btn-ghost" data-action="assign">📋 Assign</button>' : ''}
+                        <button class="btn-ghost" data-action="editEntryPrice">✏️ Entry Price</button>
                         <button class="btn-ghost" data-action="editIV">✏️ Entry IV</button>
                         <button class="btn-ghost" data-action="editRollHistory">↻ Edit History</button>
                         <button class="btn-ghost destructive" data-action="delete">Delete</button>
@@ -9865,6 +9866,26 @@
         });
 
         // Inline edit Entry IV
+        function editEntryPrice(index) {
+            const pos = positions[index];
+            if (!pos) return;
+            const current = pos.entryPrice;
+            const input = prompt(
+                `Edit entry price for ${pos.ticker} $${pos.strike} ${(pos.optionType||'').toUpperCase()}\n\n` +
+                `This is the premium per share you collected (or paid) when opening the current leg.\n` +
+                `Current: $${current.toFixed(2)}\n\n` +
+                `Enter new entry price per share:`,
+                current.toFixed(2)
+            );
+            if (input === null) return;
+            const val = parseFloat(input);
+            if (isNaN(val) || val < 0) { alert('Invalid entry price.'); return; }
+            pos.entryPrice = val;
+            delete pos._metrics;
+            savePositions();
+            renderTable();
+        }
+
         function editEntryIV(index, cell) {
             const pos = positions[index];
             const currentVal = pos.entryIV ? pos.entryIV.toFixed(1) : '';
@@ -10555,6 +10576,7 @@
                 case 'close': closePosition(index); break;
                 case 'delete': deletePosition(index); break;
                 case 'editIV': editEntryIV(index, btn); break;
+                case 'editEntryPrice': editEntryPrice(index); break;
                 case 'assign': assignCSP(index); break;
                 case 'writeCC': writeCCFromShares(index); break;
                 case 'editBasis': editCostBasis(index); break;
