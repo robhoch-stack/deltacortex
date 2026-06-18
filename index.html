@@ -2032,6 +2032,13 @@
                                 <label style="display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;">Hurdle Multiple <span style="font-weight: 400; color: var(--text-muted);">× FDRXX a trade must clear</span></label>
                                 <input type="number" id="hurdleMultiple" step="0.5" value="2" min="1" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--dark-surface); color: var(--text-primary); font-size: 1em;">
                             </div>
+                            <div>
+                                <label style="display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;">Mark Options At <span style="font-weight: 400; color: var(--text-muted);">price for current value</span></label>
+                                <select id="optionMark" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--dark-surface); color: var(--text-primary); font-size: 1em;">
+                                    <option value="mid">Mid — realistic fill value (default)</option>
+                                    <option value="ask">Ask — conservative buyback cost</option>
+                                </select>
+                            </div>
                         </div>
                         
                         <button class="btn-primary" onclick="savePortfolioConfig()" style="margin-bottom: 15px;">💾 Save Portfolio Settings</button>
@@ -2143,7 +2150,7 @@
                             <div class="brand-icon" style="width: 48px; height: 48px; font-size: 2em;">X</div>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.5 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.6 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2152,6 +2159,20 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.6 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.6</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Mark Options At setting (Mid / Ask) \u2014 default Mid gives realistic fill value for P&amp;L, capture %, and capital efficiency; Ask gives conservative buyback cost<br>
+                                    <span style="background: rgba(245,158,11,0.12); color: var(--warning-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> Option symbol timezone bug \u2014 expiration date no longer shifts back a day; refresh self-heals stored symbols<br>
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Edit entry price on open positions (drawer Pricing + action button)<br>
+                                    <span style="background: rgba(59,130,246,0.15); color: #3b82f6; padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> Scanner IV double-conversion, garbled guide text, mobile tab clipping, freshness indicator
+                                </div>
+                            </div>
+
                             <!-- v7.5 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3655,20 +3676,25 @@
                         result.mid = (result.bid + result.ask) / 2;
                     }
                     
-                    // Use ASK price as current price (what you'd pay to close)
-                    // For short positions, ask is what you'd pay to buy back
-                    // Priority: ask > last > mid > bid
-                    if (result.ask) {
-                        result.last = result.ask;
-                    } else if (data.last && data.last[0]) {
-                        result.last = data.last[0];
-                    } else if (result.mid) {
-                        result.last = result.mid;
-                    } else if (result.bid) {
-                        result.last = result.bid;
+                    // Current-price mark depends on the user's pricing setting (Settings → Mark options at).
+                    // 'mid' (default): realistic fill value — better for P&L, capture %, capital efficiency.
+                    // 'ask': conservative buyback cost — what it would actually cost to close right now.
+                    const markMode = (portfolioConfig && portfolioConfig.optionMark) || 'mid';
+                    if (markMode === 'ask') {
+                        // Priority: ask > last > mid > bid
+                        if (result.ask) result.last = result.ask;
+                        else if (data.last && data.last[0]) result.last = data.last[0];
+                        else if (result.mid) result.last = result.mid;
+                        else if (result.bid) result.last = result.bid;
+                    } else {
+                        // Mid default. Priority: mid > last > ask > bid
+                        if (result.mid) result.last = result.mid;
+                        else if (data.last && data.last[0]) result.last = data.last[0];
+                        else if (result.ask) result.last = result.ask;
+                        else if (result.bid) result.last = result.bid;
                     }
                     
-                    console.log('Parsed result (using ASK as current price):', result);
+                    console.log(`Parsed result (mark mode: ${markMode}):`, result);
                     
                     // Check if we got any useful data
                     if (result.last === null && result.bid === null && result.ask === null) {
@@ -4559,7 +4585,7 @@
                     messages.push(`Underlying: $${stockData.price?.toFixed(2) || 'N/A'}`);
                 }
                 
-                alert(`${pos.ticker} updated successfully!\n\n${messages.join('\n')}\n\nNote: Using ASK price (cost to close)`);
+                alert(`${pos.ticker} updated successfully!\n\n${messages.join('\n')}\n\nMarking at: ${((portfolioConfig && portfolioConfig.optionMark) || 'mid').toUpperCase()}`);
             } else {
                 alert(`Failed to fetch data for ${symbol}.\n\nPossible reasons:\n- Market is closed (options only trade during market hours)\n- Option symbol doesn't exist\n- API rate limit reached\n- Invalid API key\n\nCheck the browser console (F12) for more details.`);
             }
@@ -4673,7 +4699,7 @@
             if (positions.length > 0) {
                 const apiUsage = getApiCallCount();
                 const apiMsg = apiUsage.remaining !== null ? `API credits remaining: ${apiUsage.remaining.toLocaleString()} / ${apiUsage.limit.toLocaleString()}` : `API calls today: ~${apiUsage.count.toLocaleString()}`;
-                alert(`Refresh complete!\nSuccess: ${successCount}\nFailed: ${failCount}\n\nUsing ASK prices (cost to close)\n${apiMsg}`);
+                alert(`Refresh complete!\nSuccess: ${successCount}\nFailed: ${failCount}\n\nMarking at: ${((portfolioConfig && portfolioConfig.optionMark) || 'mid').toUpperCase()}\n${apiMsg}`);
             } else {
                 alert('Market regime data updated! Add positions to refresh option data.');
             }
@@ -4846,6 +4872,8 @@
             if (fdrxxEl) fdrxxEl.value = portfolioConfig.fdrxxRate || 3.98;
             const hurdleEl = document.getElementById('hurdleMultiple');
             if (hurdleEl) hurdleEl.value = portfolioConfig.hurdleMultiple || 2;
+            const markEl = document.getElementById('optionMark');
+            if (markEl) markEl.value = portfolioConfig.optionMark || 'mid';
             
             // Load manual VIX override
             const vixEl = document.getElementById('manualVIX');
@@ -4860,6 +4888,7 @@
             portfolioConfig.maxSectorPct = parseFloat(document.getElementById('maxSectorPct').value) || 40;
             portfolioConfig.fdrxxRate = parseFloat(document.getElementById('fdrxxRate').value) || 3.98;
             portfolioConfig.hurdleMultiple = parseFloat(document.getElementById('hurdleMultiple').value) || 2;
+            portfolioConfig.optionMark = document.getElementById('optionMark').value || 'mid';
             localStorage.setItem('optionsXQ_portfolioConfig', JSON.stringify(portfolioConfig));
             localStorage.setItem('optionsXQ_sectorMap', JSON.stringify(sectorMap));
             
