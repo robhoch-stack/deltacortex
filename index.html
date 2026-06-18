@@ -3936,6 +3936,9 @@
                         score -= deltaDist * 40;                          // closeness to target delta
                         if (annYield >= hurdle) score += 12; else if (annYield < fdrxx) score -= 15;
                         if (earningsCross) score -= 10;
+                        // Liquidity: reward deep OI, penalize illiquid strikes (OI floor 100)
+                        const cspOI = c.openInterest || 0;
+                        if (cspOI < 100) score -= 15; else if (cspOI >= 500) score += 6;
                         
                         let hurdleIcon = annYield >= hurdle ? '🟢' : annYield >= fdrxx ? '🟡' : '🔴';
                         
@@ -3961,6 +3964,7 @@
                         <td style="padding: 7px 6px;">${c.iv ? c.iv.toFixed(0) + '%' : '—'}</td>
                         <td style="padding: 7px 6px;">${c.otmPct.toFixed(1)}%</td>
                         <td style="padding: 7px 6px;">${atrCell}</td>
+                        <td style="padding: 7px 6px; color: ${c.openInterest >= 500 ? 'var(--success-color)' : c.openInterest >= 100 ? 'var(--text-secondary)' : 'var(--danger-color)'};" title="${c.openInterest < 100 ? 'Low open interest — illiquid' : 'Open interest'}">${(c.openInterest || 0).toLocaleString()}</td>
                         <td style="padding: 7px 6px; font-weight: 700;">$${c.ifAssigned.toFixed(2)}</td>
                         <td style="padding: 7px 6px;">${c.earningsCross ? '<span style="color: var(--danger-color);" title="Expiration crosses earnings">⚠️</span>' : '<span style="color: var(--success-color);">✓</span>'}</td>
                         <td style="padding: 7px 6px;"><button onclick="writeCSPFromScan('${ticker}', ${c.strike}, '${c.expiration}', ${c.premium.toFixed(2)}, ${(c.delta||0)}, ${(c.iv||0)})" style="padding: 6px 12px; background: var(--success-color); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 0.82em; white-space: nowrap;">Sell →</button></td>
@@ -3971,7 +3975,7 @@
                     <thead><tr style="border-bottom: 2px solid var(--border-color); text-align: left; color: var(--text-muted); font-size: 0.78em; text-transform: uppercase;">
                         <th style="padding: 8px 6px;">Strike</th><th style="padding: 8px 6px;">Expiry</th><th style="padding: 8px 6px;">Premium</th>
                         <th style="padding: 8px 6px;">Yield</th><th style="padding: 8px 6px;">Δ</th><th style="padding: 8px 6px;" title="Implied volatility">IV</th><th style="padding: 8px 6px;">OTM</th>
-                        <th style="padding: 8px 6px;" title="ATR buffer">ATR</th><th style="padding: 8px 6px;" title="Cost basis if assigned">If Assigned</th>
+                        <th style="padding: 8px 6px;" title="ATR buffer">ATR</th><th style="padding: 8px 6px;" title="Open interest — liquidity">OI</th><th style="padding: 8px 6px;" title="Cost basis if assigned">If Assigned</th>
                         <th style="padding: 8px 6px;">Earn</th><th style="padding: 8px 6px;"></th>
                     </tr></thead><tbody>${rows}</tbody></table></div>`;
             } catch (err) {
@@ -4081,6 +4085,9 @@
                         score += (ifCalledPL >= 0 ? 18 : -12);                                    // called outcome sign
                         if (absDelta >= 0.45) score -= 10;                                        // high assignment odds penalty
                         if (earningsCross) score -= 8;
+                        // Liquidity: reward deep OI, penalize illiquid strikes (OI floor 100)
+                        const ccOI = c.openInterest || 0;
+                        if (ccOI < 100) score -= 15; else if (ccOI >= 500) score += 6;
                         
                         analyzed.push({ ...c, premium, premIncome, annYield, ifCalledPL, absDelta, otmPct, atrBuffer, zone, zoneColor, zoneIcon, dte: target.dte, expiration: target.date, earningsCross, score });
                     });
@@ -4103,6 +4110,7 @@
                         <td style="padding: 7px 6px; color: ${c.annYield >= 15 ? 'var(--success-color)' : c.annYield >= 8 ? 'var(--signal-teal)' : 'var(--text-secondary)'};">${c.annYield.toFixed(0)}%/yr</td>
                         <td style="padding: 7px 6px;">${c.absDelta.toFixed(2)}</td>
                         <td style="padding: 7px 6px;">${atrCell}</td>
+                        <td style="padding: 7px 6px; color: ${c.openInterest >= 500 ? 'var(--success-color)' : c.openInterest >= 100 ? 'var(--text-secondary)' : 'var(--danger-color)'};" title="${c.openInterest < 100 ? 'Low open interest — illiquid' : 'Open interest'}">${(c.openInterest || 0).toLocaleString()}</td>
                         <td style="padding: 7px 6px; font-weight: 700; color: ${c.ifCalledPL >= 0 ? 'var(--success-color)' : 'var(--danger-color)'};">${formatCurrency(c.ifCalledPL)}</td>
                         <td style="padding: 7px 6px;">${c.earningsCross ? '<span style="color: var(--danger-color);" title="Expiration crosses earnings">⚠️</span>' : '<span style="color: var(--success-color);">✓</span>'}</td>
                         <td style="padding: 7px 6px;"><button onclick="writeCCFromScan(${c.strike}, '${c.expiration}', ${c.premium.toFixed(2)}, ${(c.delta||0)}, ${(c.iv||0)})" style="padding: 6px 12px; background: #7c3aed; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 0.82em; white-space: nowrap;">Write →</button></td>
@@ -4115,7 +4123,7 @@
                             <thead><tr style="border-bottom: 2px solid var(--border-color); text-align: left; color: var(--text-muted); font-size: 0.78em; text-transform: uppercase;">
                                 <th style="padding: 8px 6px;">Strike</th><th style="padding: 8px 6px;">Zone</th><th style="padding: 8px 6px;">Expiry</th>
                                 <th style="padding: 8px 6px;">Premium</th><th style="padding: 8px 6px;">Yield</th><th style="padding: 8px 6px;">Δ</th>
-                                <th style="padding: 8px 6px;" title="ATR buffer">ATR</th><th style="padding: 8px 6px;" title="P&L if shares called away">If Called</th>
+                                <th style="padding: 8px 6px;" title="ATR buffer">ATR</th><th style="padding: 8px 6px;" title="Open interest — liquidity">OI</th><th style="padding: 8px 6px;" title="P&L if shares called away">If Called</th>
                                 <th style="padding: 8px 6px;">Earn</th><th style="padding: 8px 6px;"></th>
                             </tr></thead>
                             <tbody>${rows}</tbody>
