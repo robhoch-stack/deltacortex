@@ -4576,8 +4576,11 @@
                 
                 const messages = [];
                 if (liveData) {
-                    messages.push(`Current Price (Ask): $${liveData.last?.toFixed(2) || 'N/A'}`);
-                    if (liveData.bid) messages.push(`Bid: $${liveData.bid.toFixed(2)}`);
+                    const markMode = ((portfolioConfig && portfolioConfig.optionMark) || 'mid');
+                    messages.push(`Current Price (${markMode === 'ask' ? 'Ask' : 'Mid'}): $${liveData.last?.toFixed(2) || 'N/A'}`);
+                    if (liveData.bid != null) messages.push(`Bid: $${liveData.bid.toFixed(2)}`);
+                    if (liveData.mid != null) messages.push(`Mid: $${liveData.mid.toFixed(2)}`);
+                    if (liveData.ask != null) messages.push(`Ask: $${liveData.ask.toFixed(2)}`);
                     messages.push(`Delta: ${liveData.delta?.toFixed(2) || 'N/A'}`);
                     messages.push(`IV: ${liveData.iv?.toFixed(1) || 'N/A'}%`);
                 }
