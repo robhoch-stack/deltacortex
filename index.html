@@ -8034,6 +8034,8 @@
                 tbody.innerHTML = '';
                 emptyState.style.display = 'block';
                 updateStats();
+                renderSharesTable();
+                renderTriagePanel();
                 return;
             }
 
@@ -8044,8 +8046,11 @@
 
             if (filteredWithIndex.length === 0) {
                 emptyState.style.display = 'none';
-                tbody.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--text-muted);">No ${strategyFilter === 'csp' ? 'CSP' : 'CC'} positions found. Switch filter to view other positions.</div>`;
+                const hasShares = positions.some(p => p.positionType === 'shares');
+                tbody.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--text-muted);">No ${strategyFilter === 'csp' ? 'CSP' : strategyFilter === 'cc' ? 'CC' : 'option'} positions${hasShares ? ' — assigned shares shown below' : ' found. Switch filter to view other positions.'}</div>`;
                 updateStats();
+                renderSharesTable();
+                renderTriagePanel();
                 return;
             }
 
