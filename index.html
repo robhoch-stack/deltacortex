@@ -2151,7 +2151,7 @@
                             <div class="brand-icon" style="width: 48px; height: 48px; font-size: 2em;">X</div>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.8 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.9 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2160,6 +2160,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.9 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.9</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Underlying stock price (Px) on the open option card metrics line
+                                </div>
+                            </div>
+
                             <!-- v7.8 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -2873,7 +2884,7 @@
     </div>
 
     <script>
-        const APP_VERSION = 'v7.8';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.9';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -8253,6 +8264,7 @@
                             <span class="m ${dCls}">Δ <b>${absD.toFixed(2)}</b></span>
                             <span class="m ${dteCls}">DTE <b>${dte}</b></span>
                             <span class="m">IV <b>${pos.iv.toFixed(1)}%</b></span>
+                            ${pos.underlyingPrice ? `<span class="m" title="Underlying stock price">Px <b>$${pos.underlyingPrice.toFixed(2)}</b></span>` : ''}
                             ${otmPct !== null ? `<span class="m ${otmCls}">${otmLabel} <b>${otmPct >= 0 ? '+' : ''}${otmPct.toFixed(1)}%</b></span>` : ''}
                             <span class="m ${ef.cssClass === 'earnings-danger' || ef.cssClass === 'earnings-warn' ? 'bad' : ''}" title="${escapeHTML(ef.title)}">Earn <b>${ef.display}</b></span>
                         </div>
