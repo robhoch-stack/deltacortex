@@ -4702,6 +4702,27 @@
             await fetchMarketRegime();
             console.log('=== Market Regime Complete ===', marketRegime);
             
+            // Refresh earnings dates for short-option holdings whose stored date is past
+            // or missing — keeps the earnings flag honest as new quarters are announced.
+            const todayStr = new Date().toISOString().split('T')[0];
+            const earningsTickers = [...new Set(
+                positions
+                    .filter(p => p.position === 'Short' && (p.optionType === 'Put' || p.optionType === 'Call'))
+                    .map(p => p.ticker.toUpperCase())
+            )].filter(tk => {
+                const d = earningsDates[tk];
+                return !d || d < todayStr;  // missing or stale
+            });
+            if (earningsTickers.length > 0 && typeof fetchUpcomingEarnings === 'function') {
+                console.log('Refreshing earnings for:', earningsTickers.join(', '));
+                for (let i = 0; i < earningsTickers.length; i += 3) {
+                    const batch = earningsTickers.slice(i, i + 3);
+                    await Promise.all(batch.map(tk => fetchUpcomingEarnings(tk).catch(() => {})));
+                    if (i + 3 < earningsTickers.length) await new Promise(r => setTimeout(r, 50));
+                }
+                renderTable();
+            }
+            
             button.disabled = false;
             button.innerHTML = originalHTML;
             localStorage.setItem('optionsXQ_lastRefresh', new Date().toISOString());
@@ -9908,6 +9929,21 @@
             savePositions();
             renderTable();
             closeAddModal();
+            
+            // Automate earnings capture: for any short put (CSP) or short call (CC),
+            // ensure the upcoming earnings date is fetched and stored so the position's
+            // earnings flag is accurate — even if the ticker-input listener didn't fire
+            // (paste, autofill, or quick entry).
+            const isShortOption = position === 'Short' && (optionType === 'Put' || optionType === 'Call');
+            if (isShortOption && typeof fetchUpcomingEarnings === 'function') {
+                const tk = ticker.toUpperCase();
+                // Fetch if we don't already have a future earnings date cached for this ticker
+                const existing = earningsDates[tk];
+                const todayStr = new Date().toISOString().split('T')[0];
+                if (!existing || existing < todayStr) {
+                    fetchUpcomingEarnings(tk).then(() => renderTable()).catch(() => {});
+                }
+            }
         });
 
         // Inline edit Entry IV
