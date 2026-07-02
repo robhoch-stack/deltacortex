@@ -2151,7 +2151,7 @@
                             <div class="brand-icon" style="width: 48px; height: 48px; font-size: 2em;">X</div>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.7 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.8 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2160,6 +2160,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.8 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.8</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(245,158,11,0.12); color: var(--warning-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> Scanner earnings flag \u2014 now fetches earnings for the scanned ticker and shows a distinct \"?\" for unverified (no longer a false green \u2713); \u26a0\ufe0f correctly warns when earnings fall before/at expiration
+                                </div>
+                            </div>
+
                             <!-- v7.7 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -2862,7 +2873,7 @@
     </div>
 
     <script>
-        const APP_VERSION = 'v7.7';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.8';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -3918,6 +3929,13 @@
                 
                 statusDiv.innerHTML = `<span style="color: var(--signal-teal);">⏳ Scanning ${ticker} puts at ${targets.length} expiration(s)...</span>`;
                 
+                // Ensure we have this ticker's upcoming earnings before flagging candidates,
+                // otherwise "no data" would render as a false "safe" checkmark.
+                if (typeof fetchUpcomingEarnings === 'function') {
+                    try { await fetchUpcomingEarnings(ticker, true); } catch (e) {}
+                }
+                const haveEarnings = !!earningsDates[ticker.toUpperCase()];
+                
                 const fdrxx = (portfolioConfig && portfolioConfig.fdrxxRate) || 3.98;
                 const hurdleMult = (portfolioConfig && portfolioConfig.hurdleMultiple) || 2;
                 const hurdle = fdrxx * hurdleMult;
@@ -3958,7 +3976,7 @@
                         
                         let hurdleIcon = annYield >= hurdle ? '🟢' : annYield >= fdrxx ? '🟡' : '🔴';
                         
-                        analyzed.push({ ...c, premium, annYield, ratio, ifAssigned, otmPct, atrBuffer, absDelta, dte: target.dte, expiration: target.date, earningsCross, score, hurdleIcon });
+                        analyzed.push({ ...c, premium, annYield, ratio, ifAssigned, otmPct, atrBuffer, absDelta, dte: target.dte, expiration: target.date, earningsCross, haveEarnings, score, hurdleIcon });
                     });
                 }
                 
@@ -3982,7 +4000,7 @@
                         <td style="padding: 7px 6px;">${atrCell}</td>
                         <td style="padding: 7px 6px; color: ${c.openInterest >= 500 ? 'var(--success-color)' : c.openInterest >= 100 ? 'var(--text-secondary)' : 'var(--danger-color)'};" title="${c.openInterest < 100 ? 'Low open interest — illiquid' : 'Open interest'}">${(c.openInterest || 0).toLocaleString()}</td>
                         <td style="padding: 7px 6px; font-weight: 700;">$${c.ifAssigned.toFixed(2)}</td>
-                        <td style="padding: 7px 6px;">${c.earningsCross ? '<span style="color: var(--danger-color);" title="Expiration crosses earnings">⚠️</span>' : '<span style="color: var(--success-color);">✓</span>'}</td>
+                        <td style="padding: 7px 6px;">${!c.haveEarnings ? '<span style="color: var(--text-muted);" title="No earnings date available — unverified">?</span>' : c.earningsCross ? '<span style="color: var(--danger-color);" title="Earnings before/at expiration — gap risk">⚠️</span>' : '<span style="color: var(--success-color);" title="Earnings after expiration (safe)">✓</span>'}</td>
                         <td style="padding: 7px 6px;"><button onclick="writeCSPFromScan('${ticker}', ${c.strike}, '${c.expiration}', ${c.premium.toFixed(2)}, ${(c.delta||0)}, ${(c.iv||0)})" style="padding: 6px 12px; background: var(--success-color); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 0.82em; white-space: nowrap;">Sell →</button></td>
                     </tr>`;
                 }).join('');
@@ -4070,6 +4088,12 @@
                 
                 statusDiv.innerHTML = `<span style="color: var(--signal-teal);">⏳ Scanning ${ticker} calls at ${targets.length} expiration(s)...</span>`;
                 
+                // Ensure earnings data before flagging candidates (avoids false "safe" check)
+                if (typeof fetchUpcomingEarnings === 'function') {
+                    try { await fetchUpcomingEarnings(ticker, true); } catch (e) {}
+                }
+                const haveEarnings = !!earningsDates[ticker.toUpperCase()];
+                
                 let analyzed = [];
                 for (const target of targets) {
                     const candidates = await fetchRollCandidates(ticker, target.date, 'call');
@@ -4105,7 +4129,7 @@
                         const ccOI = c.openInterest || 0;
                         if (ccOI < 100) score -= 15; else if (ccOI >= 500) score += 6;
                         
-                        analyzed.push({ ...c, premium, premIncome, annYield, ifCalledPL, absDelta, otmPct, atrBuffer, zone, zoneColor, zoneIcon, dte: target.dte, expiration: target.date, earningsCross, score });
+                        analyzed.push({ ...c, premium, premIncome, annYield, ifCalledPL, absDelta, otmPct, atrBuffer, zone, zoneColor, zoneIcon, dte: target.dte, expiration: target.date, earningsCross, haveEarnings, score });
                     });
                 }
                 
@@ -4128,7 +4152,7 @@
                         <td style="padding: 7px 6px;">${atrCell}</td>
                         <td style="padding: 7px 6px; color: ${c.openInterest >= 500 ? 'var(--success-color)' : c.openInterest >= 100 ? 'var(--text-secondary)' : 'var(--danger-color)'};" title="${c.openInterest < 100 ? 'Low open interest — illiquid' : 'Open interest'}">${(c.openInterest || 0).toLocaleString()}</td>
                         <td style="padding: 7px 6px; font-weight: 700; color: ${c.ifCalledPL >= 0 ? 'var(--success-color)' : 'var(--danger-color)'};">${formatCurrency(c.ifCalledPL)}</td>
-                        <td style="padding: 7px 6px;">${c.earningsCross ? '<span style="color: var(--danger-color);" title="Expiration crosses earnings">⚠️</span>' : '<span style="color: var(--success-color);">✓</span>'}</td>
+                        <td style="padding: 7px 6px;">${!c.haveEarnings ? '<span style="color: var(--text-muted);" title="No earnings date available — unverified">?</span>' : c.earningsCross ? '<span style="color: var(--danger-color);" title="Earnings before/at expiration — gap risk">⚠️</span>' : '<span style="color: var(--success-color);" title="Earnings after expiration (safe)">✓</span>'}</td>
                         <td style="padding: 7px 6px;"><button onclick="writeCCFromScan(${c.strike}, '${c.expiration}', ${c.premium.toFixed(2)}, ${(c.delta||0)}, ${(c.iv||0)})" style="padding: 6px 12px; background: #7c3aed; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 0.82em; white-space: nowrap;">Write →</button></td>
                     </tr>`;
                 }).join('');
