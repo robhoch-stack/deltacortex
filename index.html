@@ -4702,12 +4702,16 @@
             await fetchMarketRegime();
             console.log('=== Market Regime Complete ===', marketRegime);
             
-            // Refresh earnings dates for short-option holdings whose stored date is past
-            // or missing — keeps the earnings flag honest as new quarters are announced.
+            // Refresh earnings dates for any holding you might write options on:
+            // short options (CSP/CC) AND assigned shares (you'll write CCs against them).
+            // Keeps the earnings flag honest as new quarters are announced.
             const todayStr = new Date().toISOString().split('T')[0];
             const earningsTickers = [...new Set(
                 positions
-                    .filter(p => p.position === 'Short' && (p.optionType === 'Put' || p.optionType === 'Call'))
+                    .filter(p =>
+                        (p.position === 'Short' && (p.optionType === 'Put' || p.optionType === 'Call'))
+                        || p.positionType === 'shares'
+                    )
                     .map(p => p.ticker.toUpperCase())
             )].filter(tk => {
                 const d = earningsDates[tk];
@@ -4717,7 +4721,7 @@
                 console.log('Refreshing earnings for:', earningsTickers.join(', '));
                 for (let i = 0; i < earningsTickers.length; i += 3) {
                     const batch = earningsTickers.slice(i, i + 3);
-                    await Promise.all(batch.map(tk => fetchUpcomingEarnings(tk).catch(() => {})));
+                    await Promise.all(batch.map(tk => fetchUpcomingEarnings(tk, true).catch(() => {})));
                     if (i + 3 < earningsTickers.length) await new Promise(r => setTimeout(r, 50));
                 }
                 renderTable();
@@ -5505,8 +5509,12 @@
         }
 
         function removeEarningsDate(ticker) {
-            delete earningsDates[ticker.toUpperCase()];
+            const tk = ticker.toUpperCase();
+            delete earningsDates[tk];
             saveEarningsDates();
+            // Clear the in-memory API cache too, so a later fetch genuinely re-queries
+            // instead of restoring the deleted date (or a stale "no earnings") from cache.
+            try { apiCache.delete(`earnings_${tk}`); } catch (e) {}
             renderTable();
             renderEarningsManager();
         }
@@ -8419,6 +8427,16 @@
                 
                 const actionText = unrealPct >= 5 ? '✍ Write CC above basis' : unrealPct >= 0 ? '✍ Write CC at/above basis' : '✍ Write CC — recover basis';
                 
+                // Upcoming earnings for the shares (relevant before writing a CC)
+                const shDaysToEarn = getDaysToEarnings(pos.ticker);
+                let earnDisplay = '';
+                if (shDaysToEarn !== null && shDaysToEarn >= 0) {
+                    const eColor = shDaysToEarn <= 7 ? 'var(--danger-color)' : shDaysToEarn <= 21 ? 'var(--warning-color)' : 'var(--text-secondary)';
+                    const eDate = earningsDates[pos.ticker.toUpperCase()];
+                    const eDateFmt = eDate ? new Date(eDate + 'T00:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric'}) : '';
+                    earnDisplay = `<span class="m" title="Upcoming earnings${eDateFmt ? ' ' + eDateFmt : ''}">📅 Earn <b style="color: ${eColor};">${shDaysToEarn}d${eDateFmt ? ' · ' + eDateFmt : ''}</b></span>`;
+                }
+                
                 return `
                 <div class="pos-card prio-SHARES shares-card" data-pos-index="${idx}">
                     <div class="pos-main shares-main" style="cursor: default;">
@@ -8430,6 +8448,7 @@
                             <span class="m">Current <b>${formatCurrency(currentPrice)}</b></span>
                             <span class="m">Value <b>${formatCurrency(mktValue)}</b></span>
                             <span class="m">Min CC strike <b>$${costBasis.toFixed(2)}</b></span>
+                            ${earnDisplay}
                             ${Array.isArray(pos.ccHistory) && pos.ccHistory.length > 0 ? `<span class="m safe" title="CC premiums folded into basis this cycle">CCs <b>${pos.ccHistory.length} · ${formatCurrency(pos.ccHistory.reduce((s,l)=>s+(l.realizedPL||0),0))}</b></span>` : ''}
                         </div>
                         <div class="pos-pl ${unrealPL >= 0 ? 'up' : 'down'}">
@@ -8524,29 +8543,33 @@
         }
         
         // Fetch upcoming earnings date from MarketData.app (cached 24hr)
-        async function fetchUpcomingEarnings(ticker) {
+        async function fetchUpcomingEarnings(ticker, forceRefresh) {
             if (!apiKey || !ticker) return;
             ticker = ticker.toUpperCase();
             
-            // Skip if already have a future earnings date for this ticker
+            // Skip if already have a future earnings date for this ticker (unless forced)
             const existing = earningsDates[ticker];
-            if (existing && new Date(existing) > new Date()) {
+            if (!forceRefresh && existing && new Date(existing) > new Date()) {
                 console.log(`Earnings for ${ticker}: already set to ${existing} (skipping fetch)`);
                 updateEarningsHintDisplay(ticker);
                 return;
             }
             
-            // Check API cache (24hr TTL — earnings dates don't change often)
+            // Check API cache (24hr TTL — earnings dates don't change often).
+            // forceRefresh bypasses the cache — used when a date was deleted or on
+            // Refresh All, so a stale cached "null" can't block repopulation.
             const cacheKey = `earnings_${ticker}`;
-            const cached = getCached(cacheKey, 1440);
-            if (cached) {
-                console.log(`Earnings for ${ticker}: ${cached.reportDate} (cached)`);
-                if (cached.reportDate) {
-                    earningsDates[ticker] = cached.reportDate;
-                    saveEarningsDates();
-                    updateEarningsHintDisplay(ticker);
+            if (!forceRefresh) {
+                const cached = getCached(cacheKey, 1440);
+                if (cached) {
+                    console.log(`Earnings for ${ticker}: ${cached.reportDate} (cached)`);
+                    if (cached.reportDate) {
+                        earningsDates[ticker] = cached.reportDate;
+                        saveEarningsDates();
+                        updateEarningsHintDisplay(ticker);
+                    }
+                    return;
                 }
-                return;
             }
             
             try {
