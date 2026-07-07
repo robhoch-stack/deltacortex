@@ -2151,7 +2151,7 @@
                             <div class="brand-icon" style="width: 48px; height: 48px; font-size: 2em;">X</div>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.10 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.11 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2160,6 +2160,18 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.11 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.11</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(245,158,11,0.12); color: var(--warning-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> Monthly Yield now populates on load (was blank until Performance tab opened)<br>
+                                    <span style="background: rgba(245,158,11,0.12); color: var(--warning-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> Needs Action count now matches Today\'s Decisions triage \u2014 no longer flags normal underwater wheel shares as urgent
+                                </div>
+                            </div>
+
                             <!-- v7.10 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -2895,7 +2907,7 @@
     </div>
 
     <script>
-        const APP_VERSION = 'v7.10';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.11';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -8565,9 +8577,19 @@
                 return sum + (m ? m.pl : calculatePL(pos.position, pos.entryPrice, pos.currentPrice, pos.contracts || 1));
             }, 0);
             
+            // "Needs Action" = positions the engine actually flags for a decision,
+            // matching the Today's Decisions triage panel (urgency ≥ 48). This excludes
+            // wheel shares that are simply below basis (expected mid-cycle, not urgent) —
+            // they only count if an option against them triggers a real decision.
             const highPriorityCount = positions.filter(pos => {
+                if (pos.positionType === 'shares') return false;  // wheel shares aren't "action" just for being underwater
                 const m = pos._metrics;
-                return m && m.healthData && m.healthData.score < 40;
+                if (!m) return false;
+                if (typeof computeDecisionUrgency === 'function') {
+                    const urg = computeDecisionUrgency(pos, m);
+                    return urg && urg.score >= 48;
+                }
+                return m.healthData && m.healthData.score < 40;
             }).length;
 
             document.getElementById('totalPositions').innerHTML = strategyFilter === 'all' 
@@ -10715,6 +10737,8 @@
         renderEarningsManager();
         renderSectorAssignments();
         updatePortfolioRiskDashboard();
+        renderClosedPositions();
+        updatePerformanceStats();  // populate dashboard Monthly Yield card on load, not just when Performance tab opens
 
         // ── Delegated event listener for positions table ──
         document.getElementById('positionsBody').addEventListener('click', function(e) {
