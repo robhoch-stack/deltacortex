@@ -2151,7 +2151,7 @@
                             <div class="brand-icon" style="width: 48px; height: 48px; font-size: 2em;">X</div>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.11 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.12 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2160,6 +2160,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.12 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.12</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(245,158,11,0.12); color: var(--warning-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> CSP &amp; CC scanners now sample 30 / 37 / 45 DTE (was only 30 / 45) \u2014 catches the middle expiration, usually the monthly with the deepest liquidity
+                                </div>
+                            </div>
+
                             <!-- v7.11 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -2907,7 +2918,7 @@
     </div>
 
     <script>
-        const APP_VERSION = 'v7.11';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.12';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -3955,11 +3966,17 @@
                 const atr = atrData ? atrData.atr : null;
                 if (!stockPrice) { statusDiv.innerHTML = '<span style="color: var(--danger-color);">❌ Could not fetch stock price.</span>'; return; }
                 
-                const t30 = findTargetExpiration(expirations, 30);
-                const t45 = findTargetExpiration(expirations, 45);
-                const targets = [t30];
-                if (t45 && (!t30 || t45.date !== t30.date)) targets.push(t45);
-                if (!targets[0]) { statusDiv.innerHTML = '<span style="color: var(--danger-color);">❌ No suitable expiration 14+ days out.</span>'; return; }
+                // Target 30 / 37 / 45 DTE. The middle target catches expirations that fall
+                // between 30 and 45 — often the monthly (3rd Friday), which usually has the
+                // deepest liquidity. Deduplicated so we never fetch the same expiry twice.
+                const targets = [];
+                const seenDates = new Set();
+                [30, 37, 45].forEach(d => {
+                    const t = findTargetExpiration(expirations, d);
+                    if (t && !seenDates.has(t.date)) { seenDates.add(t.date); targets.push(t); }
+                });
+                if (targets.length === 0) { statusDiv.innerHTML = '<span style="color: var(--danger-color);">❌ No suitable expiration 14+ days out.</span>'; return; }
+                targets.sort((a, b) => a.dte - b.dte);
                 
                 statusDiv.innerHTML = `<span style="color: var(--signal-teal);">⏳ Scanning ${ticker} puts at ${targets.length} expiration(s)...</span>`;
                 
@@ -4114,11 +4131,17 @@
                 const atr = atrData ? atrData.atr : null;
                 
                 // Target ~30 and ~45 DTE
-                const t30 = findTargetExpiration(expirations, 30);
-                const t45 = findTargetExpiration(expirations, 45);
-                const targets = [t30];
-                if (t45 && (!t30 || t45.date !== t30.date)) targets.push(t45);
-                if (!targets[0]) { statusDiv.innerHTML = '<span style="color: var(--danger-color);">❌ No suitable expiration 14+ days out.</span>'; return; }
+                // Target 30 / 37 / 45 DTE. The middle target catches expirations that fall
+                // between 30 and 45 — often the monthly (3rd Friday), which usually has the
+                // deepest liquidity. Deduplicated so we never fetch the same expiry twice.
+                const targets = [];
+                const seenDates = new Set();
+                [30, 37, 45].forEach(d => {
+                    const t = findTargetExpiration(expirations, d);
+                    if (t && !seenDates.has(t.date)) { seenDates.add(t.date); targets.push(t); }
+                });
+                if (targets.length === 0) { statusDiv.innerHTML = '<span style="color: var(--danger-color);">❌ No suitable expiration 14+ days out.</span>'; return; }
+                targets.sort((a, b) => a.dte - b.dte);
                 
                 statusDiv.innerHTML = `<span style="color: var(--signal-teal);">⏳ Scanning ${ticker} calls at ${targets.length} expiration(s)...</span>`;
                 
