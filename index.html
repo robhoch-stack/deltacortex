@@ -2151,7 +2151,7 @@
                             <div class="brand-icon" style="width: 48px; height: 48px; font-size: 2em;">X</div>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.12 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.13 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2160,6 +2160,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.13 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.13</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> \ud83d\udcc9 Wheel Recovery Calculator on shares cards \u2014 projects months to close the basis\u2194stock gap from assumed CC premium + optional stock drift, month-by-month table, auto-seeded from prior CC history
+                                </div>
+                            </div>
+
                             <!-- v7.12 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -2771,6 +2782,41 @@
     </div>
 
     <!-- Roll Candidates Modal -->
+    <div id="recoveryCalcModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="recoveryCalcTitle">
+        <div class="modal-content" style="max-width: 640px;">
+            <span class="close" onclick="closeRecoveryCalc()" aria-label="Close dialog" role="button" tabindex="0">&times;</span>
+            <h2 id="recoveryCalcTitle">📉 Wheel Recovery Calculator</h2>
+            <p style="margin-bottom: 15px; color: var(--text-secondary);">Projects how long CC premium alone would take to grind your basis down to today's stock price — a "patience timeline," not a stock forecast.</p>
+            
+            <div id="recoveryCalcSummary" style="padding: 12px 14px; background: var(--dark-surface); border-radius: 8px; margin-bottom: 16px; font-size: 0.9em;"></div>
+            
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-size: 0.8em; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Assumed CC premium / month</label>
+                    <input type="number" id="recoveryMonthlyPremium" step="0.01" style="padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--dark-surface); color: var(--text-primary); font-size: 1em; width: 160px;" oninput="renderRecoveryProjection()">
+                    <div style="font-size: 0.72em; color: var(--text-muted); margin-top: 3px;">per share, e.g. $1.50</div>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.8em; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Assumed stock drift / month</label>
+                    <select id="recoveryStockDrift" style="padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--dark-surface); color: var(--text-primary); font-size: 1em;" onchange="renderRecoveryProjection()">
+                        <option value="0">Flat (0%)</option>
+                        <option value="0.5">+0.5%/mo (mild recovery)</option>
+                        <option value="1">+1%/mo (steady recovery)</option>
+                        <option value="2">+2%/mo (strong recovery)</option>
+                        <option value="-0.5">−0.5%/mo (mild decline)</option>
+                        <option value="-1">−1%/mo (steady decline)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="recoveryCalcProjection"></div>
+            
+            <div style="margin-top: 14px; padding: 12px 14px; background: rgba(42,166,161,0.08); border-left: 3px solid var(--signal-teal); border-radius: 6px; font-size: 0.82em; color: var(--text-secondary); line-height: 1.6;">
+                This is a planning estimate, not a prediction — actual CC premium varies with IV and strike choice, and stock price is unknowable. Use it to compare "is this a months-long recovery or a years-long one," not as a guarantee. Re-run after each CC closes with your actual collected premium for a more accurate read.
+            </div>
+        </div>
+    </div>
+
     <div id="cspScannerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="cspScanTitle">
         <div class="modal-content" style="max-width: 1050px;">
             <span class="close" onclick="closeCSPScannerModal()" aria-label="Close dialog" role="button" tabindex="0">&times;</span>
@@ -2918,7 +2964,7 @@
     </div>
 
     <script>
-        const APP_VERSION = 'v7.12';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.13';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -5987,6 +6033,147 @@
             alert(`🎡 Wheel complete!\n\n${pos.ticker} total: ${formatCurrency(wheelPL)}\n\nArchived to Performance tab.`);
         }
         
+        // ═══════════════════════════════════════════════════════════════
+        // WHEEL RECOVERY CALCULATOR
+        // Projects months to close the basis↔stock-price gap using assumed
+        // CC premium + optional stock drift. Planning tool, not a forecast.
+        // ═══════════════════════════════════════════════════════════════
+        let recoveryCalcIndex = null;
+        
+        function openRecoveryCalc(index) {
+            const pos = positions[index];
+            if (!pos || pos.positionType !== 'shares') return;
+            recoveryCalcIndex = index;
+            
+            const modal = document.getElementById('recoveryCalcModal');
+            let overlay = document.getElementById('recoveryCalcOverlay');
+            if (overlay) overlay.remove();
+            overlay = document.createElement('div');
+            overlay.id = 'recoveryCalcOverlay';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;background:rgba(0,0,0,0.75);display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;';
+            overlay.onclick = function(e) { if (e.target === overlay) closeRecoveryCalc(); };
+            modal.style.display = 'block';
+            modal.style.position = 'static';
+            modal.style.background = 'none';
+            modal.style.width = '100%';
+            modal.style.maxWidth = '640px';
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            
+            // Seed the premium input with the average of prior CC legs, if any, else a sane default
+            const ccHistory = Array.isArray(pos.ccHistory) ? pos.ccHistory : [];
+            let seedPremium = 1.50;
+            if (ccHistory.length > 0) {
+                const avgTotal = ccHistory.reduce((s, l) => s + (l.realizedPL || 0), 0) / ccHistory.length;
+                const qty = pos.quantity || 100;
+                seedPremium = Math.max(0.10, avgTotal / qty);
+            }
+            document.getElementById('recoveryMonthlyPremium').value = seedPremium.toFixed(2);
+            document.getElementById('recoveryStockDrift').value = '0';
+            
+            renderRecoveryProjection();
+        }
+        
+        function closeRecoveryCalc() {
+            const overlay = document.getElementById('recoveryCalcOverlay');
+            const modal = document.getElementById('recoveryCalcModal');
+            if (overlay && modal) { overlay.removeChild(modal); document.body.appendChild(modal); modal.style.display = 'none'; overlay.remove(); }
+            else if (modal) modal.style.display = 'none';
+            recoveryCalcIndex = null;
+        }
+        
+        function renderRecoveryProjection() {
+            if (recoveryCalcIndex === null) return;
+            const pos = positions[recoveryCalcIndex];
+            if (!pos) return;
+            
+            const qty = pos.quantity || 100;
+            const basis = pos.costBasis || pos.entryPrice;
+            const stockPrice = pos.underlyingPrice || basis;
+            const monthlyPremium = parseFloat(document.getElementById('recoveryMonthlyPremium').value) || 0;
+            const driftPct = parseFloat(document.getElementById('recoveryStockDrift').value) || 0;
+            
+            const gap = basis - stockPrice;
+            const gapPct = basis > 0 ? (gap / basis) * 100 : 0;
+            
+            const summaryEl = document.getElementById('recoveryCalcSummary');
+            summaryEl.innerHTML = `
+                <strong>${escapeHTML(pos.ticker)}</strong> · ${qty} shares · basis <b>$${basis.toFixed(2)}</b> · stock <b>$${stockPrice.toFixed(2)}</b><br>
+                <span style="color: ${gap > 0 ? 'var(--danger-color)' : 'var(--success-color)'}; font-weight: 700;">
+                    ${gap > 0 ? `Gap: $${gap.toFixed(2)}/sh (${gapPct.toFixed(1)}% underwater)` : `Already at or above basis — no gap to close`}
+                </span>`;
+            
+            const projEl = document.getElementById('recoveryCalcProjection');
+            
+            if (gap <= 0) {
+                projEl.innerHTML = `<div style="padding: 16px; text-align: center; color: var(--success-color); font-weight: 700;">✅ Stock is already at or above your cost basis. Any CC written at or above basis locks in a win if called.</div>`;
+                return;
+            }
+            
+            if (monthlyPremium <= 0) {
+                projEl.innerHTML = `<div style="padding: 16px; text-align: center; color: var(--text-muted);">Enter an assumed monthly premium to see a projection.</div>`;
+                return;
+            }
+            
+            // Month-by-month simulation: basis decreases by premium collected each month;
+            // stock price drifts by the assumed rate. Gap closes when stock >= basis.
+            let simBasis = basis;
+            let simStock = stockPrice;
+            const driftMultiplier = 1 + (driftPct / 100);
+            const rows = [];
+            let monthsToClose = null;
+            const maxMonths = 60;
+            
+            for (let m = 1; m <= maxMonths; m++) {
+                simBasis -= monthlyPremium;
+                simStock *= driftMultiplier;
+                const remainingGap = simBasis - simStock;
+                if (m <= 12 || m % 3 === 0 || (monthsToClose === null && remainingGap <= 0)) {
+                    rows.push({ m, basis: simBasis, stock: simStock, gap: remainingGap });
+                }
+                if (monthsToClose === null && remainingGap <= 0) {
+                    monthsToClose = m;
+                    break;
+                }
+            }
+            
+            let headline;
+            if (monthsToClose !== null) {
+                const years = (monthsToClose / 12).toFixed(1);
+                const color = monthsToClose <= 6 ? 'var(--success-color)' : monthsToClose <= 12 ? 'var(--signal-teal)' : monthsToClose <= 24 ? 'var(--warning-color)' : 'var(--danger-color)';
+                headline = `<div style="text-align: center; padding: 14px; background: var(--dark-surface); border-radius: 8px; margin-bottom: 14px;">
+                    <div style="font-size: 1.6rem; font-weight: 800; color: ${color};">~${monthsToClose} months</div>
+                    <div style="font-size: 0.85em; color: var(--text-muted);">to close the gap at this pace (~${years} years)</div>
+                </div>`;
+            } else {
+                headline = `<div style="text-align: center; padding: 14px; background: var(--dark-surface); border-radius: 8px; margin-bottom: 14px;">
+                    <div style="font-size: 1.3rem; font-weight: 800; color: var(--danger-color);">Beyond ${maxMonths} months</div>
+                    <div style="font-size: 0.85em; color: var(--text-muted);">at this premium + drift, the gap doesn't close in a reasonable timeframe — reconsider strike selection or whether to hold this position</div>
+                </div>`;
+            }
+            
+            const tableRows = rows.map(r => `
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 6px 8px;">${r.m}</td>
+                    <td style="padding: 6px 8px;">$${r.basis.toFixed(2)}</td>
+                    <td style="padding: 6px 8px;">$${r.stock.toFixed(2)}</td>
+                    <td style="padding: 6px 8px; color: ${r.gap <= 0 ? 'var(--success-color)' : 'var(--text-secondary)'}; font-weight: ${r.gap <= 0 ? '700' : '400'};">${r.gap <= 0 ? '✅ Closed' : '$' + r.gap.toFixed(2)}</td>
+                </tr>`).join('');
+            
+            projEl.innerHTML = headline + `
+                <div style="overflow-x: auto; max-height: 260px; overflow-y: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
+                        <thead style="position: sticky; top: 0; background: var(--card-bg);">
+                            <tr style="border-bottom: 2px solid var(--border-color); text-align: left; color: var(--text-muted); font-size: 0.78em; text-transform: uppercase;">
+                                <th style="padding: 6px 8px;">Month</th><th style="padding: 6px 8px;">Basis</th><th style="padding: 6px 8px;">Stock (drift)</th><th style="padding: 6px 8px;">Gap</th>
+                            </tr>
+                        </thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                </div>`;
+        }
+
+
         function editCostBasis(index) {
             const pos = positions[index];
             if (!pos) return;
@@ -8562,6 +8749,7 @@
                         <button class="btn-pa bpa-cc" data-action="writeCC">✍ Write CC</button>
                         <button class="btn-pa" data-action="scanCCs" style="background: var(--clarity-blue); color: white;" title="Scan for the best covered call to write">📞 Scan CCs</button>
                         <button class="btn-pa bpa-hold" data-action="closeShares" title="Shares called away or sold — complete wheel cycle">📤 Close</button>
+                        <button class="btn-pa bpa-hold" data-action="recoveryCalc" style="background: var(--dark-surface); color: var(--signal-teal); border: 1px solid rgba(42,166,161,0.3);" title="Project months to close the basis gap via CC premium">📉 Recovery Calc</button>
                         <button class="btn-pa bpa-hold" data-action="refresh" style="width: 40px;" title="Refresh price">🔄</button>
                         <button class="btn-pa bpa-hold" data-action="delete" style="width: 40px; color: var(--danger-color);" title="Delete">✕</button>
                     </div>
@@ -10831,6 +11019,7 @@
                 case 'scanCCs': scanCoveredCalls(index); break;
                 case 'editBasis': editCostBasis(index); break;
                 case 'closeShares': closeShares(index); break;
+                case 'recoveryCalc': openRecoveryCalc(index); break;
                 case 'delete': deletePosition(index); break;
             }
         });
