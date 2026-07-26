@@ -187,40 +187,9 @@
             font-size: clamp(1.2rem, 2.5vw, 1.8rem);
         }
 
-        .brand-icon {
-            width: 40px;
-            height: 40px;
-            background: transparent;
-            border-radius: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Manrope', sans-serif;
-            font-weight: 900;
-            font-size: 2em;
-            color: var(--accent-gold);
-            box-shadow: none;
-            border: none;
-            position: relative;
-            overflow: visible;
-            letter-spacing: -0.1em;
-        }
-
-        .brand-icon::before {
-            content: '';
-            display: none;
-        }
-
-        /* X logo styling to match the uploaded design */
-        .brand-icon::after {
-            content: 'X';
-            background: linear-gradient(135deg, #d4a037 0%, #f4c96d 50%, #d4a037 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-weight: 900;
-            filter: drop-shadow(0 2px 8px rgba(212, 160, 55, 0.3));
-        }
+        /* .brand-icon removed — was leftover placeholder styling (generated a duplicate
+           "X" via ::after) from an earlier design pass. Replaced with the real
+           DeltaCortex mark inline in the About section. */
 
         .brand-text h1 {
             font-family: 'Manrope', sans-serif;
@@ -2226,10 +2195,20 @@
                     <!-- Version History & Changelog -->
                     <div style="background: var(--card-bg); border-radius: 12px; padding: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
                         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-                            <div class="brand-icon" style="width: 48px; height: 48px; font-size: 2em;">X</div>
+                            <svg width="40" height="32" viewBox="0 0 136 110" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <defs>
+                                    <linearGradient id="aboutPulse" x1="0" y1="0" x2="1" y2="0">
+                                        <stop offset="0" stop-color="#F015E0"/>
+                                        <stop offset="0.55" stop-color="#22E5EE"/>
+                                        <stop offset="1" stop-color="#EFA21B"/>
+                                    </linearGradient>
+                                </defs>
+                                <path d="M68 10 L120 98 L16 98 Z" fill="none" stroke="#4a5d7e" stroke-width="14" stroke-linejoin="round"/>
+                                <path d="M2 78 L44 78 L58 46 L72 78 L80 78 L89 60 L98 78 L134 78" fill="none" stroke="url(#aboutPulse)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.18 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.19 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2238,6 +2217,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.19 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.19</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(245,158,11,0.12); color: var(--warning-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> About section showed a placeholder \u201cXX\u201d (literal X + CSS-injected duplicate) instead of the DeltaCortex logo \u2014 this was fixed in the customer build earlier but never ported back here. Now shows the real \u0394 + neon pulse mark.
+                                </div>
+                            </div>
+
                             <!-- v7.18 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3179,7 +3169,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.18';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.19';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
