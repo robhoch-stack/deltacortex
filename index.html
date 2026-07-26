@@ -2208,7 +2208,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.19 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.20 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2217,6 +2217,18 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.20 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.20</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(59,130,246,0.15); color: #3b82f6; padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">IMPROVED</span> Renamed all internal \u201coptionsXQ_\u201d localStorage keys to \u201cdeltaCortex_\u201d, with a one-time non-destructive migration that copies existing data over \u2014 nothing is lost or reset<br>
+                                    <span style="background: rgba(245,158,11,0.12); color: var(--warning-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> Discovered along the way: Cloud Sync\u2019s key list referenced three key names (portfolioConfig, earningsDates, sectorAssignments) that didn\u2019t match anything actually stored \u2014 those fields were silently never syncing across devices. Fixed to the correct keys, and added ex-dividend dates to sync too (previously missing entirely).
+                                </div>
+                            </div>
+
                             <!-- v7.19 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3169,7 +3181,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.19';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.20';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -3226,7 +3238,7 @@
         let columnVisibility = {};
         
         function loadColumnVisibility() {
-            const saved = localStorage.getItem('optionsXQ_columnVisibility');
+            const saved = localStorage.getItem('deltaCortex_columnVisibility');
             if (saved) {
                 columnVisibility = JSON.parse(saved);
             } else {
@@ -3236,7 +3248,7 @@
         }
         
         function saveColumnVisibility() {
-            localStorage.setItem('optionsXQ_columnVisibility', JSON.stringify(columnVisibility));
+            localStorage.setItem('deltaCortex_columnVisibility', JSON.stringify(columnVisibility));
         }
         
         function applyColumnVisibility() {
@@ -3380,7 +3392,7 @@
         }
         
         function getApiCallCount() {
-            const key = 'optionsXQ_apiCallCount';
+            const key = 'deltaCortex_apiCallCount';
             const saved = localStorage.getItem(key);
             if (saved) {
                 const parsed = JSON.parse(saved);
@@ -3395,7 +3407,7 @@
         function incrementApiCalls(n) {
             const data = getApiCallCount();
             data.count += n;
-            localStorage.setItem('optionsXQ_apiCallCount', JSON.stringify(data));
+            localStorage.setItem('deltaCortex_apiCallCount', JSON.stringify(data));
             return data.count;
         }
         
@@ -3417,7 +3429,7 @@
                 if (data.limit && data.remaining !== null) {
                     data.count = data.limit - data.remaining;
                 }
-                localStorage.setItem('optionsXQ_apiCallCount', JSON.stringify(data));
+                localStorage.setItem('deltaCortex_apiCallCount', JSON.stringify(data));
             }
         }
 
@@ -3695,14 +3707,14 @@
         // ═══════════════════════════════════════════════════════════════
         function exportAllData() {
             const data = {
-                version: 'optionsXQ_v2',
+                version: 'deltaCortex_v2',
                 exportDate: new Date().toISOString(),
                 positions: JSON.parse(localStorage.getItem('optionsPositions') || '[]'),
                 closedPositions: JSON.parse(localStorage.getItem('closedPositions') || '[]'),
-                earningsDates: JSON.parse(localStorage.getItem('optionsXQ_earningsDates') || '{}'),
-                portfolioConfig: JSON.parse(localStorage.getItem('optionsXQ_portfolioConfig') || '{}'),
-                sectorMap: JSON.parse(localStorage.getItem('optionsXQ_sectorMap') || '{}'),
-                marketRegime: JSON.parse(localStorage.getItem('optionsXQ_marketRegime') || '{}'),
+                earningsDates: JSON.parse(localStorage.getItem('deltaCortex_earningsDates') || '{}'),
+                portfolioConfig: JSON.parse(localStorage.getItem('deltaCortex_portfolioConfig') || '{}'),
+                sectorMap: JSON.parse(localStorage.getItem('deltaCortex_sectorMap') || '{}'),
+                marketRegime: JSON.parse(localStorage.getItem('deltaCortex_marketRegime') || '{}'),
                 apiKey: localStorage.getItem('marketDataApiKey') || ''
             };
             
@@ -3745,19 +3757,19 @@
                         summary.push(`${data.closedPositions.length} closed trades`);
                     }
                     if (data.earningsDates && typeof data.earningsDates === 'object') {
-                        localStorage.setItem('optionsXQ_earningsDates', JSON.stringify(data.earningsDates));
+                        localStorage.setItem('deltaCortex_earningsDates', JSON.stringify(data.earningsDates));
                         summary.push(`${Object.keys(data.earningsDates).length} earnings dates`);
                     }
                     if (data.portfolioConfig && typeof data.portfolioConfig === 'object' && Object.keys(data.portfolioConfig).length > 0) {
-                        localStorage.setItem('optionsXQ_portfolioConfig', JSON.stringify(data.portfolioConfig));
+                        localStorage.setItem('deltaCortex_portfolioConfig', JSON.stringify(data.portfolioConfig));
                         summary.push('portfolio config');
                     }
                     if (data.sectorMap && typeof data.sectorMap === 'object' && Object.keys(data.sectorMap).length > 0) {
-                        localStorage.setItem('optionsXQ_sectorMap', JSON.stringify(data.sectorMap));
+                        localStorage.setItem('deltaCortex_sectorMap', JSON.stringify(data.sectorMap));
                         summary.push('sector mappings');
                     }
                     if (data.marketRegime && typeof data.marketRegime === 'object') {
-                        localStorage.setItem('optionsXQ_marketRegime', JSON.stringify(data.marketRegime));
+                        localStorage.setItem('deltaCortex_marketRegime', JSON.stringify(data.marketRegime));
                     }
                     if (data.apiKey) {
                         localStorage.setItem('marketDataApiKey', data.apiKey);
@@ -5077,7 +5089,7 @@
             
             button.disabled = false;
             button.innerHTML = originalHTML;
-            localStorage.setItem('optionsXQ_lastRefresh', new Date().toISOString());
+            localStorage.setItem('deltaCortex_lastRefresh', new Date().toISOString());
             updateFreshnessIndicator();
 
             if (positions.length > 0) {
@@ -5233,9 +5245,9 @@
         };
 
         function loadPortfolioConfig() {
-            const saved = localStorage.getItem('optionsXQ_portfolioConfig');
+            const saved = localStorage.getItem('deltaCortex_portfolioConfig');
             if (saved) portfolioConfig = JSON.parse(saved);
-            const savedSectors = localStorage.getItem('optionsXQ_sectorMap');
+            const savedSectors = localStorage.getItem('deltaCortex_sectorMap');
             if (savedSectors) sectorMap = JSON.parse(savedSectors);
             
             // Apply defaults for any missing tickers
@@ -5261,7 +5273,7 @@
             
             // Load manual VIX override
             const vixEl = document.getElementById('manualVIX');
-            const savedVix = localStorage.getItem('optionsXQ_manualVIX');
+            const savedVix = localStorage.getItem('deltaCortex_manualVIX');
             if (vixEl && savedVix) vixEl.value = savedVix;
         }
 
@@ -5273,15 +5285,15 @@
             portfolioConfig.fdrxxRate = parseFloat(document.getElementById('fdrxxRate').value) || 3.98;
             portfolioConfig.hurdleMultiple = parseFloat(document.getElementById('hurdleMultiple').value) || 2;
             portfolioConfig.optionMark = document.getElementById('optionMark').value || 'mid';
-            localStorage.setItem('optionsXQ_portfolioConfig', JSON.stringify(portfolioConfig));
-            localStorage.setItem('optionsXQ_sectorMap', JSON.stringify(sectorMap));
+            localStorage.setItem('deltaCortex_portfolioConfig', JSON.stringify(portfolioConfig));
+            localStorage.setItem('deltaCortex_sectorMap', JSON.stringify(sectorMap));
             
             // Save manual VIX override (empty string clears it)
             const manualVix = document.getElementById('manualVIX').value.trim();
             if (manualVix && parseFloat(manualVix) > 0) {
-                localStorage.setItem('optionsXQ_manualVIX', manualVix);
+                localStorage.setItem('deltaCortex_manualVIX', manualVix);
             } else {
-                localStorage.removeItem('optionsXQ_manualVIX');
+                localStorage.removeItem('deltaCortex_manualVIX');
             }
             
             updatePortfolioRiskDashboard();
@@ -5298,7 +5310,7 @@
             const sector = document.getElementById('sectorSelect').value;
             if (!ticker) return;
             sectorMap[ticker] = sector;
-            localStorage.setItem('optionsXQ_sectorMap', JSON.stringify(sectorMap));
+            localStorage.setItem('deltaCortex_sectorMap', JSON.stringify(sectorMap));
             document.getElementById('sectorTicker').value = '';
             renderSectorAssignments();
             updatePortfolioRiskDashboard();
@@ -5306,7 +5318,7 @@
 
         function removeSectorMapping(ticker) {
             delete sectorMap[ticker];
-            localStorage.setItem('optionsXQ_sectorMap', JSON.stringify(sectorMap));
+            localStorage.setItem('deltaCortex_sectorMap', JSON.stringify(sectorMap));
             renderSectorAssignments();
             updatePortfolioRiskDashboard();
         }
@@ -5553,7 +5565,7 @@
             if (cached) {
                 console.log('Market Regime: Using cached data (updated', Math.round((Date.now() - apiCache.get('marketRegime').timestamp) / 60000), 'min ago)');
                 Object.assign(marketRegime, cached);
-                localStorage.setItem('optionsXQ_marketRegime', JSON.stringify(marketRegime));
+                localStorage.setItem('deltaCortex_marketRegime', JSON.stringify(marketRegime));
                 updateMarketRegimeDisplay();
                 return;
             }
@@ -5568,7 +5580,7 @@
                 let vixFetched = false;
                 
                 // Check for manual VIX override
-                const manualVix = parseFloat(localStorage.getItem('optionsXQ_manualVIX') || '');
+                const manualVix = parseFloat(localStorage.getItem('deltaCortex_manualVIX') || '');
                 if (manualVix > 0) {
                     marketRegime.vix = manualVix;
                     marketRegime.vixSource = 'manual';
@@ -5667,7 +5679,7 @@
                 marketRegime.lastUpdated = new Date().toISOString();
                 console.log('Market Regime: Determined regime =', marketRegime.regime);
                 
-                localStorage.setItem('optionsXQ_marketRegime', JSON.stringify(marketRegime));
+                localStorage.setItem('deltaCortex_marketRegime', JSON.stringify(marketRegime));
                 setCache('marketRegime', {...marketRegime});
                 
                 updateMarketRegimeDisplay();
@@ -5828,7 +5840,7 @@
         }
 
         function loadMarketRegime() {
-            const saved = localStorage.getItem('optionsXQ_marketRegime');
+            const saved = localStorage.getItem('deltaCortex_marketRegime');
             if (saved) {
                 marketRegime = JSON.parse(saved);
                 updateMarketRegimeDisplay();
@@ -5850,12 +5862,12 @@
         let dividendDates = {}; // { TICKER: { date: 'YYYY-MM-DD', amount: 0.24 } }
 
         function loadDividendDates() {
-            const saved = localStorage.getItem('optionsXQ_dividendDates');
+            const saved = localStorage.getItem('deltaCortex_dividendDates');
             if (saved) dividendDates = JSON.parse(saved);
         }
 
         function saveDividendDates() {
-            localStorage.setItem('optionsXQ_dividendDates', JSON.stringify(dividendDates));
+            localStorage.setItem('deltaCortex_dividendDates', JSON.stringify(dividendDates));
         }
 
         function setDividendDate(ticker, dateStr, amount) {
@@ -5942,12 +5954,12 @@
         let earningsDates = {};
 
         function loadEarningsDates() {
-            const saved = localStorage.getItem('optionsXQ_earningsDates');
+            const saved = localStorage.getItem('deltaCortex_earningsDates');
             if (saved) earningsDates = JSON.parse(saved);
         }
 
         function saveEarningsDates() {
-            localStorage.setItem('optionsXQ_earningsDates', JSON.stringify(earningsDates));
+            localStorage.setItem('deltaCortex_earningsDates', JSON.stringify(earningsDates));
         }
 
         function setEarningsDate(ticker, dateStr) {
@@ -8622,7 +8634,7 @@
         function updateFreshnessIndicator() {
             const el = document.getElementById('freshnessIndicator');
             if (!el) return;
-            const last = localStorage.getItem('optionsXQ_lastRefresh');
+            const last = localStorage.getItem('deltaCortex_lastRefresh');
             if (!last) { el.textContent = '● never refreshed'; el.style.color = 'var(--text-muted)'; el.title = 'Click Refresh All to pull live data'; return; }
             
             const then = new Date(last);
@@ -11004,7 +11016,12 @@
         // ═══════════════════════════════════════════════════════════════
         // BACKUP & CLOUD SYNC
         // ═══════════════════════════════════════════════════════════════
-        const SYNC_KEYS = ['optionsPositions','closedPositions','portfolioConfig','earningsDates','sectorAssignments','optionsXQ_marketRegime','optionsXQ_manualVIX','optionsXQ_apiCallCount','optionsXQ_columnVisibility'];
+        // NOTE: 'portfolioConfig', 'earningsDates', and 'sectorAssignments' below were
+        // a pre-existing mismatch — no data was ever stored under those bare names
+        // (the real keys are deltaCortex_portfolioConfig / deltaCortex_earningsDates /
+        // deltaCortex_sectorMap), so those three fields were silently never syncing
+        // across devices. Fixed here to point at the actual keys.
+        const SYNC_KEYS = ['optionsPositions','closedPositions','deltaCortex_portfolioConfig','deltaCortex_earningsDates','deltaCortex_sectorMap','deltaCortex_dividendDates','deltaCortex_marketRegime','deltaCortex_manualVIX','deltaCortex_apiCallCount','deltaCortex_columnVisibility'];
         
         function serializeAllData() {
             const data = {};
@@ -11016,7 +11033,7 @@
                 app: 'DeltaCortex',
                 version: 1,
                 exportedAt: new Date().toISOString(),
-                lastModified: localStorage.getItem('optionsXQ_lastModified') || new Date().toISOString(),
+                lastModified: localStorage.getItem('deltaCortex_lastModified') || new Date().toISOString(),
                 data
             };
         }
@@ -11026,11 +11043,11 @@
                 throw new Error('Not a valid DeltaCortex backup.');
             }
             Object.entries(payload.data).forEach(([k, v]) => localStorage.setItem(k, v));
-            if (payload.lastModified) localStorage.setItem('optionsXQ_lastModified', payload.lastModified);
+            if (payload.lastModified) localStorage.setItem('deltaCortex_lastModified', payload.lastModified);
         }
         
         function touchLastModified() {
-            localStorage.setItem('optionsXQ_lastModified', new Date().toISOString());
+            localStorage.setItem('deltaCortex_lastModified', new Date().toISOString());
             scheduleAutoPush();
         }
         
@@ -11069,9 +11086,9 @@
         // ── Cloud sync via GitHub Gist ──
         function getSyncConfig() {
             return {
-                token: localStorage.getItem('optionsXQ_gistToken') || '',
-                gistId: localStorage.getItem('optionsXQ_gistId') || '',
-                autoSync: localStorage.getItem('optionsXQ_autoSync') === 'true'
+                token: localStorage.getItem('deltaCortex_gistToken') || '',
+                gistId: localStorage.getItem('deltaCortex_gistId') || '',
+                autoSync: localStorage.getItem('deltaCortex_autoSync') === 'true'
             };
         }
         
@@ -11079,9 +11096,9 @@
             const token = document.getElementById('gistToken').value.trim();
             const gistId = document.getElementById('gistId').value.trim();
             const auto = document.getElementById('autoSyncToggle').checked;
-            if (token) localStorage.setItem('optionsXQ_gistToken', token);
-            localStorage.setItem('optionsXQ_gistId', gistId);
-            localStorage.setItem('optionsXQ_autoSync', auto ? 'true' : 'false');
+            if (token) localStorage.setItem('deltaCortex_gistToken', token);
+            localStorage.setItem('deltaCortex_gistId', gistId);
+            localStorage.setItem('deltaCortex_autoSync', auto ? 'true' : 'false');
             setSyncStatus('Settings saved', 'var(--success-color)');
         }
         
@@ -11104,8 +11121,8 @@
         function updateSyncInfo() {
             const el = document.getElementById('syncLastInfo');
             if (!el) return;
-            const lastPush = localStorage.getItem('optionsXQ_lastPush');
-            const lastPull = localStorage.getItem('optionsXQ_lastPull');
+            const lastPush = localStorage.getItem('deltaCortex_lastPush');
+            const lastPull = localStorage.getItem('deltaCortex_lastPull');
             const parts = [];
             if (lastPush) parts.push(`Last push: ${new Date(lastPush).toLocaleString()}`);
             if (lastPull) parts.push(`Last pull: ${new Date(lastPull).toLocaleString()}`);
@@ -11138,11 +11155,11 @@
                 const json = await res.json();
                 
                 if (!cfg.gistId && json.id) {
-                    localStorage.setItem('optionsXQ_gistId', json.id);
+                    localStorage.setItem('deltaCortex_gistId', json.id);
                     const g = document.getElementById('gistId');
                     if (g) g.value = json.id;
                 }
-                localStorage.setItem('optionsXQ_lastPush', new Date().toISOString());
+                localStorage.setItem('deltaCortex_lastPush', new Date().toISOString());
                 setSyncStatus('✅ Pushed', 'var(--success-color)');
                 updateSyncInfo();
                 if (!silent && !cfg.gistId && json.id) alert('✅ Cloud sync created!\n\nGist ID: ' + json.id + '\n\nOn your other device: enter the same token and this Gist ID, then Pull from Cloud.');
@@ -11175,7 +11192,7 @@
                 const payload = JSON.parse(content);
                 
                 // Conflict check: warn if local is newer than cloud
-                const localMod = localStorage.getItem('optionsXQ_lastModified');
+                const localMod = localStorage.getItem('deltaCortex_lastModified');
                 if (!silent && localMod && payload.lastModified && new Date(localMod) > new Date(payload.lastModified)) {
                     if (!confirm('⚠️ Your LOCAL data is newer than the cloud copy.\n\nLocal: ' + new Date(localMod).toLocaleString() + '\nCloud: ' + new Date(payload.lastModified).toLocaleString() + '\n\nPull anyway and overwrite local?')) {
                         setSyncStatus('Pull cancelled', 'var(--text-muted)');
@@ -11184,7 +11201,7 @@
                 }
                 
                 restoreAllData(payload);
-                localStorage.setItem('optionsXQ_lastPull', new Date().toISOString());
+                localStorage.setItem('deltaCortex_lastPull', new Date().toISOString());
                 setSyncStatus('✅ Pulled', 'var(--success-color)');
                 if (silent) {
                     location.reload();
@@ -11226,11 +11243,11 @@
                     content = await raw.text();
                 }
                 const payload = JSON.parse(content);
-                const localMod = localStorage.getItem('optionsXQ_lastModified');
+                const localMod = localStorage.getItem('deltaCortex_lastModified');
                 if (payload.lastModified && (!localMod || new Date(payload.lastModified) > new Date(localMod))) {
                     if (confirm('☁️ Newer data found in cloud (from your other device).\n\nCloud: ' + new Date(payload.lastModified).toLocaleString() + '\nLocal: ' + (localMod ? new Date(localMod).toLocaleString() : 'never') + '\n\nPull it now?')) {
                         restoreAllData(payload);
-                        localStorage.setItem('optionsXQ_lastPull', new Date().toISOString());
+                        localStorage.setItem('deltaCortex_lastPull', new Date().toISOString());
                         location.reload();
                     }
                 }
@@ -11338,6 +11355,47 @@
                 savePositions();
             }
         }
+
+        // ═══════════════════════════════════════════════════════════════
+        // LEGACY KEY MIGRATION — one-time, non-destructive copy from the old
+        // "optionsXQ_" localStorage prefix (used before the DeltaCortex rebrand)
+        // to the new "deltaCortex_" prefix. Old keys are left in place, never
+        // deleted, so nothing is lost if this runs more than once or on a
+        // device that already has data under the new names. Must run before
+        // any load*() function reads from storage.
+        // ═══════════════════════════════════════════════════════════════
+        function migrateLegacyStorageKeys() {
+            const keyMap = {
+                'optionsXQ_apiCallCount': 'deltaCortex_apiCallCount',
+                'optionsXQ_autoSync': 'deltaCortex_autoSync',
+                'optionsXQ_columnVisibility': 'deltaCortex_columnVisibility',
+                'optionsXQ_dividendDates': 'deltaCortex_dividendDates',
+                'optionsXQ_earningsDates': 'deltaCortex_earningsDates',
+                'optionsXQ_gistId': 'deltaCortex_gistId',
+                'optionsXQ_gistToken': 'deltaCortex_gistToken',
+                'optionsXQ_lastModified': 'deltaCortex_lastModified',
+                'optionsXQ_lastPull': 'deltaCortex_lastPull',
+                'optionsXQ_lastPush': 'deltaCortex_lastPush',
+                'optionsXQ_lastRefresh': 'deltaCortex_lastRefresh',
+                'optionsXQ_manualVIX': 'deltaCortex_manualVIX',
+                'optionsXQ_marketRegime': 'deltaCortex_marketRegime',
+                'optionsXQ_portfolioConfig': 'deltaCortex_portfolioConfig',
+                'optionsXQ_sectorMap': 'deltaCortex_sectorMap',
+                'optionsXQ_entryDate_migration_v1': 'deltaCortex_entryDate_migration_v1',
+                'optionsXQ_entryDate_migration_v2': 'deltaCortex_entryDate_migration_v2',
+                'optionsXQ_entryIV_migration_v1': 'deltaCortex_entryIV_migration_v1',
+                'optionsXQ_earnings_seed_v1': 'deltaCortex_earnings_seed_v1'
+            };
+            try {
+                Object.entries(keyMap).forEach(([oldKey, newKey]) => {
+                    if (localStorage.getItem(newKey) === null) {
+                        const oldVal = localStorage.getItem(oldKey);
+                        if (oldVal !== null) localStorage.setItem(newKey, oldVal);
+                    }
+                });
+            } catch (e) { console.warn('Legacy key migration skipped:', e); }
+        }
+        migrateLegacyStorageKeys();
 
         loadApiKey();
         loadPortfolioConfig();
@@ -11471,7 +11529,7 @@
 
         // ── One-time migration: backfill entryDate for existing positions ──
         (function migrateEntryDates() {
-            const migrationKey = 'optionsXQ_entryDate_migration_v1';
+            const migrationKey = 'deltaCortex_entryDate_migration_v1';
             if (localStorage.getItem(migrationKey)) return; // Already migrated
             
             // Map: ticker → entryDate (for positions missing entryDate)
@@ -11514,7 +11572,7 @@
 
         // ── Migration v2: AMZN entry date ──
         (function migrateEntryDatesV2() {
-            const migrationKey = 'optionsXQ_entryDate_migration_v2';
+            const migrationKey = 'deltaCortex_entryDate_migration_v2';
             if (localStorage.getItem(migrationKey)) return;
             
             let changed = false;
@@ -11535,7 +11593,7 @@
 
         // ── Migration v3: Seed earnings dates for current tickers ──
         (function seedEarningsDates() {
-            const migrationKey = 'optionsXQ_earnings_seed_v1';
+            const migrationKey = 'deltaCortex_earnings_seed_v1';
             if (localStorage.getItem(migrationKey)) return;
             
             const seeds = {
@@ -11561,7 +11619,7 @@
 
         // ── Migration v4: Backfill entryIV for existing positions ──
         (function migrateEntryIV() {
-            const migrationKey = 'optionsXQ_entryIV_migration_v1';
+            const migrationKey = 'deltaCortex_entryIV_migration_v1';
             if (localStorage.getItem(migrationKey)) return;
             
             let changed = false;
