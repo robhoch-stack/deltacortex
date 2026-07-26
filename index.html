@@ -1086,29 +1086,29 @@
             background: rgba(255,255,255,0.1); color: var(--text-muted, #8a93a9);
             font-size: 0.66em; font-weight: 700; cursor: help; margin-left: 4px;
             position: relative; vertical-align: middle; line-height: 1;
-            flex-shrink: 0; user-select: none;
+            flex-shrink: 0; user-select: none; text-transform: none;
         }
         .info-tip:hover, .info-tip.tip-active {
             background: var(--signal-teal, #2aa6a1); color: #0a0e17;
         }
-        .info-tip .tip-bubble {
-            display: none; position: absolute; bottom: 135%; left: 50%; transform: translateX(-50%);
-            width: max-content; max-width: 230px; background: var(--dark-surface, #0d1220);
-            color: var(--text-primary, #eef1f7); border: 1px solid var(--border-color, #232c46);
-            border-radius: 8px; padding: 9px 11px; font-size: 0.76rem; line-height: 1.45;
-            font-weight: 400; z-index: 10000; box-shadow: 0 10px 28px rgba(0,0,0,0.45);
-            text-align: left; white-space: normal; letter-spacing: normal;
-        }
-        .info-tip .tip-bubble::after {
-            content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
-            border: 5px solid transparent; border-top-color: var(--border-color, #232c46);
-        }
-        .info-tip.tip-active .tip-bubble, .info-tip:hover .tip-bubble { display: block; }
-        /* Flip bubble below the icon when it's near the top of the viewport */
-        .info-tip.tip-flip .tip-bubble { bottom: auto; top: 135%; }
-        .info-tip.tip-flip .tip-bubble::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: var(--border-color, #232c46); }
+        /* The nested span only holds the explanation text for JS to read — it is
+           NEVER shown in place. Showing it in place is what caused it to be
+           clipped by an ancestor card's overflow:hidden (needed for rounded
+           corners). The actual visible tooltip is #globalTipBubble below,
+           appended straight to <body> and positioned by JS, so no ancestor's
+           overflow or stacking context can ever clip it again. */
+        .info-tip .tip-bubble { display: none !important; }
         @media (pointer: coarse) {
             .info-tip { width: 17px; height: 17px; font-size: 0.72em; }
+        }
+        #globalTipBubble {
+            display: none; position: fixed; max-width: 230px; width: max-content;
+            background: var(--dark-surface, #0d1220); color: var(--text-primary, #eef1f7);
+            border: 1px solid var(--border-color, #232c46); border-radius: 8px;
+            padding: 9px 11px; font-size: 0.76rem; line-height: 1.45; font-weight: 400;
+            z-index: 100000; box-shadow: 0 10px 28px rgba(0,0,0,0.45);
+            text-align: left; white-space: normal; letter-spacing: normal; text-transform: none;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -2187,7 +2187,7 @@
                             <div class="brand-icon" style="width: 48px; height: 48px; font-size: 2em;">X</div>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.14 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.16 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2196,6 +2196,28 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.16 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.16</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(245,158,11,0.12); color: var(--warning-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> Tooltips were getting clipped by card boundaries (overflow:hidden for rounded corners). Rebuilt as a single floating element attached to &lt;body&gt; and positioned by JS — immune to clipping from any card, with auto flip-below near the top of the viewport and horizontal clamping to stay on-screen.
+                                </div>
+                            </div>
+
+                            <!-- v7.15 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.15</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(245,158,11,0.12); color: var(--warning-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> Tooltip text was rendering ALL CAPS inside scanner table headers — inherited text-transform:uppercase from the header row. Bubble text now always resets to normal case.
+                                </div>
+                            </div>
+
                             <!-- v7.14 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3021,27 +3043,77 @@
             return `<span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">${escapeHTML(text)}</span>ⓘ</span>`;
         }
 
+        // Floating tooltip: a single shared element appended directly to <body>
+        // and positioned via getBoundingClientRect(), so it can never be clipped
+        // by a card's overflow:hidden (rounded corners) the way an absolutely-
+        // positioned child tooltip would be. Works for both desktop hover and
+        // mobile tap, since native title="" never fires on touch at all.
+        let _tipBubbleEl = null;
+        function _ensureTipBubble() {
+            if (!_tipBubbleEl) {
+                _tipBubbleEl = document.createElement('div');
+                _tipBubbleEl.id = 'globalTipBubble';
+                document.body.appendChild(_tipBubbleEl);
+            }
+            return _tipBubbleEl;
+        }
+        function showInfoTip(trigger) {
+            const textEl = trigger.querySelector('.tip-bubble');
+            if (!textEl) return;
+            const bubble = _ensureTipBubble();
+            bubble.textContent = textEl.textContent;
+            bubble.style.visibility = 'hidden';
+            bubble.style.display = 'block';
+            bubble.style.left = '0px';
+            bubble.style.top = '0px';
+            const rect = trigger.getBoundingClientRect();
+            const bw = bubble.offsetWidth, bh = bubble.offsetHeight;
+            const gap = 8;
+            let left = rect.left + rect.width / 2 - bw / 2;
+            left = Math.max(8, Math.min(left, window.innerWidth - bw - 8));
+            let top = rect.top - bh - gap;
+            if (top < 8) top = rect.bottom + gap; // flip below if no room above
+            bubble.style.left = left + 'px';
+            bubble.style.top = top + 'px';
+            bubble.style.visibility = 'visible';
+            bubble._trigger = trigger;
+            trigger.classList.add('tip-active');
+        }
+        function hideInfoTip() {
+            if (_tipBubbleEl) { _tipBubbleEl.style.display = 'none'; _tipBubbleEl._trigger = null; }
+            document.querySelectorAll('.info-tip.tip-active').forEach(t => t.classList.remove('tip-active'));
+        }
+
+        // Desktop hover
+        document.addEventListener('mouseover', function(e) {
+            const tip = e.target.closest('.info-tip');
+            if (tip) showInfoTip(tip);
+        });
+        document.addEventListener('mouseout', function(e) {
+            const tip = e.target.closest('.info-tip');
+            if (tip && !tip.contains(e.relatedTarget)) hideInfoTip();
+        });
         // Tap-to-toggle for touch devices; click-outside and Escape dismiss.
         document.addEventListener('click', function(e) {
             const tip = e.target.closest('.info-tip');
             if (tip) {
                 e.stopPropagation();
-                const wasActive = tip.classList.contains('tip-active');
-                document.querySelectorAll('.info-tip.tip-active').forEach(t => { if (t !== tip) t.classList.remove('tip-active'); });
-                tip.classList.toggle('tip-active', !wasActive);
-                if (!wasActive) {
-                    const rect = tip.getBoundingClientRect();
-                    tip.classList.toggle('tip-flip', rect.top < 80);
-                }
+                const wasShowing = _tipBubbleEl && _tipBubbleEl.style.display === 'block' && _tipBubbleEl._trigger === tip;
+                hideInfoTip();
+                if (!wasShowing) showInfoTip(tip);
                 return;
             }
-            document.querySelectorAll('.info-tip.tip-active').forEach(t => t.classList.remove('tip-active'));
+            hideInfoTip();
         });
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') document.querySelectorAll('.info-tip.tip-active').forEach(t => t.classList.remove('tip-active'));
+            if (e.key === 'Escape') hideInfoTip();
         });
+        // Fixed-position coordinates go stale the instant the page scrolls or
+        // resizes, so just hide rather than try to track and reposition live.
+        window.addEventListener('scroll', hideInfoTip, true);
+        window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.14';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.16';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
