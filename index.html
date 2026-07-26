@@ -1233,6 +1233,34 @@
             </div>
         </div>
 
+        <!-- Dividend / Ex-Div Manager -->
+        <div id="dividendManager" style="margin: 10px 0; padding: 12px 16px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; border-left: 3px solid var(--signal-teal);">
+            <div style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;" onclick="toggleDividendManager()">
+                <span style="font-weight: 600; font-size: 0.95em;">💰 Ex-Dividend Dates <span style="font-weight: 400; color: var(--text-muted); font-size: 0.85em;">— for early assignment risk on covered calls</span></span>
+                <span id="dividendToggle" style="font-size: 0.85em; color: var(--text-muted);">▸ Show</span>
+            </div>
+            <div id="dividendPanel" style="display: none; margin-top: 12px;">
+                <p style="font-size: 0.82em; color: var(--text-muted); margin: 0 0 10px;">Not auto-fetched — MarketData.app doesn't provide dividend data. Look up the ex-date (and ideally the amount) once per ticker; the tool cross-checks it against delta and remaining time value to flag real early-assignment risk.</p>
+                <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: flex-end; flex-wrap: wrap;">
+                    <div>
+                        <label style="display: block; font-size: 0.8em; color: var(--text-muted); margin-bottom: 3px;">Ticker</label>
+                        <input type="text" id="dividendTicker" placeholder="e.g., KO" style="padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--dark-surface); color: var(--text-primary); width: 80px; font-size: 0.9em;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.8em; color: var(--text-muted); margin-bottom: 3px;">Ex-Div Date</label>
+                        <input type="date" id="dividendDateInput" style="padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--dark-surface); color: var(--text-primary); font-size: 0.9em;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.8em; color: var(--text-muted); margin-bottom: 3px;">Amount ($/sh) <span style="color: var(--text-faint, #5c6479);">optional</span></label>
+                        <input type="number" id="dividendAmountInput" step="0.01" placeholder="0.24" style="padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--dark-surface); color: var(--text-primary); width: 80px; font-size: 0.9em;">
+                    </div>
+                    <button onclick="addDividendDate()" class="btn-primary" style="padding: 6px 14px; font-size: 0.85em;">Add / Update</button>
+                    <button onclick="lookupDividendOnNasdaq()" style="padding: 6px 14px; font-size: 0.85em; background: var(--dark-surface); border: 1px solid var(--border-color); border-radius: 4px; color: var(--signal-teal); cursor: pointer; font-weight: 600;" title="Opens this ticker's dividend history on Nasdaq.com in a new tab">🔗 Look up on Nasdaq</button>
+                </div>
+                <div id="dividendList" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+            </div>
+        </div>
+
         <!-- Earnings Manager -->
         <div id="earningsManager" style="margin: 10px 0; padding: 12px 16px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; border-left: 3px solid var(--warning-color);">
             <div style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;" onclick="toggleEarningsManager()">
@@ -2187,7 +2215,7 @@
                             <div class="brand-icon" style="width: 48px; height: 48px; font-size: 2em;">X</div>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.16 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.17 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2196,6 +2224,18 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.17 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.17</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Ex-Dividend tracking (\ud83d\udcb0 manager panel, mirrors Earnings Dates) \u2014 manual entry since MarketData.app has no dividends endpoint, with a one-click Nasdaq dividend-history lookup per ticker<br>
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Early-assignment risk flag on covered calls \u2014 cross-checks the ex-div date against delta and remaining extrinsic value, not just the date alone, to flag real dividend-capture risk on ITM CCs
+                                </div>
+                            </div>
+
                             <!-- v7.16 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3113,7 +3153,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.16';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.17';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -5782,6 +5822,107 @@
         // ═══════════════════════════════════════════════════════════════
         // EARNINGS DATES — Ticker-level earnings date tracking
         // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════════
+        // DIVIDEND / EX-DIVIDEND TRACKING — Manual entry, no external API.
+        // MarketData.app doesn't expose a dividends field or endpoint (confirmed
+        // from their docs — quotes return bid/ask/mid/last/volume only), so this
+        // is a per-ticker manual date + optional amount, mirroring the earnings
+        // pattern. The protective value comes from combining it with data the
+        // tool already has: delta and extrinsic value, to flag early-assignment
+        // risk on covered calls — not from the date alone.
+        // ═══════════════════════════════════════════════════════════════
+        let dividendDates = {}; // { TICKER: { date: 'YYYY-MM-DD', amount: 0.24 } }
+
+        function loadDividendDates() {
+            const saved = localStorage.getItem('optionsXQ_dividendDates');
+            if (saved) dividendDates = JSON.parse(saved);
+        }
+
+        function saveDividendDates() {
+            localStorage.setItem('optionsXQ_dividendDates', JSON.stringify(dividendDates));
+        }
+
+        function setDividendDate(ticker, dateStr, amount) {
+            dividendDates[ticker.toUpperCase()] = { date: dateStr, amount: amount || null };
+            saveDividendDates();
+            renderTable();
+            renderDividendManager();
+        }
+
+        function removeDividendDate(ticker) {
+            delete dividendDates[ticker.toUpperCase()];
+            saveDividendDates();
+            renderTable();
+            renderDividendManager();
+        }
+
+        function getDaysToDividend(ticker) {
+            const rec = dividendDates[ticker.toUpperCase()];
+            if (!rec || !rec.date) return null;
+            const today = new Date();
+            const exDivDate = new Date(rec.date + 'T00:00:00');
+            const diff = exDivDate - today;
+            return Math.ceil(diff / (1000 * 60 * 60 * 24));
+        }
+
+        function dividendBeforeExpiration(ticker, expiration) {
+            const rec = dividendDates[ticker.toUpperCase()];
+            if (!rec || !rec.date) return false;
+            const exDivDate = new Date(rec.date + 'T00:00:00');
+            const expiryDate = new Date(expiration + 'T00:00:00');
+            const today = new Date();
+            return exDivDate >= today && exDivDate <= expiryDate;
+        }
+
+        // The actual protective logic: early assignment on a short call is only
+        // economically rational for the option holder when (a) the call is ITM,
+        // (b) a dividend goes ex before expiration, and (c) the remaining
+        // extrinsic (time) value is less than the dividend — because exercising
+        // early to capture the dividend only makes sense if there's little time
+        // value left to give up by doing so. This combines data the tool already
+        // tracks (delta, prices) with the one manually-entered date/amount.
+        function getDividendRiskFlag(pos) {
+            const isCCPos = pos.position === 'Short' && pos.optionType === 'Call';
+            if (!isCCPos) return null;
+
+            const rec = dividendDates[pos.ticker.toUpperCase()];
+            if (!rec || !rec.date) return null;
+            if (!dividendBeforeExpiration(pos.ticker, pos.expiration)) return null;
+
+            const stockPrice = pos.underlyingPrice;
+            if (!stockPrice) return null;
+            const isITM = stockPrice > pos.strike;
+            if (!isITM) return null; // early exercise only rational when ITM
+
+            const daysToDiv = getDaysToDividend(pos.ticker);
+            const exDivFmt = new Date(rec.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const intrinsic = Math.max(0, stockPrice - pos.strike);
+            const extrinsic = pos.currentPrice != null ? Math.max(0, pos.currentPrice - intrinsic) : null;
+
+            if (rec.amount && extrinsic != null) {
+                if (extrinsic < rec.amount) {
+                    return {
+                        level: 'high', color: 'var(--danger-color)',
+                        display: `⚡${daysToDiv}d`,
+                        title: `⚠️ Early assignment risk: ${pos.ticker} pays $${rec.amount.toFixed(2)}/sh ex-div ${exDivFmt}, before expiration. Only $${extrinsic.toFixed(2)} extrinsic value left — less than the dividend. The holder may exercise early to capture it.`
+                    };
+                }
+                return {
+                    level: 'low', color: 'var(--signal-teal)',
+                    display: `💰${daysToDiv}d`,
+                    title: `${pos.ticker} pays $${rec.amount.toFixed(2)}/sh ex-div ${exDivFmt}, before expiration. Extrinsic value ($${extrinsic.toFixed(2)}) still exceeds the dividend, so early assignment is less likely, but not impossible.`
+                };
+            }
+
+            // No dividend amount entered — still ITM with a dividend event before expiration
+            return {
+                level: 'unknown', color: 'var(--warning-color)',
+                display: `💰${daysToDiv}d`,
+                title: `${pos.ticker} goes ex-dividend ${exDivFmt}, before expiration, and this call is ITM. Add the dividend amount in Settings to check extrinsic-value risk, or verify manually before the ex-date.`
+            };
+        }
+
+
         let earningsDates = {};
 
         function loadEarningsDates() {
@@ -8649,6 +8790,7 @@
                             <span class="m" title="Underlying stock price${pos.underlyingPrice ? '' : ' — refresh to populate'}">Px <b>${pos.underlyingPrice ? '$' + pos.underlyingPrice.toFixed(2) : '—'}</b>${infoTip('The stock\u2019s current price. Shows — until you Refresh All.')}</span>
                             ${otmPct !== null ? `<span class="m ${otmCls}">${otmLabel} <b>${otmPct >= 0 ? '+' : ''}${otmPct.toFixed(1)}%</b>${infoTip('How far the stock is from your strike, as a percent. OTM (out of the money) is safer; ITM (in the money) means real assignment risk.')}</span>` : ''}
                             <span class="m ${ef.cssClass === 'earnings-danger' || ef.cssClass === 'earnings-warn' ? 'bad' : ''}" title="${escapeHTML(ef.title)}">Earn <b>${ef.display}</b>${infoTip('Days until this ticker\u2019s next earnings report. Red means earnings fall before expiration — a gap-risk warning.')}</span>
+                            ${(() => { const df = getDividendRiskFlag(pos); return df ? `<span class="m" style="color: ${df.color};" title="${escapeHTML(df.title)}">Div <b>${df.display}</b>${infoTip('Early assignment risk: this covered call is in the money with a dividend going ex before expiration. The holder may exercise early to capture it if there\u2019s little time value left to give up.')}</span>` : ''; })()}
                         </div>
                         <div class="pos-pl ${plUp ? 'up' : 'down'}">
                             <div class="plv">${formatCurrency(pl)}</div>
@@ -10607,6 +10749,64 @@
         });
 
         // ── Earnings Manager UI ──
+        function toggleDividendManager() {
+            const panel = document.getElementById('dividendPanel');
+            const toggle = document.getElementById('dividendToggle');
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+                toggle.textContent = '▾ Hide';
+            } else {
+                panel.style.display = 'none';
+                toggle.textContent = '▸ Show';
+            }
+        }
+
+        function addDividendDate() {
+            const ticker = document.getElementById('dividendTicker').value.trim().toUpperCase();
+            const dateStr = document.getElementById('dividendDateInput').value;
+            const amountStr = document.getElementById('dividendAmountInput').value;
+            if (!ticker || !dateStr) {
+                alert('Please enter both a ticker and an ex-dividend date.');
+                return;
+            }
+            const amount = amountStr ? parseFloat(amountStr) : null;
+            setDividendDate(ticker, dateStr, amount);
+            document.getElementById('dividendTicker').value = '';
+            document.getElementById('dividendDateInput').value = '';
+            document.getElementById('dividendAmountInput').value = '';
+        }
+
+        // Nasdaq's dividend-history page is free, requires no login, and is
+        // reliably kept current — a solid default for a quick manual lookup.
+        function lookupDividendOnNasdaq() {
+            const ticker = document.getElementById('dividendTicker').value.trim().toLowerCase();
+            if (!ticker) { alert('Enter a ticker first, then Look up.'); return; }
+            window.open(`https://www.nasdaq.com/market-activity/stocks/${ticker}/dividend-history`, '_blank', 'noopener');
+        }
+
+        function renderDividendManager() {
+            const container = document.getElementById('dividendList');
+            if (!container) return;
+            const tickers = Object.keys(dividendDates).sort();
+            if (tickers.length === 0) {
+                container.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85em;">No ex-dividend dates set</span>';
+                return;
+            }
+            container.innerHTML = tickers.map(ticker => {
+                const rec = dividendDates[ticker];
+                const dte = getDaysToDividend(ticker);
+                const dateDisplay = new Date(rec.date + 'T00:00:00').toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
+                const dteLabel = dte !== null ? (dte < 0 ? `${Math.abs(dte)}d ago` : `in ${dte}d`) : '';
+                const color = (dte !== null && dte >= 0 && dte <= 5) ? 'var(--warning-color)' : 'var(--text-secondary)';
+                const amountLabel = rec.amount ? ` · $${rec.amount.toFixed(2)}/sh` : '';
+                return `<span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--dark-surface); border: 1px solid var(--border-color); border-radius: 16px; font-size: 0.85em;">
+                    <strong>${ticker}</strong>
+                    <span style="color: ${color};">${dateDisplay} (${dteLabel})${amountLabel}</span>
+                    <span onclick="removeDividendDate('${ticker}')" style="cursor: pointer; color: var(--danger-color); font-weight: 700; margin-left: 2px;" title="Remove">×</span>
+                </span>`;
+            }).join('');
+        }
+
         function toggleEarningsManager() {
             const panel = document.getElementById('earningsPanel');
             const toggle = document.getElementById('earningsToggle');
@@ -11089,13 +11289,14 @@
         { const vb = document.getElementById('versionBadge'); if (vb) vb.textContent = APP_VERSION; }
         setTimeout(autoPullCheck, 1200);
         loadEarningsDates();
+        loadDividendDates();
         loadMarketRegime();
         loadColumnVisibility();
         applyColumnVisibility();
         loadPositions();
         backfillRollHistory();
         renderEarningsManager();
-        renderSectorAssignments();
+        renderDividendManager();
         updatePortfolioRiskDashboard();
         renderClosedPositions();
         updatePerformanceStats();  // populate dashboard Monthly Yield card on load, not just when Performance tab opens
