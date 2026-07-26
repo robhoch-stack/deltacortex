@@ -1074,6 +1074,42 @@
             input, select { min-height: 40px; font-size: 16px; }  /* 16px prevents iOS zoom-on-focus */
         }
 
+        /* ═══════════════════════════════════════════════════════════════
+           INFO TOOLTIPS — works on both hover (desktop) and tap (mobile,
+           via JS toggle below). Native title="" attributes don't fire on
+           touch at all, so this is the real explanation layer for anyone
+           using the app on a phone.
+           ═══════════════════════════════════════════════════════════════ */
+        .info-tip {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 14px; height: 14px; border-radius: 50%;
+            background: rgba(255,255,255,0.1); color: var(--text-muted, #8a93a9);
+            font-size: 0.66em; font-weight: 700; cursor: help; margin-left: 4px;
+            position: relative; vertical-align: middle; line-height: 1;
+            flex-shrink: 0; user-select: none;
+        }
+        .info-tip:hover, .info-tip.tip-active {
+            background: var(--signal-teal, #2aa6a1); color: #0a0e17;
+        }
+        .info-tip .tip-bubble {
+            display: none; position: absolute; bottom: 135%; left: 50%; transform: translateX(-50%);
+            width: max-content; max-width: 230px; background: var(--dark-surface, #0d1220);
+            color: var(--text-primary, #eef1f7); border: 1px solid var(--border-color, #232c46);
+            border-radius: 8px; padding: 9px 11px; font-size: 0.76rem; line-height: 1.45;
+            font-weight: 400; z-index: 10000; box-shadow: 0 10px 28px rgba(0,0,0,0.45);
+            text-align: left; white-space: normal; letter-spacing: normal;
+        }
+        .info-tip .tip-bubble::after {
+            content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+            border: 5px solid transparent; border-top-color: var(--border-color, #232c46);
+        }
+        .info-tip.tip-active .tip-bubble, .info-tip:hover .tip-bubble { display: block; }
+        /* Flip bubble below the icon when it's near the top of the viewport */
+        .info-tip.tip-flip .tip-bubble { bottom: auto; top: 135%; }
+        .info-tip.tip-flip .tip-bubble::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: var(--border-color, #232c46); }
+        @media (pointer: coarse) {
+            .info-tip { width: 17px; height: 17px; font-size: 0.72em; }
+        }
     </style>
 </head>
 <body>
@@ -1127,28 +1163,28 @@
         <!-- ═══ Phase 1: 5 decision cards ═══ -->
         <div class="dash" style="padding: 16px 24px 4px;">
             <div class="dash-card">
-                <div class="dash-label">Total P&L</div>
+                <div class="dash-label">Total P&amp;L <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">Sum of unrealized profit/loss across every open position, marked at current price.</span>ⓘ</span></div>
                 <div class="dash-value" id="totalPL">$0</div>
                 <div class="dash-sub" id="totalPositions">0</div>
             </div>
             <div class="dash-card">
-                <div class="dash-label">Needs Action</div>
+                <div class="dash-label">Needs Action <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">Positions the engine has flagged for a real decision right now — loss stops, assignment risk, idle capital, or earnings crossing. Matches the Today’s Decisions list.</span>ⓘ</span></div>
                 <div class="dash-value" id="highPriority" style="color: var(--danger-color);">0</div>
                 <div class="dash-sub">positions flagged</div>
             </div>
             <div class="dash-card">
-                <div class="dash-label">Deployed</div>
+                <div class="dash-label">Deployed <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">Percent of your buying power currently tied up in collateral and share value. Target ~60% — too low wastes capital, too high leaves no room to roll or add positions.</span>ⓘ</span></div>
                 <div class="dash-value" id="deployedDisplay">0%</div>
                 <div class="dash-bar"><div id="deployedBar" style="height: 100%; border-radius: 2px; width: 0%; transition: width 0.3s;"></div></div>
                 <div class="dash-sub" id="deployedDetail">Target: 60%</div>
             </div>
             <div class="dash-card">
-                <div class="dash-label">Available BP</div>
+                <div class="dash-label">Available BP <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">Buying power not currently locked as collateral — what you could use for a new trade right now.</span>ⓘ</span></div>
                 <div class="dash-value" id="availableBP" style="color: var(--success-color);">$0</div>
                 <div class="dash-sub">Cash locked: <span id="totalCash">$0</span></div>
             </div>
             <div class="dash-card">
-                <div class="dash-label">Monthly Yield</div>
+                <div class="dash-label">Monthly Yield <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">Premium captured from closed trades this month, as a percent of buying power. Target 1–2% monthly — the wheel’s income goal.</span>ⓘ</span></div>
                 <div class="dash-value" id="monthlyYieldDisplay">—</div>
                 <div class="dash-bar"><div id="monthlyYieldBar" style="height: 100%; border-radius: 2px; width: 0%; transition: width 0.3s;"></div></div>
                 <div class="dash-sub" id="monthlyYieldDetail">Target: 1–2%</div>
@@ -1950,7 +1986,7 @@
                         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
                             <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #22E5EE 0%, #1E4E8C 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5em;">☁️</div>
                             <div>
-                                <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">Backup & Cloud Sync</h3>
+                                <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">Backup & Cloud Sync <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">Download a JSON backup anytime, or connect a free private GitHub Gist to sync your positions between your own devices — never through a shared server.</span>ⓘ</span></h3>
                                 <p style="color: var(--text-secondary); margin: 0; font-size: 0.9em;">Protect your data and sync between PC and iPhone</p>
                             </div>
                             <div id="syncStatus" style="margin-left: auto; font-size: 0.82em; color: var(--text-muted);"></div>
@@ -2006,35 +2042,35 @@
                         
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 20px;">
                             <div>
-                                <label style="display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;">Total Buying Power ($)</label>
+                                <label style="display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;">Total Buying Power ($) <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">The total cash you’re willing to allocate to this strategy. Used to calculate utilization % and position sizing warnings.</span>ⓘ</span></label>
                                 <input type="number" id="totalBuyingPower" step="1000" value="150000" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--dark-surface); color: var(--text-primary); font-size: 1em;">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;">Max Utilization Target (%)</label>
+                                <label style="display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;">Max Utilization Target (%) <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">The share of buying power you want deployed at once. Around 55–65% is common — leaves room to roll or add positions without going all-in.</span>ⓘ</span></label>
                                 <input type="number" id="maxUtilization" step="5" value="55" min="10" max="100" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--dark-surface); color: var(--text-primary); font-size: 1em;">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;">Max Per Position (%)</label>
+                                <label style="display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;">Max Per Position (%) <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">The most any single ticker should represent of your buying power. Keeps one bad trade from hurting too much.</span>ⓘ</span></label>
                                 <input type="number" id="maxPositionPct" step="5" value="25" min="5" max="50" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--dark-surface); color: var(--text-primary); font-size: 1em;">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;">Max Per Sector (%)</label>
+                                <label style="display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;">Max Per Sector (%) <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">The most any single sector (Tech, Energy, etc.) should represent of your buying power — avoids hidden concentration across tickers that move together.</span>ⓘ</span></label>
                                 <input type="number" id="maxSectorPct" step="5" value="40" min="10" max="80" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--dark-surface); color: var(--text-primary); font-size: 1em;">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;">VIX Override <span style="font-weight: 400; color: var(--text-muted);">(blank = auto from UVXY)</span></label>
+                                <label style="display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;">VIX Override <span style="font-weight: 400; color: var(--text-muted);">(blank = auto from UVXY)</span> <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">Manually set the VIX reading used for market-regime context, instead of estimating it from UVXY price action.</span>ⓘ</span></label>
                                 <input type="number" id="manualVIX" step="0.1" placeholder="e.g., 27.5" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--dark-surface); color: var(--text-primary); font-size: 1em;">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;">FDRXX Rate (%) <span style="font-weight: 400; color: var(--text-muted);">Money market yield</span></label>
+                                <label style="display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;">FDRXX Rate (%) <span style="font-weight: 400; color: var(--text-muted);">Money market yield</span> <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">The yield your idle cash collateral actually earns — FDRXX, SPAXX, or your broker’s equivalent sweep fund. This is the baseline every trade’s premium gets checked against.</span>ⓘ</span></label>
                                 <input type="number" id="fdrxxRate" step="0.01" value="3.98" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--dark-surface); color: var(--text-primary); font-size: 1em;">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;">Hurdle Multiple <span style="font-weight: 400; color: var(--text-muted);">× FDRXX a trade must clear</span></label>
+                                <label style="display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;">Hurdle Multiple <span style="font-weight: 400; color: var(--text-muted);">× FDRXX a trade must clear</span> <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">How many times your cash rate a new trade must yield to clear the bar. 2× is a reasonable default — barely beating cash isn’t worth the assignment risk.</span>ⓘ</span></label>
                                 <input type="number" id="hurdleMultiple" step="0.5" value="2" min="1" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--dark-surface); color: var(--text-primary); font-size: 1em;">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;">Mark Options At <span style="font-weight: 400; color: var(--text-muted);">price for current value</span></label>
+                                <label style="display: block; font-size: 0.85em; color: var(--text-muted); margin-bottom: 5px; font-weight: 600;">Mark Options At <span style="font-weight: 400; color: var(--text-muted);">price for current value</span> <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">Mid gives a realistic fill value for P&amp;L and capture %. Ask is the conservative worst-case cost to close right now.</span>ⓘ</span></label>
                                 <select id="optionMark" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--dark-surface); color: var(--text-primary); font-size: 1em;">
                                     <option value="mid">Mid — realistic fill value (default)</option>
                                     <option value="ask">Ask — conservative buyback cost</option>
@@ -2100,7 +2136,7 @@
                                 🔌
                             </div>
                             <div>
-                                <h3 style="color: var(--light-text); font-family: 'Montserrat', sans-serif; font-weight: 600; margin: 0;">MarketData.app API</h3>
+                                <h3 style="color: var(--light-text); font-family: 'Montserrat', sans-serif; font-weight: 600; margin: 0;">MarketData.app API <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">Your API key is stored only in this browser — never on a server. It powers every live price, Greek, and IV in the app.</span>ⓘ</span></h3>
                                 <p style="color: var(--platinum-gray); margin: 0; font-size: 0.9em;">Configure real-time options data</p>
                             </div>
                         </div>
@@ -2151,7 +2187,7 @@
                             <div class="brand-icon" style="width: 48px; height: 48px; font-size: 2em;">X</div>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.13 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.14 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2160,6 +2196,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.14 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.14</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Info tooltips (\u24d8) across dashboard, card metrics, drawers, scanners, and settings \u2014 tap-to-show on mobile, hover on desktop, since native title="" tooltips never fire on touch
+                                </div>
+                            </div>
+
                             <!-- v7.13 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -2792,12 +2839,12 @@
             
             <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px;">
                 <div>
-                    <label style="display: block; font-size: 0.8em; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Assumed CC premium / month</label>
+                    <label style="display: block; font-size: 0.8em; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Assumed CC premium / month <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">Your best guess at the premium you’ll collect writing a covered call each month. Auto-filled from your past CC history if you have any.</span>ⓘ</span></label>
                     <input type="number" id="recoveryMonthlyPremium" step="0.01" style="padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--dark-surface); color: var(--text-primary); font-size: 1em; width: 160px;" oninput="renderRecoveryProjection()">
                     <div style="font-size: 0.72em; color: var(--text-muted); margin-top: 3px;">per share, e.g. $1.50</div>
                 </div>
                 <div>
-                    <label style="display: block; font-size: 0.8em; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Assumed stock drift / month</label>
+                    <label style="display: block; font-size: 0.8em; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Assumed stock drift / month <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">An optional guess at how the stock price moves each month. This is the honest way to see how much actual recovery it takes to close the gap — not a prediction.</span>ⓘ</span></label>
                     <select id="recoveryStockDrift" style="padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--dark-surface); color: var(--text-primary); font-size: 1em;" onchange="renderRecoveryProjection()">
                         <option value="0">Flat (0%)</option>
                         <option value="0.5">+0.5%/mo (mild recovery)</option>
@@ -2964,7 +3011,37 @@
     </div>
 
     <script>
-        const APP_VERSION = 'v7.13';  // ← single source of truth; shown in header badge & changelog
+        // ═══════════════════════════════════════════════════════════════
+        // INFO TOOLTIPS — call infoTip('explanation') inside any template
+        // literal to drop in a small ⓘ icon. Works via CSS :hover on desktop
+        // and via tap-toggle (delegated listener below) on touch devices,
+        // where native title="" attributes never fire at all.
+        // ═══════════════════════════════════════════════════════════════
+        function infoTip(text) {
+            return `<span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">${escapeHTML(text)}</span>ⓘ</span>`;
+        }
+
+        // Tap-to-toggle for touch devices; click-outside and Escape dismiss.
+        document.addEventListener('click', function(e) {
+            const tip = e.target.closest('.info-tip');
+            if (tip) {
+                e.stopPropagation();
+                const wasActive = tip.classList.contains('tip-active');
+                document.querySelectorAll('.info-tip.tip-active').forEach(t => { if (t !== tip) t.classList.remove('tip-active'); });
+                tip.classList.toggle('tip-active', !wasActive);
+                if (!wasActive) {
+                    const rect = tip.getBoundingClientRect();
+                    tip.classList.toggle('tip-flip', rect.top < 80);
+                }
+                return;
+            }
+            document.querySelectorAll('.info-tip.tip-active').forEach(t => t.classList.remove('tip-active'));
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') document.querySelectorAll('.info-tip.tip-active').forEach(t => t.classList.remove('tip-active'));
+        });
+
+        const APP_VERSION = 'v7.14';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -4104,10 +4181,10 @@
                 
                 resultsDiv.innerHTML = `<div style="overflow-x: auto;"><table style="width: 100%; border-collapse: collapse; font-size: 0.86em;">
                     <thead><tr style="border-bottom: 2px solid var(--border-color); text-align: left; color: var(--text-muted); font-size: 0.78em; text-transform: uppercase;">
-                        <th style="padding: 8px 6px;">Strike</th><th style="padding: 8px 6px;">Expiry</th><th style="padding: 8px 6px;">Premium</th>
-                        <th style="padding: 8px 6px;">Yield</th><th style="padding: 8px 6px;">Δ</th><th style="padding: 8px 6px;" title="Implied volatility">IV</th><th style="padding: 8px 6px;">OTM</th>
-                        <th style="padding: 8px 6px;" title="ATR buffer">ATR</th><th style="padding: 8px 6px;" title="Open interest — liquidity">OI</th><th style="padding: 8px 6px;" title="Cost basis if assigned">If Assigned</th>
-                        <th style="padding: 8px 6px;">Earn</th><th style="padding: 8px 6px;"></th>
+                        <th style="padding: 8px 6px;">Strike</th><th style="padding: 8px 6px;">Expiry</th><th style="padding: 8px 6px;">Premium${infoTip('The bid price — what you\u2019d collect per share for selling this put.')}</th>
+                        <th style="padding: 8px 6px;">Yield${infoTip('Premium annualized against the collateral required, then color-coded against your T-bill hurdle. 🟢 clears it, 🟡 beats cash but thin, 🔴 fails.')}</th><th style="padding: 8px 6px;">Δ${infoTip('Delta — roughly the odds this put finishes in the money and gets assigned. Lower is safer.')}</th><th style="padding: 8px 6px;" title="Implied volatility">IV</th><th style="padding: 8px 6px;">OTM${infoTip('How far below the current stock price this strike sits, as a percent. More cushion = safer.')}</th>
+                        <th style="padding: 8px 6px;" title="ATR buffer">ATR${infoTip('How many Average True Range (14-day) moves the stock would need to reach this strike. Above 1.5× is a comfortable cushion.')}</th><th style="padding: 8px 6px;" title="Open interest — liquidity">OI${infoTip('Open interest — how many contracts are outstanding at this strike. Below 100 means thin liquidity and wider spreads.')}</th><th style="padding: 8px 6px;" title="Cost basis if assigned">If Assigned${infoTip('Your effective cost basis per share if this put gets assigned: strike minus premium collected.')}</th>
+                        <th style="padding: 8px 6px;">Earn${infoTip('Whether this ticker reports earnings before the option expires. Red = gap risk; a green checkmark means it\u2019s confirmed safe.')}</th><th style="padding: 8px 6px;"></th>
                     </tr></thead><tbody>${rows}</tbody></table></div>`;
             } catch (err) {
                 console.error('CSP scan error:', err);
@@ -4264,10 +4341,10 @@
                     <div style="overflow-x: auto;">
                         <table style="width: 100%; border-collapse: collapse; font-size: 0.86em;">
                             <thead><tr style="border-bottom: 2px solid var(--border-color); text-align: left; color: var(--text-muted); font-size: 0.78em; text-transform: uppercase;">
-                                <th style="padding: 8px 6px;">Strike</th><th style="padding: 8px 6px;">Zone</th><th style="padding: 8px 6px;">Expiry</th>
-                                <th style="padding: 8px 6px;">Premium</th><th style="padding: 8px 6px;">Yield</th><th style="padding: 8px 6px;">Δ</th>
-                                <th style="padding: 8px 6px;" title="ATR buffer">ATR</th><th style="padding: 8px 6px;" title="Open interest — liquidity">OI</th><th style="padding: 8px 6px;" title="P&L if shares called away">If Called</th>
-                                <th style="padding: 8px 6px;">Earn</th><th style="padding: 8px 6px;"></th>
+                                <th style="padding: 8px 6px;">Strike</th><th style="padding: 8px 6px;">Zone${infoTip('🟢 Recovery = at/above your basis, safe if called. 🟡 Income = between stock and basis, meaningful premium but caps a loss if called. 🔴 Aggressive = at/below stock price, high premium and high odds of being called.')}</th><th style="padding: 8px 6px;">Expiry</th>
+                                <th style="padding: 8px 6px;">Premium${infoTip('The bid price — what you\u2019d collect per share for selling this call.')}</th><th style="padding: 8px 6px;">Yield${infoTip('Premium annualized against your share value.')}</th><th style="padding: 8px 6px;">Δ${infoTip('Delta — roughly the odds this call finishes in the money and your shares get called away.')}</th>
+                                <th style="padding: 8px 6px;" title="ATR buffer">ATR${infoTip('How many Average True Range (14-day) moves the stock would need to reach this strike.')}</th><th style="padding: 8px 6px;" title="Open interest — liquidity">OI${infoTip('Open interest — how many contracts are outstanding. Below 100 means thin liquidity.')}</th><th style="padding: 8px 6px;" title="P&L if shares called away">If Called${infoTip('Your total profit or loss if the shares get called away at this strike: (strike − basis) × shares + premium.')}</th>
+                                <th style="padding: 8px 6px;">Earn${infoTip('Whether this ticker reports earnings before the option expires — avoid writing through an earnings gap.')}</th><th style="padding: 8px 6px;"></th>
                             </tr></thead>
                             <tbody>${rows}</tbody>
                         </table>
@@ -8436,16 +8513,16 @@
                 const drawer = `
                 <div class="pos-drawer" style="display: ${isOpen ? 'grid' : 'none'};">
                     <div class="drawer-group">
-                        <div class="drawer-title">Pricing</div>
+                        <div class="drawer-title">Pricing${infoTip('The two resting orders to place at your broker: a take-profit and a hard stop. Together they let this position manage itself.')}</div>
                         <div class="drawer-row"><span class="k">Entry</span><span class="v"><button data-action="editEntryPrice" style="background:none;border:none;cursor:pointer;padding:0;color:var(--text-primary);font-weight:700;font-family:inherit;font-size:inherit;" title="Click to edit entry price">$${pos.entryPrice.toFixed(2)} ✏️</button></span></div>
                         <div class="drawer-row"><span class="k">Current</span><span class="v">$${pos.currentPrice.toFixed(2)}</span></div>
-                        <div class="drawer-row"><span class="k">50% GTC</span><span class="v" style="color: var(--signal-teal);">$${gtcPrice.toFixed(2)}</span></div>
-                        <div class="drawer-row"><span class="k" title="Buy-to-close price that hits your −200% stop (2× loss). Set this as a GTC order at your broker.">🛑 Eject (3×)</span><span class="v" style="color: var(--danger-color);">$${ejectPrice.toFixed(2)}</span></div>
-                        <div class="drawer-row"><span class="k">${isCC ? 'Sale if called' : 'If assigned'}</span><span class="v">$${basisValue.toFixed(2)}/sh</span></div>
+                        <div class="drawer-row"><span class="k">50% GTC${infoTip('The buy-to-close price that locks in 50% of the premium you collected. A common take-profit target — set it as a GTC (good-till-canceled) limit order.')}</span><span class="v" style="color: var(--signal-teal);">$${gtcPrice.toFixed(2)}</span></div>
+                        <div class="drawer-row"><span class="k" title="Buy-to-close price that hits your −200% stop (2× loss). Set this as a GTC order at your broker.">🛑 Eject (3×)${infoTip('The buy-to-close price where your loss reaches 2× the premium collected — a hard stop. Set this as a GTC order so it protects you even when you\u2019re not watching.')}</span><span class="v" style="color: var(--danger-color);">$${ejectPrice.toFixed(2)}</span></div>
+                        <div class="drawer-row"><span class="k">${isCC ? 'Sale if called' : 'If assigned'}${infoTip(isCC ? 'Your effective sale price per share if the stock gets called away at this strike.' : 'Your effective cost basis per share if this put gets assigned to you.')}</span><span class="v">$${basisValue.toFixed(2)}/sh</span></div>
                         <div class="drawer-row"><span class="k">Contracts</span><span class="v">${contracts}</span></div>
                     </div>
                     <div class="drawer-group">
-                        <div class="drawer-title">Roll Chain</div>
+                        <div class="drawer-title">Roll Chain${infoTip('If this position has been rolled before, this shows the full chain\u2019s combined result — not just the current leg.')}</div>
                         ${chainLegs > 0 ? `
                         <div class="drawer-row"><span class="k">Prior legs</span><span class="v">${chainLegs}</span></div>
                         <div class="drawer-row"><span class="k">Realized</span><span class="v" style="color: ${m.plRealized >= 0 ? 'var(--success-color)' : 'var(--danger-color)'};">${formatCurrency(m.plRealized)}</span></div>
@@ -8458,13 +8535,13 @@
                         <div class="drawer-title">Greeks & Vol</div>
                         <div class="drawer-row"><span class="k">Delta</span><span class="v">${pos.delta.toFixed(2)}</span></div>
                         <div class="drawer-row"><span class="k">IV</span><span class="v">${pos.iv.toFixed(1)}%</span></div>
-                        ${ivDelta !== null ? `<div class="drawer-row"><span class="k">Entry IV → Δ</span><span class="v" style="color: ${ivDelta <= 0 ? 'var(--success-color)' : 'var(--warning-color)'};">${pos.entryIV.toFixed(1)} → ${ivDelta >= 0 ? '+' : ''}${ivDelta.toFixed(1)}</span></div>` : ''}
+                        ${ivDelta !== null ? `<div class="drawer-row"><span class="k">Entry IV → Δ${infoTip('How implied volatility has changed since you opened this trade. A drop (IV crush) usually works in your favor as a premium seller.')}</span><span class="v" style="color: ${ivDelta <= 0 ? 'var(--success-color)' : 'var(--warning-color)'};">${pos.entryIV.toFixed(1)} → ${ivDelta >= 0 ? '+' : ''}${ivDelta.toFixed(1)}</span></div>` : ''}
                         <div class="drawer-row"><span class="k">θ Pace</span><span class="v" title="${escapeHTML(thetaDisplay.title)}">${thetaDisplay.display}</span></div>
                         <div class="drawer-row"><span class="k">Cap. Yield</span><span class="v" title="${escapeHTML(yieldDisplay.title)}">${yieldDisplay.display}</span></div>
-                        ${m.capEfficiency ? `<div class="drawer-row"><span class="k">vs FDRXX ${m.capEfficiency.fdrxx.toFixed(1)}%</span><span class="v" style="color: ${m.capEfficiency.color};">${m.capEfficiency.ratio.toFixed(1)}× cash</span></div>` : ''}
+                        ${m.capEfficiency ? `<div class="drawer-row"><span class="k">vs FDRXX ${m.capEfficiency.fdrxx.toFixed(1)}%${infoTip('How many times your cash-equivalent rate this position\u2019s remaining annualized yield is earning. Below 1× means your collateral is earning less than doing nothing.')}</span><span class="v" style="color: ${m.capEfficiency.color};">${m.capEfficiency.ratio.toFixed(1)}× cash</span></div>` : ''}
                     </div>
                     <div class="drawer-group">
-                        <div class="drawer-title">Quality ${q ? '· ' + q.composite + ' ' + q.grade : ''}</div>
+                        <div class="drawer-title">Quality ${q ? '· ' + q.composite + ' ' + q.grade : ''}${infoTip('An A–D grade combining how long you\u2019ve held the trade, how far OTM the strike is, and the yield on your collateral vs. cash.')}</div>
                         ${q ? `
                         <div class="drawer-row"><span class="k">Duration</span><span class="v">${q.durationScore}</span></div>
                         <div class="drawer-row"><span class="k">OTM depth</span><span class="v">${q.otmScore}</span></div>
@@ -8494,23 +8571,23 @@
                             <div class="sub">${stratLabel} · ${contracts}x · ${expFmt} · ${dte} DTE</div>
                         </div>
                         <div class="pos-metrics">
-                            <span class="m ${dCls}">Δ <b>${absD.toFixed(2)}</b></span>
-                            <span class="m ${dteCls}">DTE <b>${dte}</b></span>
-                            <span class="m">IV <b>${pos.iv.toFixed(1)}%</b></span>
-                            <span class="m" title="Underlying stock price${pos.underlyingPrice ? '' : ' — refresh to populate'}">Px <b>${pos.underlyingPrice ? '$' + pos.underlyingPrice.toFixed(2) : '—'}</b></span>
-                            ${otmPct !== null ? `<span class="m ${otmCls}">${otmLabel} <b>${otmPct >= 0 ? '+' : ''}${otmPct.toFixed(1)}%</b></span>` : ''}
-                            <span class="m ${ef.cssClass === 'earnings-danger' || ef.cssClass === 'earnings-warn' ? 'bad' : ''}" title="${escapeHTML(ef.title)}">Earn <b>${ef.display}</b></span>
+                            <span class="m ${dCls}">Δ <b>${absD.toFixed(2)}</b>${infoTip('Delta — how much the option price moves per $1 move in the stock, and a rough estimate of assignment probability. Lower = safer.')}</span>
+                            <span class="m ${dteCls}">DTE <b>${dte}</b>${infoTip('Days to expiration — how many days until this contract expires or is assigned.')}</span>
+                            <span class="m">IV <b>${pos.iv.toFixed(1)}%</b>${infoTip('Implied volatility — the market\u2019s expectation of how much the stock will move. Higher IV means richer premium, but also bigger swings.')}</span>
+                            <span class="m" title="Underlying stock price${pos.underlyingPrice ? '' : ' — refresh to populate'}">Px <b>${pos.underlyingPrice ? '$' + pos.underlyingPrice.toFixed(2) : '—'}</b>${infoTip('The stock\u2019s current price. Shows — until you Refresh All.')}</span>
+                            ${otmPct !== null ? `<span class="m ${otmCls}">${otmLabel} <b>${otmPct >= 0 ? '+' : ''}${otmPct.toFixed(1)}%</b>${infoTip('How far the stock is from your strike, as a percent. OTM (out of the money) is safer; ITM (in the money) means real assignment risk.')}</span>` : ''}
+                            <span class="m ${ef.cssClass === 'earnings-danger' || ef.cssClass === 'earnings-warn' ? 'bad' : ''}" title="${escapeHTML(ef.title)}">Earn <b>${ef.display}</b>${infoTip('Days until this ticker\u2019s next earnings report. Red means earnings fall before expiration — a gap-risk warning.')}</span>
                         </div>
                         <div class="pos-pl ${plUp ? 'up' : 'down'}">
                             <div class="plv">${formatCurrency(pl)}</div>
                             <div class="plpct">${plPercent.toFixed(1)}%${chainLegs > 0 ? ' · incl. roll' : ''}</div>
                         </div>
                         <div class="pos-action-col">
-                            <span class="action-text" style="color: ${actionColor};" title="${escapeHTML(smartAction.detail)}">${escapeHTML(smartAction.text)}</span>
+                            <span class="action-text" style="color: ${actionColor};" title="${escapeHTML(smartAction.detail)}">${escapeHTML(smartAction.text)}${infoTip('The engine\u2019s recommendation for this position, based on profit captured, delta, days to expiration, and theta pace. This is a suggestion, not advice — the decision is always yours.')}</span>
                             ${m.capEfficiency ? `<div class="why-line" style="font-size: 0.7rem; color: ${m.capEfficiency.color}; line-height: 1.3;">${escapeHTML(m.capEfficiency.message)}</div>` : ''}
                             <div class="health-mini">
                                 <div class="health-track"><div style="width: ${hs}%; background: ${hColor};"></div></div>
-                                <span>${hs} · ${escapeHTML(healthDisplay.band || '')}</span>
+                                <span>${hs} · ${escapeHTML(healthDisplay.band || '')}${infoTip('A 0–100 score combining profit progress, delta risk, and time remaining into one number. Higher is healthier.')}</span>
                             </div>
                         </div>
                         <div class="pos-buttons">
@@ -8673,7 +8750,7 @@
             panel.innerHTML = `
                 <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px;">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-                        <span style="font-size: 1.05rem; font-weight: 800;">🎯 Today's Decisions</span>
+                        <span style="font-size: 1.05rem; font-weight: 800;">🎯 Today's Decisions${infoTip('Positions ranked by urgency — loss stops first, then assignment risk, idle capital, rolls, earnings, and profit-taking. Only positions that actually need attention appear here. Tap any row to jump to it.')}</span>
                         <span style="font-size: 0.8rem; color: var(--text-muted);">${ranked.length} ranked by urgency</span>
                     </div>
                     ${rows}
@@ -8732,9 +8809,9 @@
                         <div class="pos-metrics">
                             <span class="m">Current <b>${formatCurrency(currentPrice)}</b></span>
                             <span class="m">Value <b>${formatCurrency(mktValue)}</b></span>
-                            <span class="m">Min CC strike <b>$${costBasis.toFixed(2)}</b></span>
+                            <span class="m">Min CC strike <b>$${costBasis.toFixed(2)}</b>${infoTip('Your cost basis. Writing a covered call at or above this strike means you profit if the shares get called away.')}</span>
                             ${earnDisplay}
-                            ${Array.isArray(pos.ccHistory) && pos.ccHistory.length > 0 ? `<span class="m safe" title="CC premiums folded into basis this cycle">CCs <b>${pos.ccHistory.length} · ${formatCurrency(pos.ccHistory.reduce((s,l)=>s+(l.realizedPL||0),0))}</b></span>` : ''}
+                            ${Array.isArray(pos.ccHistory) && pos.ccHistory.length > 0 ? `<span class="m safe" title="CC premiums folded into basis this cycle">CCs <b>${pos.ccHistory.length} · ${formatCurrency(pos.ccHistory.reduce((s,l)=>s+(l.realizedPL||0),0))}</b>${infoTip('How many covered calls you\u2019ve written against these shares, and the total premium collected — all folded into the basis above.')}</span>` : ''}
                         </div>
                         <div class="pos-pl ${unrealPL >= 0 ? 'up' : 'down'}">
                             <div class="plv">${formatCurrency(unrealPL)}</div>
