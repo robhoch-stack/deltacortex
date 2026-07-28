@@ -2208,7 +2208,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.25 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.26 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2217,6 +2217,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.26 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.26</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> \u201cOpen CC\u201d running chain P&amp;L on assigned shares cards \u2014 shows the currently open covered call\u2019s live chain total, including any debits paid to roll it. Previously this was invisible on the shares card entirely: \u201cCCs X \u00b7 $Y\u201d only counts CCs that have been fully closed and folded into basis, so an actively-rolling CC\u2019s running debit/credit history \u2014 including roll-for-debit \u2014 didn\u2019t show up anywhere on this card until the day it finally closed.
+                                </div>
+                            </div>
+
                             <!-- v7.25 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3236,7 +3247,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.25';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.26';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -9157,11 +9168,25 @@
                 // live obligation that doesn't exist yet.
                 const linkedCC = positions.find(p => p.positionType !== 'shares' && p.ticker && p.ticker.toUpperCase() === pos.ticker.toUpperCase() && p.position === 'Short' && p.optionType === 'Call');
                 let valueIfCalledDisplay = '';
+                let openCCPLDisplay = '';
                 if (linkedCC) {
                     const valueIfCalled = linkedCC.strike * quantity;
                     const vsBasisValue = valueIfCalled - (costBasis * quantity);
                     const vicColor = vsBasisValue >= 0 ? 'var(--success-color)' : 'var(--danger-color)';
                     valueIfCalledDisplay = `<span class="m">Value if Called <b style="color: ${vicColor};">${formatCurrency(valueIfCalled)}</b>${infoTip('Total proceeds if the shares get called away at the currently written CC\u2019s strike ($' + linkedCC.strike.toFixed(2) + '). Green means a net gain vs. your basis value; red means a net loss.')}</span>`;
+
+                    // Running chain P&L on the OPEN call — this is the one figure that
+                    // was previously invisible on the shares card. "CCs X · $Y" below
+                    // only counts CCs that have been fully closed and folded into
+                    // basis; a CC you're actively rolling (including any debits paid
+                    // to roll) doesn't show up there until the day it finally closes.
+                    // This surfaces that running total — debit rolls included — while
+                    // it's still open, not just after the fact.
+                    const ccM = linkedCC._metrics || computePositionMetrics(linkedCC);
+                    const ccChainPL = ccM.pl || 0;
+                    const ccChainColor = ccChainPL >= 0 ? 'var(--success-color)' : 'var(--danger-color)';
+                    const ccRollCount = Array.isArray(linkedCC.rollHistory) ? linkedCC.rollHistory.length : 0;
+                    openCCPLDisplay = `<span class="m">Open CC ${ccRollCount > 0 ? `(${ccRollCount} roll${ccRollCount > 1 ? 's' : ''})` : ''} <b style="color: ${ccChainColor};">${formatCurrency(ccChainPL)}</b>${infoTip('The currently open covered call\u2019s running chain P&L, including any debits paid to roll it \u2014 not yet folded into basis. This updates as you roll; it only folds into Basis Value once the call is fully closed.')}</span>`;
                 }
                 
                 totalUnrealPL += unrealPL;
@@ -9191,6 +9216,7 @@
                             <span class="m">Value <b>${formatCurrency(mktValue)}</b></span>
                             <span class="m">Basis Value <b>${formatCurrency(costBasis * quantity)}</b>${infoTip('Your total dollar cost basis — per-share basis × shares. Compare directly against Value above to see the full dollar gap, not just the per-share difference.')}</span>
                             ${valueIfCalledDisplay}
+                            ${openCCPLDisplay}
                             <span class="m">Min CC strike <b>$${costBasis.toFixed(2)}</b>${infoTip('Your cost basis. Writing a covered call at or above this strike means you profit if the shares get called away.')}</span>
                             ${earnDisplay}
                             ${Array.isArray(pos.ccHistory) && pos.ccHistory.length > 0 ? `<span class="m safe" title="CC premiums folded into basis this cycle">CCs <b>${pos.ccHistory.length} · ${formatCurrency(pos.ccHistory.reduce((s,l)=>s+(l.realizedPL||0),0))}</b>${infoTip('How many covered calls you\u2019ve written against these shares, and the total premium collected — all folded into the basis above.')}</span>` : ''}
