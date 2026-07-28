@@ -2208,7 +2208,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.28 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.29 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2217,6 +2217,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.29 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.29</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> \u201cThe actual choice\u201d panel at the top of the Roll Scanner \u2014 a real Close vs. Roll comparison in dollars and plain language: realized loss/gain if closed now, capital freed, vs. debit/credit to roll, plain-language assignment odds from delta, if-called basis outcome, and total cash committed to the chain if you roll. Answers \u201cwhat am I actually choosing between\u201d directly instead of requiring you to synthesize it from a data table yourself.
+                                </div>
+                            </div>
+
                             <!-- v7.28 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3270,7 +3281,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.28';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.29';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -4802,25 +4813,83 @@
             const creditCount = analyzedWithTest.filter(c => c.isCredit).length;
             const passCount = analyzedWithTest.filter(c => c.passesTest).length;
             const bestPassing = analyzedWithTest.find(c => c.passesTest);
+
+            // ═══════════════════════════════════════════════════
+            // THE ACTUAL CHOICE — a real Close vs Roll comparison in dollars
+            // and plain language, not just a data table you have to
+            // synthesize yourself. This directly answers "what am I actually
+            // choosing between," which the raw candidate table alone doesn't.
+            // ═══════════════════════════════════════════════════
+            const rollHistoryForClose = Array.isArray(pos.rollHistory) ? pos.rollHistory : [];
+            const plRealizedForClose = rollHistoryForClose.reduce((sum, leg) => sum + (leg.realizedPL || 0), 0);
+            const plCurrentLegForClose = (pos.entryPrice - pos.currentPrice) * 100 * contracts;
+            const chainPLIfClosedNow = plCurrentLegForClose + plRealizedForClose;
+            const collateralFreed = pos.strike * 100 * contracts;
+
+            let choiceHTML = `
+                <div style="margin-bottom: 14px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color);">
+                    <div style="padding: 10px 14px; background: var(--dark-surface); font-weight: 700; font-size: 0.92em;">The actual choice</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border-color);">
+                        <div style="padding: 14px; background: var(--card-bg);">
+                            <div style="font-weight: 700; color: ${chainPLIfClosedNow >= 0 ? 'var(--success-color)' : 'var(--danger-color)'}; margin-bottom: 6px;">Close now</div>
+                            <div style="font-size: 0.86em; color: var(--text-secondary); line-height: 1.7;">
+                                Realized ${chainPLIfClosedNow >= 0 ? 'gain' : 'loss'}: <strong style="color: ${chainPLIfClosedNow >= 0 ? 'var(--success-color)' : 'var(--danger-color)'};">${formatCurrency(chainPLIfClosedNow)}</strong><br>
+                                Capital freed: <strong>${formatCurrency(collateralFreed)}</strong><br>
+                                Further risk on this leg: <strong>$0</strong> — done, no more downside
+                            </div>
+                        </div>`;
+
+            if (bestPassing) {
+                const rollDebitOrCredit = bestPassing.netCreditTotal;
+                // Cumulative cash actually committed to this chain if you roll — sum of
+                // whatever's already realized as a loss (if any) plus today's debit (if
+                // any). Deliberately NOT trying to predict the new leg's future outcome,
+                // which is unknowable — this is just "how much is genuinely in this
+                // chain so far," an honest number rather than a speculative one.
+                const cashCommittedIfRolled = Math.abs(Math.min(0, chainPLIfClosedNow)) + Math.abs(Math.min(0, rollDebitOrCredit));
+                const assignProb = Math.round(Math.abs(bestPassing.delta) * 100);
+                const hasBasisInfo = bestPassing.vsBasis !== null && bestPassing.vsBasis !== undefined;
+                choiceHTML += `
+                        <div style="padding: 14px; background: var(--card-bg);">
+                            <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">Roll to $${bestPassing.strike} (${bestPassing.dte}d)</div>
+                            <div style="font-size: 0.86em; color: var(--text-secondary); line-height: 1.7;">
+                                ${rollDebitOrCredit >= 0 ? 'Collect' : 'Pay'} today: <strong style="color: ${rollDebitOrCredit >= 0 ? 'var(--success-color)' : 'var(--danger-color)'};">${formatCurrency(Math.abs(rollDebitOrCredit))}</strong><br>
+                                Roughly <strong>${assignProb}% chance</strong> of finishing ITM (Δ${Math.abs(bestPassing.delta).toFixed(2)})${infoTip('Delta is a widely-used approximation of assignment probability, not an exact figure — treat this as a rough guide, not a guarantee.')}<br>
+                                ${hasBasisInfo ? `If assigned: <strong style="color: ${bestPassing.vsBasis >= 0 ? 'var(--success-color)' : 'var(--danger-color)'};">${bestPassing.vsBasis >= 0 ? '+' : ''}${formatCurrency(bestPassing.vsBasis * 100 * contracts)} vs your basis</strong><br>` : ''}
+                                ${cashCommittedIfRolled > 0 ? `Cash committed to this chain so far, after this roll: <strong style="color: var(--danger-color);">${formatCurrency(cashCommittedIfRolled)}</strong>${infoTip('The realized loss already locked in, plus today\u2019s debit if this roll costs one \u2014 not a prediction of how the new leg ends up, just what\u2019s genuinely been spent so far.')}` : ''}
+                            </div>
+                        </div>`;
+            } else {
+                choiceHTML += `
+                        <div style="padding: 14px; background: var(--card-bg);">
+                            <div style="font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">No sound roll available</div>
+                            <div style="font-size: 0.86em; color: var(--text-secondary); line-height: 1.7;">
+                                Every candidate either fails the roll test or would just reset the same problem at a new date. Rolling here would be delay, not a genuine improvement.
+                            </div>
+                        </div>`;
+            }
+            choiceHTML += `
+                    </div>
+                </div>`;
             
-            let verdictHTML = '';
+            let verdictHTML = choiceHTML;
             if (bestPassing && bestPassing.collectsCredit) {
-                verdictHTML = `<div style="margin-top: 10px; padding: 10px 14px; background: rgba(16, 185, 129, 0.12); border-radius: 6px; border-left: 3px solid var(--success-color); font-size: 0.9em;">
+                verdictHTML += `<div style="margin-top: 10px; padding: 10px 14px; background: rgba(16, 185, 129, 0.12); border-radius: 6px; border-left: 3px solid var(--success-color); font-size: 0.9em;">
                     <strong style="color: var(--success-color);">✅ Roll viable — passes ${bestPassing.passCount}/3 tests.</strong> 
                     Best: <strong>$${bestPassing.strike}</strong> (${bestPassing.dte}d) — +$${bestPassing.netCredit.toFixed(2)} credit, Δ ${Math.abs(bestPassing.delta).toFixed(2)}${bestPassing.reducesRisk ? ' ↓' : ''}${bestPassing.buysTime ? ', +time' : ''}.
                 </div>`;
             } else if (bestPassing && bestPassing.debitJustified) {
-                verdictHTML = `<div style="margin-top: 10px; padding: 10px 14px; background: rgba(245, 158, 11, 0.12); border-radius: 6px; border-left: 3px solid var(--warning-color); font-size: 0.9em;">
+                verdictHTML += `<div style="margin-top: 10px; padding: 10px 14px; background: rgba(245, 158, 11, 0.12); border-radius: 6px; border-left: 3px solid var(--warning-color); font-size: 0.9em;">
                     <strong style="color: var(--warning-color);">⚠️ Debit roll justified — reduces risk + buys time.</strong> 
                     Best: <strong>$${bestPassing.strike}</strong> (${bestPassing.dte}d) — $${Math.abs(bestPassing.netCredit).toFixed(2)} debit, Δ ${Math.abs(bestPassing.delta).toFixed(2)} (from ${currentAbsDelta.toFixed(2)}).
                 </div>`;
             } else if (creditCount > 0) {
-                verdictHTML = `<div style="margin-top: 10px; padding: 10px 14px; background: rgba(245, 158, 11, 0.12); border-radius: 6px; border-left: 3px solid var(--warning-color); font-size: 0.9em;">
+                verdictHTML += `<div style="margin-top: 10px; padding: 10px 14px; background: rgba(245, 158, 11, 0.12); border-radius: 6px; border-left: 3px solid var(--warning-color); font-size: 0.9em;">
                     <strong style="color: var(--warning-color);">⚠️ Roll not recommended — no candidate passes 2/3 tests.</strong> 
                     Credit rolls exist but don't meaningfully reduce risk or buy time. You'd be resetting the problem, not solving it.
                 </div>`;
             } else {
-                verdictHTML = `<div style="margin-top: 10px; padding: 10px 14px; background: rgba(239, 68, 68, 0.12); border-radius: 6px; border-left: 3px solid var(--danger-color); font-size: 0.9em;">
+                verdictHTML += `<div style="margin-top: 10px; padding: 10px 14px; background: rgba(239, 68, 68, 0.12); border-radius: 6px; border-left: 3px solid var(--danger-color); font-size: 0.9em;">
                     <strong style="color: var(--danger-color);">🛑 No viable roll — all candidates fail the 3-part test.</strong> 
                     Close the position and preserve capital.
                 </div>`;
