@@ -1218,12 +1218,13 @@
                 
                 <!-- Assigned Shares Table -->
                 <div id="sharesSection" style="display: none; margin-top: 20px;">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px; padding: 12px 16px; background: linear-gradient(90deg, rgba(124,58,237,0.1) 0%, transparent 100%); border-radius: 8px; border-left: 4px solid #7c3aed;">
+                    <div onclick="toggleSharesSection()" style="cursor: pointer; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; padding: 12px 16px; background: linear-gradient(90deg, rgba(124,58,237,0.1) 0%, transparent 100%); border-radius: 8px; border-left: 4px solid #7c3aed;">
+                        <span id="sharesToggleIcon" style="font-size: 0.9em; color: #a78bfa; transition: transform 0.15s;">▾</span>
                         <span style="font-size: 1.1em; font-weight: 700; color: #a78bfa;">📦 Assigned Shares</span>
                         <span id="sharesCount" style="font-size: 0.85em; color: var(--text-muted);"></span>
                         <span id="sharesTotalPL" style="font-size: 0.9em; font-weight: 700; margin-left: auto;"></span>
                     </div>
-                    <div style="overflow-x: auto;">
+                    <div id="sharesCollapsibleBody" style="overflow-x: auto;">
                         <div id="sharesBody"></div>
                     </div>
                 </div>
@@ -2208,7 +2209,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.30 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.31 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2217,6 +2218,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.31 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.31</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Collapsible Assigned Shares section \u2014 click the header to hide/show the full card list. The count and total P&amp;L summary stay visible even when collapsed, so you keep the at-a-glance number without the full cards taking up scroll space. State persists across reloads.
+                                </div>
+                            </div>
+
                             <!-- v7.30 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3292,7 +3304,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.30';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.31';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -9318,6 +9330,29 @@
                 </div>`;
         }
         
+        // Collapse the whole Assigned Shares section — the header (count + total
+        // P&L) always stays visible even when collapsed, so you still get the
+        // at-a-glance summary without the full card list taking up scroll space.
+        // State persists across reloads, same pattern as column visibility.
+        function toggleSharesSection() {
+            const body = document.getElementById('sharesCollapsibleBody');
+            const icon = document.getElementById('sharesToggleIcon');
+            if (!body || !icon) return;
+            const collapsed = body.style.display !== 'none';
+            body.style.display = collapsed ? 'none' : 'block';
+            icon.textContent = collapsed ? '▸' : '▾';
+            localStorage.setItem('deltaCortex_sharesCollapsed', collapsed ? 'true' : 'false');
+        }
+
+        function applySharesCollapsedState() {
+            const body = document.getElementById('sharesCollapsibleBody');
+            const icon = document.getElementById('sharesToggleIcon');
+            if (!body || !icon) return;
+            const isCollapsed = localStorage.getItem('deltaCortex_sharesCollapsed') === 'true';
+            body.style.display = isCollapsed ? 'none' : 'block';
+            icon.textContent = isCollapsed ? '▸' : '▾';
+        }
+
         function renderSharesTable() {
             const sharesPositions = positions.map((pos, idx) => ({ pos, idx })).filter(({ pos }) => pos.positionType === 'shares');
             const section = document.getElementById('sharesSection');
@@ -9330,6 +9365,7 @@
             }
             
             section.style.display = 'block';
+            applySharesCollapsedState();
             
             let totalUnrealPL = 0;
             let totalMktValue = 0;
