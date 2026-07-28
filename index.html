@@ -2208,7 +2208,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.21 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.22 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2217,6 +2217,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.22 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.22</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(59,130,246,0.15); color: #3b82f6; padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">IMPROVED</span> The -200% max-loss stop is now CC-aware. CSPs keep the unconditional \u201cClose \u2014 cut immediately\u201d hard stop (rolling a losing put commits fresh capital to the same bet). CCs now show \u201cClose or Roll \u2014 max loss exceeded\u201d and point at Scan Rolls first \u2014 since you hold the shares either way, rolling doesn\u2019t add risk the way it does for a CSP. Primary button still safely defaults to Close either way.
+                                </div>
+                            </div>
+
                             <!-- v7.21 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3192,7 +3203,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.21';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.22';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -8118,8 +8129,22 @@
                 };
             }
             
-            // ── Max loss stop-loss — 2x premium lost = hard stop (both CSP and CC) ──
+            // ── Max loss stop-loss — 2x premium lost = hard stop ──
+            // CSPs: unconditional hard stop. Rolling a losing CSP commits fresh
+            // capital to the same bet — exactly the "one more roll" rationalization
+            // this circuit-breaker exists to prevent, so it stays non-negotiable.
+            //
+            // CCs: the risk shape is different. You hold the shares either way —
+            // rolling doesn't add capital or risk, it just re-prices income against
+            // collateral you're already carrying. "Close" here doesn't exit the
+            // trade, it just leaves you holding naked shares with no income while
+            // you wait for the same recovery. So for CCs this stays a real trigger
+            // (it still fires, still flagged urgent) but points at evaluating a
+            // roll first rather than assuming Close is the only right move.
             if (plPercent <= -200) {
+                if (isCC) {
+                    return { text: `${lossPrefix}Close or Roll — max loss exceeded (${closeLabel})`, detail: `Loss exceeds 2x premium on this leg. You hold the shares either way — check Scan Rolls for a strike that moves you toward basis before closing outright.` };
+                }
                 return { text: `${lossPrefix}Close — max loss exceeded (${closeLabel})`, detail: `Loss exceeds 2x premium collected — hard stop triggered. Cut immediately.` };
             }
             if (plPercent <= -100) {
