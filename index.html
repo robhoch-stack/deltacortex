@@ -2208,7 +2208,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.29 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.30 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2217,6 +2217,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.30 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.30</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> \u201cClose vs Hold\u201d comparison on EVERY position\u2019s drawer, not just crisis-triggered ones \u2014 same honest, dollar-based framing built for the Roll Scanner (v7.29), now the first thing you see when you open any card: realized $ if closed now, additional $ kept if it expires worthless, and the assignment outcome with plain-language odds from delta and (for CCs) the real dollar gap vs your actual shares basis. Uses only data already loaded \u2014 no new API calls, works instantly on every card.
+                                </div>
+                            </div>
+
                             <!-- v7.29 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3281,7 +3292,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.29';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.30';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -9017,9 +9028,49 @@
                 
                 const ivDelta = (pos.entryIV && pos.position === 'Short') ? (pos.iv - pos.entryIV) : null;
                 const q = qualityScore;
+
+                // ═══════════════════════════════════════════════════
+                // CLOSE VS HOLD — the same honest, dollar-based comparison
+                // built for the Roll Scanner, now permanent on every card's
+                // drawer, not just crisis-triggered ones. Uses only data
+                // already loaded — no new API calls. This is meant to be the
+                // first thing you read, with Pricing/Roll Chain/Greeks below
+                // as supporting detail rather than the primary decision surface.
+                // ═══════════════════════════════════════════════════
+                const closeRealized = pl; // already chain-aware from computePositionMetrics
+                const holdIfExpiresWorthless = pos.currentPrice * 100 * contracts; // what you'd additionally keep
+                const totalIfExpiresWorthless = closeRealized + holdIfExpiresWorthless;
+                const assignLabel = isCC ? 'If called away' : 'If assigned';
+                const hasBasisCompare = isCC && cardSharesBasis !== null;
+                const assignVsBasis = hasBasisCompare ? (basisValue - cardSharesBasis) * 100 * contracts : null;
+                const assignProbPct = Math.round(absD * 100);
+
+                const closeVsHoldPanel = `
+                    <div class="drawer-group" style="grid-column: 1 / -1;">
+                        <div class="drawer-title">Close vs Hold${infoTip('The same real comparison built for the Roll Scanner \u2014 now on every card. What you lock in by closing today, versus the two ways holding to expiration can actually play out.')}</div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 4px;">
+                            <div style="padding: 10px 12px; background: var(--dark-surface); border-radius: 8px;">
+                                <div style="font-weight: 700; font-size: 0.85em; color: ${closeRealized >= 0 ? 'var(--success-color)' : 'var(--danger-color)'}; margin-bottom: 4px;">Close now</div>
+                                <div style="font-size: 0.82em; color: var(--text-secondary); line-height: 1.6;">Realized: <strong style="color: ${closeRealized >= 0 ? 'var(--success-color)' : 'var(--danger-color)'};">${formatCurrency(closeRealized)}</strong><br>Done — $0 further risk on this leg</div>
+                            </div>
+                            <div style="padding: 10px 12px; background: var(--dark-surface); border-radius: 8px;">
+                                <div style="font-weight: 700; font-size: 0.85em; color: var(--success-color); margin-bottom: 4px;">Hold — expires OTM</div>
+                                <div style="font-size: 0.82em; color: var(--text-secondary); line-height: 1.6;">Keep <strong style="color: var(--success-color);">+${formatCurrency(holdIfExpiresWorthless)}</strong> more<br>Total if worthless: <strong>${formatCurrency(totalIfExpiresWorthless)}</strong></div>
+                            </div>
+                            <div style="padding: 10px 12px; background: var(--dark-surface); border-radius: 8px;">
+                                <div style="font-weight: 700; font-size: 0.85em; color: var(--text-primary); margin-bottom: 4px;">${assignLabel}</div>
+                                <div style="font-size: 0.82em; color: var(--text-secondary); line-height: 1.6;">
+                                    Roughly <strong>${assignProbPct}% chance</strong> (Δ${absD.toFixed(2)})${infoTip('Delta as a rough approximation of assignment probability \u2014 not exact, but the standard practitioner shorthand.')}<br>
+                                    ${hasBasisCompare ? `<strong style="color: ${assignVsBasis >= 0 ? 'var(--success-color)' : 'var(--danger-color)'};">${assignVsBasis >= 0 ? '+' : ''}${formatCurrency(assignVsBasis)} vs basis</strong>` : `$${basisValue.toFixed(2)}/sh effective`}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
                 
                 const drawer = `
                 <div class="pos-drawer" style="display: ${isOpen ? 'grid' : 'none'};">
+                    ${closeVsHoldPanel}
                     <div class="drawer-group">
                         <div class="drawer-title">Pricing${infoTip('The two resting orders to place at your broker: a take-profit and a hard stop. Together they let this position manage itself.')}</div>
                         <div class="drawer-row"><span class="k">Entry</span><span class="v"><button data-action="editEntryPrice" style="background:none;border:none;cursor:pointer;padding:0;color:var(--text-primary);font-weight:700;font-family:inherit;font-size:inherit;" title="Click to edit entry price">$${pos.entryPrice.toFixed(2)} ✏️</button></span></div>
