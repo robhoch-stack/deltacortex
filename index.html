@@ -2208,7 +2208,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.22 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.23 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2217,6 +2217,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.23 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.23</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(245,158,11,0.12); color: var(--warning-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> P&amp;L% on rolled chains used only the LATEST leg\u2019s entry premium as its basis (code comment said \u201coriginal chain basis\u201d but the code didn\u2019t match) \u2014 meant rolling to a smaller-premium strike could make the % look WORSE immediately after a roll, even when delta/DTE genuinely improved, and could re-trigger the max-loss stop right after acting on it. Now uses total premium collected across the whole chain. Eject price formula corrected to match. Also fixed the same missing-chain-history bug in CSV export (open positions), which previously excluded realized roll P&amp;L entirely, understating exported P&amp;L/health/Smart Action for any rolled position.
+                                </div>
+                            </div>
+
                             <!-- v7.22 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3203,7 +3214,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.22';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.23';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -3511,9 +3522,17 @@
             // Chain total P&L (what the user cares about)
             const pl = plCurrentLeg + plRealized;
             
-            // P&L % is based on the original chain entry cost basis
-            // (total premium collected on opens minus total paid on closes = total at risk)
-            const currentLegCost = pos.entryPrice * 100 * contracts;
+            // P&L % is based on the TOTAL premium ever collected across the whole
+            // rolled chain (every leg's opening entry price, summed) — not just the
+            // latest leg's entry alone. This was previously using only pos.entryPrice
+            // (the newest leg), which meant rolling to a smaller-premium strike could
+            // make the % look WORSE immediately after a roll, even when delta/DTE
+            // genuinely improved, since the same accumulated dollar loss sat on top
+            // of a shrinking denominator. Using the cumulative chain premium keeps
+            // the % stable and meaningful across rolls: "how much of everything this
+            // position has ever collected have I now given back."
+            const totalPremiumCollected = pos.entryPrice + rollHistory.reduce((sum, leg) => sum + (leg.entryPrice || 0), 0);
+            const currentLegCost = totalPremiumCollected * 100 * contracts;
             const plPercent = currentLegCost > 0 ? (pl / currentLegCost) * 100 : 0;
             
             const thetaPace = calculateThetaPace(pos.entryPrice, pos.currentPrice, pos.position, pos.expiration, pos.entryDate || pos.lastUpdated);
@@ -8811,14 +8830,22 @@
                 const rollLossPerShare = (m.plRealized || 0) / (100 * contracts);
                 const effEntry = pos.entryPrice + rollLossPerShare;
                 const gtcPrice = effEntry > 0 ? effEntry * 0.50 : Math.max(0, pos.entryPrice - Math.abs(rollLossPerShare));
-                // Eject price: buy-to-close price at which the CHAIN hits -200% of current-leg premium.
-                // plPercent = [(entry - X)*100*ct + realizedRollPL] / (entry*100*ct) * 100 = -200
-                //   →  X = entry + 2*entry + rollLossPerShare = entry*3 + rollLossPerShare
+                const rollHistory = Array.isArray(pos.rollHistory) ? pos.rollHistory : [];
+                // Eject price: buy-to-close price at which the CHAIN hits -200% of TOTAL
+                // premium ever collected across the whole chain — matches the corrected
+                // plPercent basis (see computePositionMetrics). Previously this only used
+                // the latest leg's entry price, which meant rolling to a smaller-premium
+                // strike could make the eject threshold worse immediately after a roll,
+                // even when delta/DTE genuinely improved.
+                // plPercent = [(entry-X)*100*ct + realizedRollPL] / (totalPremiumCollected*100*ct)*100 = -200
+                //   totalPremiumCollected = entry + priorLegsSum
+                //   →  X = entry + 2*totalPremiumCollected + rollLossPerShare
+                //        = 3*entry + 2*priorLegsSum + rollLossPerShare
                 // Floored at $0 — an option can never be bought back for negative dollars. On a chain
                 // with large realized roll losses this formula can go negative, which just means the
                 // -200% stop has already been blown through entirely (any price, even $0, exceeds it).
-                const ejectPrice = Math.max(0, pos.entryPrice * 3 + rollLossPerShare);
-                const rollHistory = Array.isArray(pos.rollHistory) ? pos.rollHistory : [];
+                const priorLegsSum = rollHistory.reduce((sum, leg) => sum + (leg.entryPrice || 0), 0);
+                const ejectPrice = Math.max(0, pos.entryPrice * 3 + priorLegsSum * 2 + rollLossPerShare);
                 let chainPrem = pos.entryPrice;
                 rollHistory.forEach(leg => { chainPrem += (leg.entryPrice || 0) - (leg.exitPrice || 0); });
                 const basisValue = isCC ? pos.strike + chainPrem : pos.strike - chainPrem;
@@ -10740,8 +10767,17 @@
             const rows = positions.map(pos => {
                 const dte = calculateDTE(pos.expiration);
                 const contracts = pos.contracts || 1;
-                const pl = calculatePL(pos.position, pos.entryPrice, pos.currentPrice, contracts);
-                const plPercent = (pl / (pos.entryPrice * 100 * contracts)) * 100;
+                // Include realized P&L from any prior roll legs — this was previously
+                // missing here entirely, understating P&L for any rolled position in
+                // the export (it only counted the current open leg). Also switched the
+                // % basis to total chain premium collected, matching the same fix
+                // applied to the live position metrics.
+                const rollHistory = Array.isArray(pos.rollHistory) ? pos.rollHistory : [];
+                const plRealized = rollHistory.reduce((sum, leg) => sum + (leg.realizedPL || 0), 0);
+                const plCurrentLeg = calculatePL(pos.position, pos.entryPrice, pos.currentPrice, contracts);
+                const pl = plCurrentLeg + plRealized;
+                const totalPremiumCollected = pos.entryPrice + rollHistory.reduce((sum, leg) => sum + (leg.entryPrice || 0), 0);
+                const plPercent = totalPremiumCollected > 0 ? (pl / (totalPremiumCollected * 100 * contracts)) * 100 : 0;
                 const thetaPace = calculateThetaPace(pos.entryPrice, pos.currentPrice, pos.position, pos.expiration, pos.entryDate || pos.lastUpdated);
                 const capitalYield = calculateCapitalYield(pos.currentPrice, pos.strike, contracts, dte, pos.position, pos.optionType, pos.underlyingPrice);
                 const healthData = calculateHealthScore(pos.position, pos.delta, dte, plPercent, pos.iv, thetaPace, capitalYield, pos.ticker, pos.expiration, pos.entryIV, pos.optionType);
