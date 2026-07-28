@@ -2208,7 +2208,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.26 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.27 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2217,6 +2217,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.27 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.27</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(59,130,246,0.15); color: #3b82f6; padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">IMPROVED</span> The -100% loss trigger is now CC-aware too, matching the -200% fix from v7.22 \u2014 previously only the harder -200% stop got the \u201cClose or Roll\u201d treatment for CCs, so a CC between -100% and -200% still showed a plain \u201cClose,\u201d inconsistent with its own detail text which already said \u201cevaluate close vs roll.\u201d
+                                </div>
+                            </div>
+
                             <!-- v7.26 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3247,7 +3258,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.26';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.27';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -8200,6 +8211,9 @@
                 return { text: `${lossPrefix}Close — max loss exceeded (${closeLabel})`, detail: `Loss exceeds 2x premium collected — hard stop triggered. Cut immediately.` };
             }
             if (plPercent <= -100) {
+                if (isCC) {
+                    return { text: `${lossPrefix}Close or Roll — loss exceeds premium (${closeLabel})`, detail: `Loss has exceeded total premium collected on this leg. You hold the shares either way — check Scan Rolls for a strike that improves delta/DTE before closing outright.` };
+                }
                 return { text: `${lossPrefix}Close — loss exceeds premium (${closeLabel})`, detail: `Loss has exceeded total premium collected. Evaluate close vs roll but act now.` };
             }
 
