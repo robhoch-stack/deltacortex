@@ -2208,7 +2208,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.27 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.28 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2217,6 +2217,18 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.28 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.28</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Roll Scanner now shows a \u201cvs Basis\u201d column for CC candidates \u2014 each strike\u2019s distance from your actual shares cost basis, color-coded, so you can see at a glance whether ANY candidate protects what you paid before scanning through Greeks.<br>
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> The option card\u2019s \u201cSale if called\u201d line is now color-coded against your real shares basis and shows the exact dollar gap \u2014 no need to look up basis separately or do the math yourself.
+                                </div>
+                            </div>
+
                             <!-- v7.27 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3258,7 +3270,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.27';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.28';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -4652,6 +4664,15 @@
             const costToClose = pos.currentPrice;
             const side = pos.optionType === 'Put' ? 'put' : 'call';
 
+            // For CC rolls specifically: look up the linked shares position so every
+            // candidate can show its distance from YOUR actual basis, not just the
+            // raw strike. This is the piece that was missing tonight — without it,
+            // a roll table full of "passes the 3-part test" candidates gives no
+            // signal about whether any of them actually protect what you paid.
+            const isThisCC = pos.position === 'Short' && pos.optionType === 'Call';
+            const linkedShares = isThisCC ? positions.find(p => p.positionType === 'shares' && p.ticker && p.ticker.toUpperCase() === pos.ticker.toUpperCase()) : null;
+            const sharesBasis = linkedShares ? (linkedShares.costBasis || linkedShares.entryPrice) : null;
+
             // Step 1: Get expirations and ATR in parallel
             const [expirations, atrData] = await Promise.all([
                 fetchExpirations(pos.ticker),
@@ -4705,6 +4726,11 @@
                         inATRBuffer = atrDistance < 1.0; // Within 1× ATR = danger zone
                     }
                     
+                    // Distance from YOUR basis, not just the raw strike — the piece
+                    // that answers "does this candidate actually protect what I paid"
+                    // at a glance, instead of requiring a separate mental calculation.
+                    const vsBasis = sharesBasis !== null ? c.strike - sharesBasis : null;
+                    
                     return {
                         ...c,
                         newPremium,
@@ -4716,7 +4742,8 @@
                         dte: target.dte,
                         annualizedYield,
                         atrDistance,
-                        inATRBuffer
+                        inATRBuffer,
+                        vsBasis
                     };
                 });
                 allAnalyzed = allAnalyzed.concat(analyzed);
@@ -4842,6 +4869,7 @@
                             <th style="padding: 8px 6px;">Net $ (×${contracts})</th>
                             <th style="padding: 8px 6px;">Yield</th>
                             <th style="padding: 8px 6px;" title="Distance from stock price in ATR units. <1× = within danger zone">ATR Buf</th>
+                            ${sharesBasis !== null ? `<th style="padding: 8px 6px;" title="This strike minus your shares cost basis of $${sharesBasis.toFixed(2)}. Positive = protects/beats basis if called. Negative = locks in a loss.">vs Basis</th>` : ''}
                             <th style="padding: 8px 6px;" title="Candidate expires after earnings event">Earn</th>
                             <th style="padding: 8px 6px;">Roll Test</th>
                             <th style="padding: 8px 6px;"></th>
@@ -4860,6 +4888,20 @@
                                 const atrColor = c.atrDistance >= 1.5 ? 'var(--success-color)' : c.atrDistance >= 1.0 ? 'var(--warning-color)' : 'var(--danger-color)';
                                 const atrIcon = c.atrDistance >= 1.5 ? '🟢' : c.atrDistance >= 1.0 ? '🟡' : '🔴';
                                 atrCell = `<td style="padding: 6px; font-weight: 600; color: ${atrColor}; white-space: nowrap;" title="${c.atrDistance.toFixed(2)}× ATR from stock price${c.inATRBuffer ? ' — within 1× ATR danger zone' : ''}">${atrIcon} ${c.atrDistance.toFixed(1)}×</td>`;
+                            }
+                            
+                            // vs Basis display — only present for CC candidates with a linked
+                            // shares position. This is the number that would have answered
+                            // "does any of this actually protect what I paid" at a glance.
+                            let basisCell = '';
+                            if (sharesBasis !== null) {
+                                if (c.vsBasis === null || c.vsBasis === undefined) {
+                                    basisCell = '<td style="padding: 6px; color: var(--text-muted);">—</td>';
+                                } else {
+                                    const vbColor = c.vsBasis >= 0 ? 'var(--success-color)' : 'var(--danger-color)';
+                                    const vbSign = c.vsBasis >= 0 ? '+' : '';
+                                    basisCell = `<td style="padding: 6px; font-weight: 700; color: ${vbColor}; white-space: nowrap;" title="Strike $${c.strike} vs. your basis $${sharesBasis.toFixed(2)}">${vbSign}$${c.vsBasis.toFixed(2)}</td>`;
+                                }
                             }
                             
                             // Earnings warning display
@@ -4893,6 +4935,7 @@
                                     </td>
                                     <td style="padding: 6px;" class="${yieldClass}">${c.annualizedYield.toFixed(1)}%</td>
                                     ${atrCell}
+                                    ${basisCell}
                                     ${earningsCell}
                                     <td style="padding: 6px; white-space: nowrap; font-size: 0.85em;">
                                         ${testBadge1} ${testBadge2} ${testBadge3} ${passLabel}
@@ -8835,6 +8878,12 @@
                 
                 const safeTicker = escapeHTML(pos.ticker);
                 const isCC = pos.position === 'Short' && pos.optionType === 'Call';
+                // For CCs: look up the linked shares position so basisValue below can be
+                // shown relative to what you actually paid, not just this option's own
+                // roll-chain math. Same lookup pattern used on the shares card and Roll
+                // Scanner — kept consistent across all three surfaces.
+                const linkedSharesForCard = isCC ? positions.find(p => p.positionType === 'shares' && p.ticker && p.ticker.toUpperCase() === pos.ticker.toUpperCase()) : null;
+                const cardSharesBasis = linkedSharesForCard ? (linkedSharesForCard.costBasis || linkedSharesForCard.entryPrice) : null;
                 const stratLabel = pos.position === 'Short' ? (isCC ? 'CC' : 'CSP') : 'Long ' + pos.optionType;
                 const expFmt = new Date(pos.expiration + 'T00:00:00').toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
                 const chainLegs = m.rollChainLength || 0;
@@ -8908,7 +8957,7 @@
                         <div class="drawer-row"><span class="k">Current</span><span class="v">$${pos.currentPrice.toFixed(2)}</span></div>
                         <div class="drawer-row"><span class="k">50% GTC${infoTip('The buy-to-close price that locks in 50% of the premium you collected. A common take-profit target — set it as a GTC (good-till-canceled) limit order.')}</span><span class="v" style="color: var(--signal-teal);">$${gtcPrice.toFixed(2)}</span></div>
                         <div class="drawer-row"><span class="k" title="Buy-to-close price that hits your −200% stop (2× loss). Set this as a GTC order at your broker.">🛑 Eject (3×)${infoTip('The buy-to-close price where your loss reaches 2× the premium collected — a hard stop. Set this as a GTC order so it protects you even when you\u2019re not watching.')}</span><span class="v" style="color: var(--danger-color);">$${ejectPrice.toFixed(2)}</span></div>
-                        <div class="drawer-row"><span class="k">${isCC ? 'Sale if called' : 'If assigned'}${infoTip(isCC ? 'Your effective sale price per share if the stock gets called away at this strike.' : 'Your effective cost basis per share if this put gets assigned to you.')}</span><span class="v">$${basisValue.toFixed(2)}/sh</span></div>
+                        <div class="drawer-row"><span class="k">${isCC ? 'Sale if called' : 'If assigned'}${infoTip(isCC ? 'Your effective sale price per share if the stock gets called away at this strike.' : 'Your effective cost basis per share if this put gets assigned to you.')}</span><span class="v" style="${cardSharesBasis !== null ? `color: ${basisValue >= cardSharesBasis ? 'var(--success-color)' : 'var(--danger-color)'};` : ''}">$${basisValue.toFixed(2)}/sh${cardSharesBasis !== null ? ` <span style="font-size: 0.82em; font-weight: 400; opacity: 0.85;">(${basisValue >= cardSharesBasis ? '+' : ''}${(basisValue - cardSharesBasis).toFixed(2)} vs $${cardSharesBasis.toFixed(2)} basis)</span>` : ''}</span></div>
                         <div class="drawer-row"><span class="k">Contracts</span><span class="v">${contracts}</span></div>
                     </div>
                     <div class="drawer-group">
