@@ -928,6 +928,12 @@
         .pos-pl .plpct { font-size: 0.75rem; font-weight: 600; }
         .pos-pl.up .plv, .pos-pl.up .plpct { color: var(--success-color); }
         .pos-pl.down .plv, .pos-pl.down .plpct { color: var(--danger-color); }
+        /* Down but genuinely healthy (Health Score ≥60) — a modest, expected
+           drawdown that theta/time hasn't caught up on yet shouldn't trigger
+           the same visceral alarm as a position that's actually in trouble.
+           Muted amber instead of full red; the raw number is still negative,
+           just not screaming "danger" when nothing's actually wrong. */
+        .pos-pl.down-mild .plv, .pos-pl.down-mild .plpct { color: var(--warning-color); opacity: 0.9; }
         .pos-action-col { display: flex; flex-direction: column; gap: 3px; }
         .action-text { font-size: 0.84rem; font-weight: 700; }
         .health-mini { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; color: var(--text-muted); }
@@ -2209,7 +2215,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.31 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.32 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2218,6 +2224,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.32 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.32</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">IMPROVED</span> P&amp;L color now reflects Health Score, not just the raw sign \u2014 a position down in dollars but Health \u226560 (Healthy/Monitor) now shows in muted amber instead of full red, with a tooltip explaining why. A modest, expected drawdown no longer reads with the same visceral alarm as a position that's actually in trouble; full red is reserved for positions where Health has genuinely dropped too.
+                                </div>
+                            </div>
+
                             <!-- v7.31 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3304,7 +3321,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.31';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.32';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -9150,8 +9167,8 @@
                             <span class="m ${ef.cssClass === 'earnings-danger' || ef.cssClass === 'earnings-warn' ? 'bad' : ''}" title="${escapeHTML(ef.title)}">Earn <b>${ef.display}</b>${infoTip('Days until this ticker\u2019s next earnings report. Red means earnings fall before expiration — a gap-risk warning.')}</span>
                             ${(() => { const df = getDividendRiskFlag(pos); return df ? `<span class="m" style="color: ${df.color};" title="${escapeHTML(df.title)}">Div <b>${df.display}</b>${infoTip('Early assignment risk: this covered call is in the money with a dividend going ex before expiration. The holder may exercise early to capture it if there\u2019s little time value left to give up.')}</span>` : ''; })()}
                         </div>
-                        <div class="pos-pl ${plUp ? 'up' : 'down'}">
-                            <div class="plv">${formatCurrency(pl)}</div>
+                        <div class="pos-pl ${plUp ? 'up' : (hs >= 60 ? 'down-mild' : 'down')}">
+                            <div class="plv">${formatCurrency(pl)}${(!plUp && hs >= 60) ? infoTip('Down in dollars, but Health Score is ' + hs + ' (Healthy/Monitor) \u2014 delta, DTE, and theta pace all still look fine. Shown in amber, not red, so a normal early-stage drawdown doesn\u2019t read as urgent when nothing\u2019s actually wrong.') : ''}</div>
                             <div class="plpct">${plPercent.toFixed(1)}%${chainLegs > 0 ? ' · incl. roll' : ''}</div>
                         </div>
                         <div class="pos-action-col">
