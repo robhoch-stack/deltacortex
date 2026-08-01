@@ -1242,9 +1242,10 @@
             </div>
 
             <div id="closedPositionsView" style="display: none;">
-                <div style="padding: 20px 0; display: flex; gap: 15px;">
+                <div style="padding: 20px 0; display: flex; gap: 15px; flex-wrap: wrap;">
                     <button class="btn-primary" onclick="openImportModal()">📥 Import Trades from CSV</button>
                     <button class="btn-success" onclick="exportClosedToCSV()">📤 Export Closed Positions</button>
+                    <button class="btn-primary" onclick="openWeeklyAudit()" style="background: var(--signal-teal, #2aa6a1);">✅ Weekly Audit</button>
                     <button class="btn-danger" onclick="clearAllClosedTrades()">🗑️ Clear All Trades</button>
                 </div>
                 
@@ -2215,7 +2216,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.32 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.39 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2224,6 +2225,90 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.39 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.39</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> vs Basis check extended to CSP rolls \u2014 previously CC-only (comparing to owned shares basis). CSPs have no shares yet, so this compares each candidate to your CURRENT position's own effective breakeven-if-assigned instead. A CSP roll could satisfy lower delta, more time, and a credit while quietly worsening what you'd actually pay if assigned \u2014 nothing previously caught that. Now a hard disqualifier alongside earnings and illiquidity.
+                                </div>
+                            </div>
+
+                            <!-- v7.38 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.38</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Roll Test expanded from 3 parts to 4 \u2014 ATR buffer (\u226e1.0\u00d7) is now a real, required leg, not just an informational column. Closes the exact gap from tonight's LULU review: a candidate could improve delta/DTE/credit on paper while having no real safety margin.<br>
+                                    <span style="background: rgba(239,68,68,0.12); color: var(--danger-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Three hard disqualifiers, matching rules already treated as non-negotiable elsewhere in this tool: earnings before expiration, illiquid (OI &lt;100, already fetched but previously unused), and \u2014 for CC rolls with a linked shares position \u2014 candidates that move further from basis than your current position already sits. These fail outright regardless of how well they score on the 4-part test, and show a clear \ud83d\udeab Disqualified label with the specific reason.<br>
+                                    <span style="background: rgba(245,158,11,0.12); color: var(--warning-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> Found while building the above: a leftover code path let debit-justified candidates bypass the pass/fail check entirely, which would have silently let hard-disqualified candidates (e.g. earnings-exposed) show as passing anyway. Fixed before shipping. Roll Decision Guide rewritten to document the real 4-part test and disqualifiers.
+                                </div>
+                            </div>
+
+                            <!-- v7.37 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.37</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">IMPROVED</span> Roll Scanner now sorts passing candidates first (credit as tiebreaker within each group), instead of sorting purely by credit regardless of pass/fail. Nothing is hidden \u2014 every candidate still renders \u2014 but the richest-premium, lowest-quality candidates no longer lead the list by default. Note: this addresses candidates that genuinely fail the 3-part test; it does not catch candidates that pass mechanically but have thin ATR buffer, since ATR isn't one of the 3 test criteria (see LULU discussion).
+                                </div>
+                            </div>
+
+                            <!-- v7.36 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.36</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Roll Scanner now shows IV per candidate \u2014 already being fetched, previously just never displayed. Answers whether a given roll is being priced generously or thinly, a roll-time question no entry-screening tool can see since it doesn't know about your existing position.<br>
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Roll Scanner candidates now labeled by type (\ud83d\udd3c Up / \ud83d\udd3d Down / \u27a1\ufe0f Out) \u2014 strike direction relative to your current position, computed from data already there.
+                                </div>
+                            </div>
+
+                            <!-- v7.35 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.35</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Short-DTE gamma-risk tightening \u2014 under 15 DTE, positions that aren't already ultra-safe now target a lower 37.5% profit bar instead of the standard target, so you exit before gamma risk accelerates near expiration.<br>
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Close-winners-before-earnings rule extended to the full 2-week window (previously only covered inside 10 days) \u2014 a profitable position with earnings 11-14d out now gets flagged to close rather than hold through a binary event waiting for the full target.<br>
+                                    <span style="background: rgba(245,158,11,0.12); color: var(--warning-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> Found while building the above: the displayed \u201c50% GTC\u201d price was hardcoded, completely disconnected from the Smart Action engine's actual dynamic profit target \u2014 the order you'd set at your broker didn't match what the tool was evaluating against. Extracted into one shared calculateProfitTarget() function used by both; the drawer label now shows the real target percentage instead of always claiming 50%.
+                                </div>
+                            </div>
+
+                            <!-- v7.34 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.34</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">IMPROVED</span> Trade journal split into Entry Thesis (set once, near entry) and Exit / Ongoing Reflection (updated as it plays out) \u2014 preserves your original reasoning separately from hindsight instead of one field that gets overwritten. Old single-field notes migrate automatically on next edit, nothing lost.<br>
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Weekly Audit now shows each position's logged Entry Thesis right next to its rule-compliance checks \u2014 your own stated reasoning sits beside what actually happened.
+                                </div>
+                            </div>
+
+                            <!-- v7.33 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.33</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Trade journal \u2014 a \ud83d\udcdd Notes button on every position opens a free-text field for entry reasoning and later reflection. Carries over automatically when a position closes.<br>
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Weekly Audit (Performance tab) \u2014 checks positions opened in the last 7 days against your actual configured rules: position size, sector exposure, T-bill hurdle clearance, and earnings gap. The backward-looking complement to Today's Decisions.
+                                </div>
+                            </div>
+
                             <!-- v7.32 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3177,12 +3262,23 @@
                 <div id="rollGuideBody" style="display: none; padding: 14px; font-size: 0.85em; color: var(--text-secondary); line-height: 1.7; background: var(--card-bg);">
                     
                     <div style="margin-bottom: 14px;">
-                        <strong style="color: var(--accent-gold); font-size: 1em;">📐 Three-Part Roll Test</strong>
+                        <strong style="color: var(--accent-gold); font-size: 1em;">📐 Four-Part Roll Test</strong>
                         <div style="padding-left: 16px; margin-top: 4px;">
-                            Every roll candidate is evaluated against your current position on three criteria. A roll must pass <strong>at least 2 of 3</strong> to show the Roll → button:<br><br>
+                            Every roll candidate is evaluated against your current position on four criteria. A roll must pass <strong>at least 3 of 4</strong> (and always meet the ATR check) to show the Roll → button:<br><br>
                             <strong style="color: var(--success-color);">① Reduces Risk</strong> — Does the candidate have a lower absolute delta than your current position? Lower delta = further OTM = less directional exposure.<br>
                             <strong style="color: var(--success-color);">② Buys Time</strong> — Does the candidate have more DTE? More time = more theta to collect and more room for recovery.<br>
-                            <strong style="color: var(--success-color);">③ Collects Credit</strong> — Is it a net credit roll? Credit rolls are always preferred. A debit roll can pass if ① and ② both improve meaningfully (delta drops ≥ 0.05 AND DTE extends ≥ 14 days).
+                            <strong style="color: var(--success-color);">③ Collects Credit</strong> — Is it a net credit roll? Credit rolls are always preferred. A debit roll can pass if ① and ② both improve meaningfully (delta drops ≥ 0.05 AND DTE extends ≥ 14 days).<br>
+                            <strong style="color: var(--success-color);">④ Meets ATR Buffer</strong> — Required, not just scored. A candidate can improve delta/DTE/credit on paper while still having near-zero real safety margin — this leg exists specifically to catch that. Must be ≥1.0× ATR (see below) or the candidate fails regardless of the other three.
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 14px;">
+                        <strong style="color: var(--danger-color); font-size: 1em;">🚫 Hard Disqualifiers</strong>
+                        <div style="padding-left: 16px; margin-top: 4px;">
+                            Three things fail a candidate outright, regardless of how well it scores on the four-part test above — these match rules treated as non-negotiable elsewhere in this tool and across every options-income guide reviewed while building this feature:<br><br>
+                            <strong>Earnings before expiration</strong> — never roll into an earnings gap. Roll after, not through.<br>
+                            <strong>Illiquid</strong> — open interest below 100. A candidate you can't get a fair fill on isn't a real option, no matter how good it looks on paper.<br>
+                            <strong>Worsens your basis (CC only)</strong> — if the new strike moves you further from your shares' cost basis than your current position already sits, that's giving up ground while still technically satisfying the other criteria. Only checked when a linked shares position exists.
                         </div>
                     </div>
 
@@ -3191,9 +3287,9 @@
                         <div style="padding-left: 16px; margin-top: 4px;">
                             The ATR measures how much a stock typically moves per day over the last 14 trading sessions. The <strong>ATR Buf</strong> column shows how many ATRs each candidate's strike is from the current stock price:<br><br>
                             🟢 <strong>≥ 1.5×</strong> — Safe buffer. The strike is well outside the stock's normal daily range. Low probability of being tested.<br>
-                            🟡 <strong>1.0 – 1.5×</strong> — Marginal. A strong single-day move could bring the stock close to this strike. Acceptable but watch closely.<br>
-                            🔴 <strong>< 1.0×</strong> — Danger zone. The strike is within one day's normal range. High probability of being tested or breached.<br><br>
-                            <strong>How to use it:</strong> When choosing between candidates that pass the roll test, prefer strikes with 🟢 1.5×+ ATR buffer. A roll that collects credit but lands at 🔴 0.7× ATR is likely to put you right back in trouble within days. The ATR buffer helps you avoid rolling into a strike that the stock can easily reach.
+                            🟡 <strong>1.0 – 1.5×</strong> — Marginal. A strong single-day move could bring the stock close to this strike. Meets the ④ requirement, but watch closely.<br>
+                            🔴 <strong>< 1.0×</strong> — Danger zone. The strike is within one day's normal range. Fails ④ regardless of how the other three legs score.<br><br>
+                            <strong>How to use it:</strong> Among passing candidates, still prefer 🟢 1.5×+ where available — passing the 1.0× floor means "not disqualified," not "ideal." A candidate at exactly 1.0× cleared the bar, but a 1.8× candidate is genuinely safer.
                         </div>
                     </div>
 
@@ -3321,7 +3417,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.32';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.39';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -4724,6 +4820,17 @@
             const linkedShares = isThisCC ? positions.find(p => p.positionType === 'shares' && p.ticker && p.ticker.toUpperCase() === pos.ticker.toUpperCase()) : null;
             const sharesBasis = linkedShares ? (linkedShares.costBasis || linkedShares.entryPrice) : null;
 
+            // For CSP rolls: there are no shares yet, so the equivalent check isn't
+            // "vs my shares basis" — it's "vs my OWN current position's effective
+            // cost-if-assigned." A CSP roll can satisfy lower delta, more time, and
+            // a credit while still quietly worsening what you'd actually pay if
+            // assigned, and nothing previously caught that. Mirrors the same
+            // chainPrem calculation already used for the "If assigned" display.
+            const rollHistoryForBasis = Array.isArray(pos.rollHistory) ? pos.rollHistory : [];
+            let currentChainPrem = pos.entryPrice;
+            rollHistoryForBasis.forEach(leg => { currentChainPrem += (leg.entryPrice || 0) - (leg.exitPrice || 0); });
+            const currentBreakeven = !isThisCC ? (pos.strike - currentChainPrem) : null;
+
             // Step 1: Get expirations and ATR in parallel
             const [expirations, atrData] = await Promise.all([
                 fetchExpirations(pos.ticker),
@@ -4780,7 +4887,15 @@
                     // Distance from YOUR basis, not just the raw strike — the piece
                     // that answers "does this candidate actually protect what I paid"
                     // at a glance, instead of requiring a separate mental calculation.
-                    const vsBasis = sharesBasis !== null ? c.strike - sharesBasis : null;
+                    // CC: compared against your actual shares cost basis.
+                    // CSP: compared against your CURRENT position's own effective
+                    // breakeven-if-assigned (there are no shares yet, so the relevant
+                    // question is "does this roll improve what I'm already exposed
+                    // to," not some external number). Positive = improvement in both
+                    // cases, so the same column/disqualifier logic works for either.
+                    const vsBasis = isThisCC
+                        ? (sharesBasis !== null ? c.strike - sharesBasis : null)
+                        : (currentBreakeven !== null ? (pos.strike - c.strike) + netCredit : null);
                     
                     return {
                         ...c,
@@ -4811,22 +4926,32 @@
             const analyzed = allAnalyzed.sort((a, b) => b.netCredit - a.netCredit);
 
             // ═══════════════════════════════════════════════════
-            // THREE-PART ROLL TEST
-            // A roll must improve at least 2 of 3:
-            // 1. Reduces risk (lower absolute delta)
-            // 2. Buys time (more DTE)
-            // 3. Collects credit (or justified debit if 1+2 pass)
+            // ROLL VALIDATION
+            // Two tiers:
+            //   HARD DISQUALIFIERS — fail regardless of everything else, since
+            //   every article reviewed tonight and this tool's own existing
+            //   rules already treat these as non-negotiable elsewhere:
+            //     - Earnings falls before the new expiration
+            //     - Illiquid (OI below the same floor used in the CSP/CC scanners)
+            //     - For CC rolls: moves further from basis than the CURRENT
+            //       position already sits — giving up ground while still
+            //       technically satisfying the other criteria
+            //   SCORED — the original 3-part test, now with ATR buffer as a
+            //   real 4th leg rather than just an informational column, since
+            //   a candidate can improve delta/DTE/credit on paper while still
+            //   having near-zero real safety margin.
             // ═══════════════════════════════════════════════════
             const currentDTE = calculateDTE(pos.expiration) || 0;
             const currentAbsDelta = Math.abs(pos.delta || 0);
+            const currentVsBasis = sharesBasis !== null ? pos.strike - sharesBasis : null;
             
             const analyzedWithTest = analyzed.map(c => {
                 const candDelta = Math.abs(c.delta || 1);
                 const reducesRisk = candDelta < currentAbsDelta;
                 const buysTime = c.dte > currentDTE;
                 const collectsCredit = c.netCredit > 0;
-                const passCount = (reducesRisk ? 1 : 0) + (buysTime ? 1 : 0) + (collectsCredit ? 1 : 0);
-                const passesTest = passCount >= 2;
+                const meetsATR = (c.atrDistance === null || c.atrDistance === undefined) ? true : c.atrDistance >= 1.0;
+                const passCount = (reducesRisk ? 1 : 0) + (buysTime ? 1 : 0) + (collectsCredit ? 1 : 0) + (meetsATR ? 1 : 0);
                 
                 // Debit is justified only if both risk and time improve meaningfully
                 const debitJustified = !collectsCredit && reducesRisk && buysTime 
@@ -4835,18 +4960,56 @@
                 // Earnings check — does this candidate expire after earnings?
                 const earningsInWindow = earningsBeforeExpiration(pos.ticker, c.expiration);
                 const daysToEarnings = getDaysToEarnings(pos.ticker);
+
+                // Liquidity — same floor used elsewhere in the app (CSP/CC scanners)
+                const illiquid = (c.openInterest !== null && c.openInterest !== undefined) && c.openInterest < 100;
+
+                // For CC rolls with a linked shares position: does this candidate
+                // move further from basis than what you already have right now?
+                // CC: vsBasis is an absolute distance from shares basis — compare
+                // against the current position's own absolute distance.
+                // CSP: vsBasis is already expressed as an improvement-over-current
+                // delta (see its calculation above) — so "worse" is simply negative,
+                // no separate reference point needed.
+                const worsensBasis = (c.vsBasis === null || c.vsBasis === undefined) ? false
+                    : isThisCC
+                        ? (currentVsBasis !== null ? c.vsBasis < currentVsBasis : false)
+                        : (c.vsBasis < 0);
+
+                const hardDisqualified = earningsInWindow || illiquid || worsensBasis;
+                // meetsATR is required unconditionally (not just counted toward
+                // passCount) — without this, a perfect 3/3 on the original criteria
+                // could still pass despite having no real safety margin, which is
+                // exactly the gap this was built to close.
+                const passesTest = !hardDisqualified && meetsATR && (passCount >= 3 || debitJustified);
                 
                 return {
                     ...c,
+                    meetsATR,
+                    illiquid,
+                    worsensBasis,
+                    hardDisqualified,
                     reducesRisk,
                     buysTime,
                     collectsCredit,
                     passCount,
-                    passesTest: passesTest || debitJustified,
+                    passesTest,
                     debitJustified,
                     earningsInWindow,
                     daysToEarnings
                 };
+            });
+
+            // Re-sort so candidates that actually pass the roll test lead the list,
+            // with credit as the tiebreaker within each group. Previously this was
+            // sorted purely by credit, which put the richest-premium candidates
+            // first regardless of quality — exactly the trap where a thin-ATR,
+            // barely-improved-delta candidate looked like "the best option" simply
+            // by sitting at the top. Nothing is hidden here, every candidate still
+            // renders — this only changes what leads.
+            analyzedWithTest.sort((a, b) => {
+                if (a.passesTest !== b.passesTest) return a.passesTest ? -1 : 1;
+                return b.netCredit - a.netCredit;
             });
 
             // Step 5: Render results
@@ -4915,7 +5078,7 @@
             let verdictHTML = choiceHTML;
             if (bestPassing && bestPassing.collectsCredit) {
                 verdictHTML += `<div style="margin-top: 10px; padding: 10px 14px; background: rgba(16, 185, 129, 0.12); border-radius: 6px; border-left: 3px solid var(--success-color); font-size: 0.9em;">
-                    <strong style="color: var(--success-color);">✅ Roll viable — passes ${bestPassing.passCount}/3 tests.</strong> 
+                    <strong style="color: var(--success-color);">✅ Roll viable — passes ${bestPassing.passCount}/4 tests.</strong> 
                     Best: <strong>$${bestPassing.strike}</strong> (${bestPassing.dte}d) — +$${bestPassing.netCredit.toFixed(2)} credit, Δ ${Math.abs(bestPassing.delta).toFixed(2)}${bestPassing.reducesRisk ? ' ↓' : ''}${bestPassing.buysTime ? ', +time' : ''}.
                 </div>`;
             } else if (bestPassing && bestPassing.debitJustified) {
@@ -4930,7 +5093,7 @@
                 </div>`;
             } else {
                 verdictHTML += `<div style="margin-top: 10px; padding: 10px 14px; background: rgba(239, 68, 68, 0.12); border-radius: 6px; border-left: 3px solid var(--danger-color); font-size: 0.9em;">
-                    <strong style="color: var(--danger-color);">🛑 No viable roll — all candidates fail the 3-part test.</strong> 
+                    <strong style="color: var(--danger-color);">🛑 No viable roll — all candidates fail the 4-part test.</strong> 
                     Close the position and preserve capital.
                 </div>`;
             }
@@ -4978,7 +5141,9 @@
                             <th style="padding: 8px 6px;">Net $ (×${contracts})</th>
                             <th style="padding: 8px 6px;">Yield</th>
                             <th style="padding: 8px 6px;" title="Distance from stock price in ATR units. <1× = within danger zone">ATR Buf</th>
-                            ${sharesBasis !== null ? `<th style="padding: 8px 6px;" title="This strike minus your shares cost basis of $${sharesBasis.toFixed(2)}. Positive = protects/beats basis if called. Negative = locks in a loss.">vs Basis</th>` : ''}
+                            <th style="padding: 8px 6px;" title="Roll type — how this candidate compares to your current strike">Type</th>
+                            <th style="padding: 8px 6px;" title="Implied volatility on this candidate. Higher IV = richer roll pricing.">IV</th>
+                            ${(sharesBasis !== null || currentBreakeven !== null) ? `<th style="padding: 8px 6px;" title="${isThisCC ? 'This strike minus your shares cost basis of $' + sharesBasis.toFixed(2) + '. Positive = protects/beats basis if called. Negative = locks in a loss.' : 'How this candidate compares to the breakeven your CURRENT position already has if assigned ($' + currentBreakeven.toFixed(2) + '). Positive = improves on what you already have. Negative = quietly worsens it, even if delta/DTE/credit look fine.'}">vs Basis</th>` : ''}
                             <th style="padding: 8px 6px;" title="Candidate expires after earnings event">Earn</th>
                             <th style="padding: 8px 6px;">Roll Test</th>
                             <th style="padding: 8px 6px;"></th>
@@ -4999,17 +5164,45 @@
                                 atrCell = `<td style="padding: 6px; font-weight: 600; color: ${atrColor}; white-space: nowrap;" title="${c.atrDistance.toFixed(2)}× ATR from stock price${c.inATRBuffer ? ' — within 1× ATR danger zone' : ''}">${atrIcon} ${c.atrDistance.toFixed(1)}×</td>`;
                             }
                             
-                            // vs Basis display — only present for CC candidates with a linked
-                            // shares position. This is the number that would have answered
-                            // "does any of this actually protect what I paid" at a glance.
+                            // Roll type — how this candidate's strike compares to the
+                            // current position's strike. Every candidate is necessarily
+                            // "Out" (later expiration than today), so the variable
+                            // dimension worth labeling is strike direction.
+                            let typeCell = '<td style="padding: 6px; color: var(--text-muted); white-space: nowrap;">—</td>';
+                            if (c.strike !== null && c.strike !== undefined && pos.strike) {
+                                if (c.strike > pos.strike) {
+                                    typeCell = `<td style="padding: 6px; white-space: nowrap;" title="Higher strike than your current $${pos.strike} — more room, less premium">🔼 Up</td>`;
+                                } else if (c.strike < pos.strike) {
+                                    typeCell = `<td style="padding: 6px; white-space: nowrap;" title="Lower strike than your current $${pos.strike} — more premium, less room">🔽 Down</td>`;
+                                } else {
+                                    typeCell = `<td style="padding: 6px; white-space: nowrap;" title="Same strike, later expiration — pure time extension">➡️ Out</td>`;
+                                }
+                            }
+
+                            // IV on this candidate — already fetched, previously just never
+                            // displayed. Roll-time IV is a different question than entry-time
+                            // IV Rank: this tells you whether THIS roll is being priced
+                            // generously or thinly, something no external screening tool
+                            // sees since it doesn't know about your existing position.
+                            let ivCell = '<td style="padding: 6px; color: var(--text-muted);">—</td>';
+                            if (c.iv !== null && c.iv !== undefined) {
+                                ivCell = `<td style="padding: 6px;">${c.iv.toFixed(1)}%</td>`;
+                            }
+
+                            // vs Basis display — CC: distance from your shares cost basis.
+                            // CSP: improvement (or lack of one) over your CURRENT position's
+                            // own effective breakeven-if-assigned. This is the number that
+                            // answers "does any of this actually protect what I paid /
+                            // what I'm already exposed to" at a glance.
                             let basisCell = '';
-                            if (sharesBasis !== null) {
+                            if (sharesBasis !== null || currentBreakeven !== null) {
                                 if (c.vsBasis === null || c.vsBasis === undefined) {
                                     basisCell = '<td style="padding: 6px; color: var(--text-muted);">—</td>';
                                 } else {
                                     const vbColor = c.vsBasis >= 0 ? 'var(--success-color)' : 'var(--danger-color)';
                                     const vbSign = c.vsBasis >= 0 ? '+' : '';
-                                    basisCell = `<td style="padding: 6px; font-weight: 700; color: ${vbColor}; white-space: nowrap;" title="Strike $${c.strike} vs. your basis $${sharesBasis.toFixed(2)}">${vbSign}$${c.vsBasis.toFixed(2)}</td>`;
+                                    const vbTitle = isThisCC ? `Strike $${c.strike} vs. your basis $${sharesBasis.toFixed(2)}` : `vs. your current position's breakeven of $${currentBreakeven.toFixed(2)} if assigned`;
+                                    basisCell = `<td style="padding: 6px; font-weight: 700; color: ${vbColor}; white-space: nowrap;" title="${vbTitle}">${vbSign}$${c.vsBasis.toFixed(2)}</td>`;
                                 }
                             }
                             
@@ -5028,7 +5221,12 @@
                             const testBadge1 = c.reducesRisk ? '<span style="color: var(--success-color);">①✓</span>' : '<span style="color: var(--danger-color);">①✗</span>';
                             const testBadge2 = c.buysTime ? '<span style="color: var(--success-color);">②✓</span>' : '<span style="color: var(--danger-color);">②✗</span>';
                             const testBadge3 = c.collectsCredit ? '<span style="color: var(--success-color);">③✓</span>' : (c.debitJustified ? '<span style="color: var(--warning-color);">③~</span>' : '<span style="color: var(--danger-color);">③✗</span>');
-                            const passLabel = c.passesTest ? `<strong style="color: var(--success-color);">${c.passCount}/3</strong>` : `<span style="color: var(--text-muted);">${c.passCount}/3</span>`;
+                            const testBadge4 = c.meetsATR ? '<span style="color: var(--success-color);" title="ATR buffer ≥1.0×">④✓</span>' : '<span style="color: var(--danger-color);" title="ATR buffer <1.0× — thin real safety margin">④✗</span>';
+                            const passLabel = c.hardDisqualified
+                                ? `<span style="color: var(--danger-color);" title="${c.earningsInWindow ? 'Earnings before expiration' : c.illiquid ? 'Illiquid (OI: ' + (c.openInterest||0) + ')' : 'Moves further from basis than your current position'}">🚫 Disqualified</span>`
+                                : c.passesTest
+                                    ? `<strong style="color: var(--success-color);">${c.passCount}/4</strong>`
+                                    : `<span style="color: var(--text-muted);">${c.passCount}/4</span>`;
                             
                             return `
                                 <tr style="border-bottom: 1px solid var(--border-color); ${rowBg ? 'background:' + rowBg : ''}">
@@ -5044,10 +5242,12 @@
                                     </td>
                                     <td style="padding: 6px;" class="${yieldClass}">${c.annualizedYield.toFixed(1)}%</td>
                                     ${atrCell}
+                                    ${typeCell}
+                                    ${ivCell}
                                     ${basisCell}
                                     ${earningsCell}
                                     <td style="padding: 6px; white-space: nowrap; font-size: 0.85em;">
-                                        ${testBadge1} ${testBadge2} ${testBadge3} ${passLabel}
+                                        ${testBadge1} ${testBadge2} ${testBadge3} ${testBadge4} ${passLabel}
                                     </td>
                                     <td style="padding: 6px;">
                                         ${c.passesTest ? `<button onclick="selectRollCandidate(${index}, ${c.strike}, '${c.expiration}', ${c.newPremium.toFixed(2)}, ${c.delta || 0}, ${c.iv || 0})" 
@@ -8277,6 +8477,50 @@
         // ═══════════════════════════════════════════════════════════════
         // SMART ACTION — single concrete instruction per position
         // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════════
+        // Shared profit-taking target calculation — used by BOTH the Smart
+        // Action engine AND the displayed 50%-GTC price in the drawer, so
+        // the number you'd actually set at your broker always matches what
+        // the tool is evaluating against. Previously these were disconnected:
+        // Smart Action used this dynamic pace/delta/DTE-scaled target, but
+        // the drawer's GTC price was a hardcoded flat 50%, regardless.
+        // ═══════════════════════════════════════════════════════════════
+        function calculateProfitTarget(dte, absDelta, thetaPace) {
+            const pace = thetaPace ? thetaPace.paceRatio : 1;
+            const fractionElapsed = thetaPace ? thetaPace.fractionElapsed : 0;
+            let profitTarget = 50;
+
+            if (fractionElapsed >= 0.4) {
+                if (pace >= 1.3) profitTarget = 40;
+                else if (pace >= 0.9) profitTarget = 50;
+                else profitTarget = 60;
+            } else {
+                if (pace >= 1.3) profitTarget = 55;
+                else if (pace >= 0.9) profitTarget = 55;
+                else profitTarget = 60;
+            }
+
+            if (absDelta > 0.35) profitTarget = Math.min(profitTarget, 40);
+            else if (absDelta < 0.10) profitTarget = Math.max(profitTarget, 60);
+
+            // DTE scaling — safe, low-delta positions near expiration: let theta finish
+            if (dte <= 5 && absDelta < 0.20) profitTarget = Math.max(profitTarget, 80);
+            else if (dte <= 10 && absDelta < 0.20) profitTarget = Math.max(profitTarget, 70);
+            else if (dte <= 14 && absDelta < 0.15) profitTarget = Math.max(profitTarget, 65);
+
+            // Short-DTE gamma-risk tightening — the complementary case. Under 15
+            // DTE, a position that ISN'T already ultra-safe (caught by the rules
+            // above) faces real gamma risk: it can flip fast as expiration nears.
+            // Lower the bar so you can exit before that risk materializes, rather
+            // than holding out for the standard target. Guarded to only ever
+            // lower an otherwise-higher target, never raise one that's already tight.
+            if (dte < 15 && absDelta >= 0.20 && profitTarget > 40) {
+                profitTarget = 37.5;
+            }
+
+            return profitTarget;
+        }
+
         function generateSmartAction(position, delta, dte, plPercent, iv, thetaPace, capitalYield, ticker, expiration, currentPrice, entryPrice, strike, contracts, optionType) {
             if (position === 'Long') return { text: 'Review manually', detail: 'Long position — manual review recommended' };
             
@@ -8295,32 +8539,10 @@
             const lossPrefix = '🛑 ';
             const warnPrefix = '⚠️ ';
             
-            // Dynamic profit-taking target based on theta pace + delta override + DTE scaling
-            // Pace-based target — but only after enough of the trade has elapsed
+            // Dynamic profit-taking target — shared with the displayed GTC price
+            // (calculateProfitTarget), so both always agree.
             const fractionElapsed = thetaPace ? thetaPace.fractionElapsed : 0;
-            let profitTarget = 50;
-            
-            if (fractionElapsed >= 0.4) {
-                // Past 40% of trade life — pace matters
-                if (pace >= 1.3) profitTarget = 40;
-                else if (pace >= 0.9) profitTarget = 50;
-                else profitTarget = 60;
-            } else {
-                // Early in trade — don't let accelerated pace trigger premature close
-                // Use a higher baseline that rewards patience
-                if (pace >= 1.3) profitTarget = 55;  // Ahead early = great, but keep holding
-                else if (pace >= 0.9) profitTarget = 55;
-                else profitTarget = 60;
-            }
-            
-            // Delta override — high-risk positions close faster, ultra-safe positions hold longer
-            if (absDelta > 0.35) profitTarget = Math.min(profitTarget, 40);      // Don't let high-delta linger
-            else if (absDelta < 0.10) profitTarget = Math.max(profitTarget, 60);  // Don't close ultra-safe early
-            
-            // DTE scaling — as expiration approaches with safe delta, let theta finish
-            if (dte <= 5 && absDelta < 0.20) profitTarget = Math.max(profitTarget, 80);
-            else if (dte <= 10 && absDelta < 0.20) profitTarget = Math.max(profitTarget, 70);
-            else if (dte <= 14 && absDelta < 0.15) profitTarget = Math.max(profitTarget, 65);
+            const profitTarget = calculateProfitTarget(dte, absDelta, thetaPace);
             
             // Remaining premium analysis
             const remainingPremium = currentPrice;
@@ -8418,6 +8640,13 @@
                     return { text: `${winPrefix}Buy back at $${currentPrice.toFixed(2)} (${closeLabel})`, detail: `θ ahead of schedule — buy back early at ${plPercent.toFixed(0)}%` };
                 }
 
+                // Close a genuine winner early rather than hold it through earnings —
+                // don't wait for the full profit target just because it hasn't been
+                // hit yet, when a binary event sits inside the window.
+                if (earningsInPlay && daysToEarnings !== null && daysToEarnings > 10 && daysToEarnings <= 14 && plPercent >= 15) {
+                    return { text: `${winPrefix}Close before earnings (${closeLabel})`, detail: `${plPercent.toFixed(0)}% profit with earnings in ${daysToEarnings}d — take the win rather than hold a winner through a binary event.` };
+                }
+
                 if (earningsInPlay && daysToEarnings !== null && daysToEarnings <= 5) {
                     if (plPercent >= 25) {
                         return { text: `${winPrefix}Close pre-earnings (${closeLabel})`, detail: `Earnings in ${daysToEarnings}d — close to avoid gap through strike` };
@@ -8503,6 +8732,12 @@
             }
 
             // ── Earnings imminent ──
+            // Close a genuine winner early rather than hold it through earnings —
+            // don't wait for the full profit target just because it hasn't been
+            // hit yet, when a binary event sits inside the window.
+            if (earningsInPlay && daysToEarnings !== null && daysToEarnings > 10 && daysToEarnings <= 14 && plPercent >= 15) {
+                return { text: `${winPrefix}Close before earnings (${closeLabel})`, detail: `${plPercent.toFixed(0)}% profit with earnings in ${daysToEarnings}d — take the win rather than hold a winner through a binary event.` };
+            }
             if (earningsInPlay && daysToEarnings !== null && daysToEarnings <= 5) {
                 if (absDelta >= 0.30 || plPercent >= 25) {
                     const prefix = plPercent >= 0 ? winPrefix : warnPrefix;
@@ -9034,7 +9269,12 @@
                 // GTC / basis values for drawer
                 const rollLossPerShare = (m.plRealized || 0) / (100 * contracts);
                 const effEntry = pos.entryPrice + rollLossPerShare;
-                const gtcPrice = effEntry > 0 ? effEntry * 0.50 : Math.max(0, pos.entryPrice - Math.abs(rollLossPerShare));
+                // Uses the SAME dynamic target as the Smart Action engine (calculateProfitTarget)
+                // rather than a flat 50% — so the order you'd actually place at your broker
+                // matches what the tool is evaluating against, including the short-DTE
+                // gamma-risk tightening (35-40% target under 15 DTE).
+                const gtcTargetPct = calculateProfitTarget(dte, absD, thetaPace) / 100;
+                const gtcPrice = effEntry > 0 ? effEntry * gtcTargetPct : Math.max(0, pos.entryPrice - Math.abs(rollLossPerShare));
                 const rollHistory = Array.isArray(pos.rollHistory) ? pos.rollHistory : [];
                 // Eject price: buy-to-close price at which the CHAIN hits -200% of TOTAL
                 // premium ever collected across the whole chain — matches the corrected
@@ -9104,7 +9344,7 @@
                         <div class="drawer-title">Pricing${infoTip('The two resting orders to place at your broker: a take-profit and a hard stop. Together they let this position manage itself.')}</div>
                         <div class="drawer-row"><span class="k">Entry</span><span class="v"><button data-action="editEntryPrice" style="background:none;border:none;cursor:pointer;padding:0;color:var(--text-primary);font-weight:700;font-family:inherit;font-size:inherit;" title="Click to edit entry price">$${pos.entryPrice.toFixed(2)} ✏️</button></span></div>
                         <div class="drawer-row"><span class="k">Current</span><span class="v">$${pos.currentPrice.toFixed(2)}</span></div>
-                        <div class="drawer-row"><span class="k">50% GTC${infoTip('The buy-to-close price that locks in 50% of the premium you collected. A common take-profit target — set it as a GTC (good-till-canceled) limit order.')}</span><span class="v" style="color: var(--signal-teal);">$${gtcPrice.toFixed(2)}</span></div>
+                        <div class="drawer-row"><span class="k">${effEntry > 0 ? Math.round(gtcTargetPct * 100) : 50}% GTC${infoTip('The buy-to-close price for your take-profit order. This target adjusts automatically \u2014 tighter (35-40%) under 15 DTE since gamma risk rises fast near expiration, higher (up to 80%) for very safe, low-delta positions where letting theta finish captures more. Set it as a GTC (good-till-canceled) limit order.')}</span><span class="v" style="color: var(--signal-teal);">$${gtcPrice.toFixed(2)}</span></div>
                         <div class="drawer-row"><span class="k" title="Buy-to-close price that hits your −200% stop (2× loss). Set this as a GTC order at your broker.">🛑 Eject (3×)${infoTip('The buy-to-close price where your loss reaches 2× the premium collected — a hard stop. Set this as a GTC order so it protects you even when you\u2019re not watching.')}</span><span class="v" style="color: var(--danger-color);">$${ejectPrice.toFixed(2)}</span></div>
                         <div class="drawer-row"><span class="k">${isCC ? 'Sale if called' : 'If assigned'}${infoTip(isCC ? 'Your effective sale price per share if the stock gets called away at this strike.' : 'Your effective cost basis per share if this put gets assigned to you.')}</span><span class="v" style="${cardSharesBasis !== null ? `color: ${basisValue >= cardSharesBasis ? 'var(--success-color)' : 'var(--danger-color)'};` : ''}">$${basisValue.toFixed(2)}/sh${cardSharesBasis !== null ? ` <span style="font-size: 0.82em; font-weight: 400; opacity: 0.85;">(${basisValue >= cardSharesBasis ? '+' : ''}${(basisValue - cardSharesBasis).toFixed(2)} vs $${cardSharesBasis.toFixed(2)} basis)</span>` : ''}</span></div>
                         <div class="drawer-row"><span class="k">Contracts</span><span class="v">${contracts}</span></div>
@@ -9147,6 +9387,7 @@
                         <button class="btn-ghost" data-action="editEntryPrice">✏️ Entry Price</button>
                         <button class="btn-ghost" data-action="editIV">✏️ Entry IV</button>
                         <button class="btn-ghost" data-action="editRollHistory">↻ Edit History</button>
+                        <button class="btn-ghost" data-action="editNotes">${(pos.entryNotes || pos.exitNotes || pos.notes) ? '📝 Notes' : '📝 Add Notes'}</button>
                         <button class="btn-ghost destructive" data-action="delete">Delete</button>
                     </div>
                 </div>`;
@@ -11007,6 +11248,175 @@
             renderTable();
         }
 
+        // Trade journal — free-text notes per position. Answers the question no
+        // number on the card can: why did I actually take this trade, and would
+        // I take it again? Carries over to closedPositions automatically since
+        // closePosition() spreads the full position object.
+        function editNotes(index) {
+            const pos = positions[index];
+            if (!pos) return;
+
+            // Migrate the old single `notes` field into entryNotes the first time
+            // this position is edited post-split — nothing gets silently lost.
+            if (pos.notes && !pos.entryNotes) {
+                pos.entryNotes = pos.notes;
+                delete pos.notes;
+            }
+
+            let overlay = document.getElementById('notesOverlay');
+            if (overlay) overlay.remove();
+            overlay = document.createElement('div');
+            overlay.id = 'notesOverlay';
+            overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 100000; background: rgba(8,10,16,0.85); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;';
+
+            const modal = document.createElement('div');
+            modal.style.cssText = 'background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; max-width: 520px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.5);';
+
+            const label = pos.position === 'Short' && pos.optionType === 'Call' ? 'CC' : (pos.position === 'Short' ? 'CSP' : pos.positionType === 'shares' ? 'Shares' : pos.optionType);
+            modal.innerHTML = `
+                <div style="font-weight: 700; font-size: 1.05em; margin-bottom: 14px;">📝 Notes — ${escapeHTML(pos.ticker)} ${label}</div>
+
+                <label style="font-size: 0.82em; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Entry Thesis</label>
+                <p style="font-size: 0.78em; color: var(--text-muted); margin: 0 0 6px;">Why did you take this trade? Set it once, near entry — this is what you'll compare outcomes against later.</p>
+                <textarea id="entryNotesTextarea" rows="4" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--dark-surface); color: var(--text-primary); font-family: inherit; font-size: 0.9em; resize: vertical; margin-bottom: 16px;" placeholder="e.g. IV Rank elevated after earnings beat, delta 0.25 clears hurdle by 2x, comfortable owning at this strike...">${escapeHTML(pos.entryNotes || '')}</textarea>
+
+                <label style="font-size: 0.82em; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">Exit / Ongoing Reflection</label>
+                <p style="font-size: 0.78em; color: var(--text-muted); margin: 0 0 6px;">Update this as it plays out. When it closes: did it go as expected? Would you take this again?</p>
+                <textarea id="exitNotesTextarea" rows="4" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--dark-surface); color: var(--text-primary); font-family: inherit; font-size: 0.9em; resize: vertical;" placeholder="e.g. Rolled once for a small debit to protect basis — still comfortable with the thesis, would do this again...">${escapeHTML(pos.exitNotes || '')}</textarea>
+
+                <div style="display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end;">
+                    <button id="notesCancelBtn" class="btn-ghost">Cancel</button>
+                    <button id="notesSaveBtn" class="btn-primary">Save Notes</button>
+                </div>
+            `;
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            document.getElementById('entryNotesTextarea').focus();
+
+            const close = () => overlay.remove();
+            document.getElementById('notesCancelBtn').onclick = close;
+            overlay.onclick = (e) => { if (e.target === overlay) close(); };
+            document.getElementById('notesSaveBtn').onclick = () => {
+                pos.entryNotes = document.getElementById('entryNotesTextarea').value.trim();
+                pos.exitNotes = document.getElementById('exitNotesTextarea').value.trim();
+                savePositions();
+                renderTable();
+                close();
+            };
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // WEEKLY AUDIT — a backward-looking check: did positions opened in
+        // the last 7 days actually respect your own configured rules?
+        // Today's Decisions is forward-looking triage; this is the missing
+        // complement — did I actually do what I said I'd do. Checks position
+        // size, sector exposure, T-bill hurdle clearance, and earnings gap
+        // against your real Portfolio Configuration limits, using real data.
+        // ═══════════════════════════════════════════════════════════════
+        function openWeeklyAudit() {
+            const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+            const allPositions = [...positions, ...closedPositions];
+            const recentPositions = allPositions.filter(p => {
+                if (p.positionType === 'shares') return false;
+                const entryTime = p.entryDate ? new Date(p.entryDate + (p.entryDate.length === 10 ? 'T00:00:00' : '')).getTime() : null;
+                return entryTime && entryTime >= sevenDaysAgo;
+            });
+
+            let overlay = document.getElementById('auditOverlay');
+            if (overlay) overlay.remove();
+            overlay = document.createElement('div');
+            overlay.id = 'auditOverlay';
+            overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 100000; background: rgba(8,10,16,0.85); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;';
+
+            const modal = document.createElement('div');
+            modal.style.cssText = 'background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; max-width: 680px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5);';
+
+            if (recentPositions.length === 0) {
+                modal.innerHTML = `
+                    <div style="font-weight: 700; font-size: 1.1em; margin-bottom: 10px;">✅ Weekly Audit</div>
+                    <p style="color: var(--text-muted);">No positions opened in the last 7 days — nothing to audit yet.</p>
+                    <button id="auditCloseBtn" class="btn-primary" style="margin-top: 10px;">Close</button>
+                `;
+                overlay.appendChild(modal);
+                document.body.appendChild(overlay);
+                document.getElementById('auditCloseBtn').onclick = () => overlay.remove();
+                overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+                return;
+            }
+
+            const bp = portfolioConfig.totalBuyingPower || 0;
+            const maxPosPct = portfolioConfig.maxPositionPct || 25;
+            const maxSecPct = portfolioConfig.maxSectorPct || 40;
+            const hurdleMult = portfolioConfig.hurdleMultiple || 2;
+            const fdrxx = portfolioConfig.fdrxxRate || 3.98;
+            const hurdleTarget = hurdleMult * fdrxx;
+
+            let passCount = 0;
+            const rows = recentPositions.map(pos => {
+                const contracts = pos.contracts || 1;
+                const isCC = pos.position === 'Short' && pos.optionType === 'Call';
+                const cashReq = isCC ? (pos.underlyingPrice || pos.strike) * 100 * contracts : pos.strike * 100 * contracts;
+
+                // Rule 1: position size vs max %
+                const posPct = bp > 0 ? (cashReq / bp) * 100 : 0;
+                const posPass = posPct <= maxPosPct;
+
+                // Rule 2: sector exposure vs max % (current portfolio state, not
+                // a historical snapshot — the app doesn't store point-in-time
+                // sector exposure, so this reflects "is it within limits now")
+                const sector = getSector(pos.ticker);
+                let sectorExposure = 0;
+                positions.forEach(p => {
+                    if (p.positionType === 'shares' || getSector(p.ticker) !== sector) return;
+                    const pIsCC = p.position === 'Short' && p.optionType === 'Call';
+                    sectorExposure += pIsCC ? (p.underlyingPrice || p.strike) * 100 * (p.contracts || 1) : p.strike * 100 * (p.contracts || 1);
+                });
+                const secPct = bp > 0 ? (sectorExposure / bp) * 100 : 0;
+                const secPass = secPct <= maxSecPct;
+
+                // Rule 3: cleared the T-bill hurdle at entry
+                const entryDTE = pos.expiration && pos.entryDate ? Math.round((new Date(pos.expiration + 'T00:00:00') - new Date(pos.entryDate + (pos.entryDate.length === 10 ? 'T00:00:00' : ''))) / 86400000) : null;
+                const entryAnnYield = (entryDTE && entryDTE > 0 && cashReq > 0) ? (pos.entryPrice * 100 * contracts / cashReq) * (365 / entryDTE) * 100 : null;
+                const hurdlePass = entryAnnYield === null ? null : entryAnnYield >= hurdleTarget;
+
+                // Rule 4: earnings before expiration (checked against currently
+                // known earnings dates — not necessarily what was knowable at
+                // the exact moment of entry)
+                const earningsClear = pos.expiration ? !earningsBeforeExpiration(pos.ticker, pos.expiration) : null;
+
+                const allPass = posPass && secPass && (hurdlePass !== false) && (earningsClear !== false);
+                if (allPass) passCount++;
+
+                const rowIcon = (pass) => pass === null ? '<span style="color: var(--text-muted);">—</span>' : pass ? '<span style="color: var(--success-color);">✓</span>' : '<span style="color: var(--danger-color);">✗</span>';
+                const entryThesis = (pos.entryNotes || pos.notes || '').trim();
+
+                return `
+                    <div style="padding: 12px 14px; background: var(--dark-surface); border-radius: 8px; margin-bottom: 8px; border-left: 3px solid ${allPass ? 'var(--success-color)' : 'var(--warning-color)'};">
+                        <div style="font-weight: 700; margin-bottom: 6px;">${escapeHTML(pos.ticker)} $${pos.strike} ${(pos.optionType||'').toUpperCase()} <span style="font-weight: 400; color: var(--text-muted); font-size: 0.82em;">— ${escapeHTML(pos.entryDate || '')}</span></div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 6px; font-size: 0.82em; color: var(--text-secondary);">
+                            <div>${rowIcon(posPass)} Position size (${posPct.toFixed(1)}% / max ${maxPosPct}%)</div>
+                            <div>${rowIcon(secPass)} Sector exposure (${secPct.toFixed(1)}% / max ${maxSecPct}%)</div>
+                            <div>${rowIcon(hurdlePass)} T-bill hurdle${entryAnnYield !== null ? ` (${entryAnnYield.toFixed(1)}% vs ${hurdleTarget.toFixed(1)}% target)` : ''}</div>
+                            <div>${rowIcon(earningsClear)} Clear of earnings</div>
+                        </div>
+                        ${entryThesis ? `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-color); font-size: 0.8em; color: var(--text-secondary); font-style: italic;">📝 "${escapeHTML(entryThesis)}"</div>` : `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-color); font-size: 0.78em; color: var(--text-faint, #5c6479);">No entry thesis logged — add one from the position's Notes button.</div>`}
+                    </div>
+                `;
+            }).join('');
+
+            modal.innerHTML = `
+                <div style="font-weight: 700; font-size: 1.1em; margin-bottom: 4px;">✅ Weekly Audit</div>
+                <p style="font-size: 0.85em; color: var(--text-muted); margin: 0 0 14px;">${passCount} of ${recentPositions.length} position${recentPositions.length === 1 ? '' : 's'} opened in the last 7 days cleared every rule. Sector exposure reflects current portfolio state, not a historical snapshot.</p>
+                ${rows}
+                <button id="auditCloseBtn" class="btn-primary" style="margin-top: 10px; width: 100%;">Close</button>
+            `;
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            document.getElementById('auditCloseBtn').onclick = () => overlay.remove();
+            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+        }
+
+
         function editEntryIV(index, cell) {
             const pos = positions[index];
             const currentVal = pos.entryIV ? pos.entryIV.toFixed(1) : '';
@@ -11823,6 +12233,7 @@
                 case 'writeCC': writeCCFromShares(index); break;
                 case 'editBasis': editCostBasis(index); break;
                 case 'editRollHistory': editRollHistory(index); break;
+                case 'editNotes': editNotes(index); break;
             }
         });
 
