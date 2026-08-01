@@ -1440,9 +1440,47 @@
             <div id="guideView" style="display: none;">
                 <div style="padding: 30px;">
                     <h2 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin-bottom: 10px;">📋 Decision Guide</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 30px; font-size: 1.05em;">How to read the dashboard and take action on your positions</p>
-                    
-                    <!-- Weekly Workflow -->
+                    <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 1.05em;">How to read the dashboard and take action on your positions</p>
+
+                    <!-- Quick Reference — the "just give me the number" cheat sheet.
+                         Full reasoning lives in the sections below; this is meant to
+                         answer the fast lookup without any scrolling or expanding. -->
+                    <div style="background: var(--card-bg); border-radius: 12px; padding: 20px; border: 1px solid var(--accent-gold); margin-bottom: 24px;">
+                        <h3 style="color: var(--accent-gold); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0 0 14px; font-size: 1em; display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1.3em;">⚡</span> Quick Reference
+                        </h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; font-size: 0.85em; line-height: 1.6;">
+                            <div>
+                                <strong style="color: var(--text-primary);">Health Score</strong><br>
+                                <span style="color: var(--text-secondary);">
+                                    <span style="color: #10b981;">●</span> 80+ Healthy &nbsp;
+                                    <span style="color: var(--signal-teal);">●</span> 60+ Monitor &nbsp;
+                                    <span style="color: var(--warning-color);">●</span> 40+ Attention<br>
+                                    <span style="color: #f97316;">●</span> 20+ Act Soon &nbsp;
+                                    <span style="color: #ef4444;">●</span> &lt;20 Act Now
+                                </span>
+                            </div>
+                            <div>
+                                <strong style="color: var(--text-primary);">4-Part Roll Test</strong><br>
+                                <span style="color: var(--text-secondary);">Need 3 of 4: lower delta, more DTE, net credit, ATR ≥1.0×. Earnings/illiquidity/worsened basis = automatic disqualify.</span>
+                            </div>
+                            <div>
+                                <strong style="color: var(--text-primary);">Profit Target</strong><br>
+                                <span style="color: var(--text-secondary);">Dynamic 37.5–80% based on pace, delta, DTE — shown live as the GTC price on every card, not a flat 50%.</span>
+                            </div>
+                            <div>
+                                <strong style="color: var(--text-primary);">Hard Stops</strong><br>
+                                <span style="color: var(--text-secondary);">-100% = evaluate close vs roll now. -200% = max loss, cut (or roll for CCs — you hold the shares either way).</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="guide-acc-section" style="margin-bottom: 12px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+                        <div onclick="toggleGuideSection(0)" style="cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: var(--card-bg);">
+                            <span id="guideIcon0" style="font-size: 0.85em; color: var(--text-muted); transition: transform 0.15s;">▾</span>
+                            <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0; font-size: 1em;">⚡ Your Weekly Workflow (10 Minutes)</h3>
+                        </div>
+                        <div id="guideBody0" style="display: block; padding: 0 20px 20px;">
                     <div style="background: linear-gradient(135deg, var(--clarity-blue) 0%, var(--signal-teal) 100%); border-radius: 12px; padding: 25px; margin-bottom: 30px; box-shadow: var(--shadow-lg);">
                         <h3 style="color: white; font-family: 'Manrope', sans-serif; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
                             <span style="font-size: 1.5em;">⚡</span> Your Weekly Workflow (10 Minutes)
@@ -1467,7 +1505,15 @@
                         </div>
                     </div>
 
-                    <!-- Close Decision Guide (VADER-style, reflects engine logic) -->
+                        </div>
+                    </div>
+
+                    <div class="guide-acc-section" style="margin-bottom: 12px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+                        <div onclick="toggleGuideSection(1)" style="cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: var(--card-bg);">
+                            <span id="guideIcon1" style="font-size: 0.85em; color: var(--text-muted); transition: transform 0.15s;">▸</span>
+                            <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0; font-size: 1em;">🎯 When to Close — Profit-Taking Framework</h3>
+                        </div>
+                        <div id="guideBody1" style="display: none; padding: 0 20px 20px;">
                     <div style="background: var(--card-bg); border-radius: 12px; padding: 25px; margin-bottom: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
                         <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin-bottom: 6px;">🎯 When to Close — Profit-Taking Framework</h3>
                         <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.92em;">The engine decides per-position, but here's the logic it follows. Profit alone never decides — it's always gated by <strong>delta</strong> (how much risk remains) and <strong>capital efficiency</strong> (what your collateral is still earning).</p>
@@ -1542,7 +1588,15 @@
                         </div>
                     </div>
 
-                    <!-- Health Score Bands -->
+                        </div>
+                    </div>
+
+                    <div class="guide-acc-section" style="margin-bottom: 12px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+                        <div onclick="toggleGuideSection(2)" style="cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: var(--card-bg);">
+                            <span id="guideIcon2" style="font-size: 0.85em; color: var(--text-muted); transition: transform 0.15s;">▸</span>
+                            <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0; font-size: 1em;">🎯 Health Score Bands (0–100)</h3>
+                        </div>
+                        <div id="guideBody2" style="display: none; padding: 0 20px 20px;">
                     <div style="background: var(--card-bg); border-radius: 12px; padding: 25px; margin-bottom: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
                         <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
                             <span style="font-size: 1.5em;">🎯</span> Health Score Bands (0–100)
@@ -1588,37 +1642,49 @@
                         </div>
                     </div>
 
-                    <!-- The 7 Factors -->
+                        </div>
+                    </div>
+
+                    <div class="guide-acc-section" style="margin-bottom: 12px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+                        <div onclick="toggleGuideSection(3)" style="cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: var(--card-bg);">
+                            <span id="guideIcon3" style="font-size: 0.85em; color: var(--text-muted); transition: transform 0.15s;">▸</span>
+                            <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0; font-size: 1em;">📊 The 8 Factors Behind Your Score</h3>
+                        </div>
+                        <div id="guideBody3" style="display: none; padding: 0 20px 20px;">
                     <div style="background: var(--card-bg); border-radius: 12px; padding: 25px; margin-bottom: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
                         <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 1.5em;">📊</span> The 7 Factors Behind Your Score
+                            <span style="font-size: 1.5em;">📊</span> The 8 Factors Behind Your Score
                         </h3>
                         <p style="color: var(--text-secondary); margin-bottom: 20px;">Hover over any Health Score in the table to see the component breakdown. Here's what each factor measures:</p>
                         
                         <div style="display: grid; gap: 12px;">
                             <div style="display: grid; grid-template-columns: 80px 1fr; gap: 12px; padding: 12px; border-radius: 6px; background: var(--dark-surface);">
-                                <div style="text-align: center;"><span style="font-size: 1.3em;">Δ</span><br><span style="font-size: 0.75em; color: var(--text-muted); font-weight: 700;">28%</span></div>
+                                <div style="text-align: center;"><span style="font-size: 1.3em;">Δ</span><br><span style="font-size: 0.75em; color: var(--text-muted); font-weight: 700;">26%</span></div>
                                 <div><strong style="color: var(--text-primary);">Delta Proximity</strong><br><span style="color: var(--text-secondary); font-size: 0.9em;">How far OTM you are. Under 0.20 = safe. Over 0.50 = in trouble. The single most important signal.</span></div>
                             </div>
                             <div style="display: grid; grid-template-columns: 80px 1fr; gap: 12px; padding: 12px; border-radius: 6px; background: var(--dark-surface);">
-                                <div style="text-align: center;"><span style="font-size: 1.3em;">⏱</span><br><span style="font-size: 0.75em; color: var(--text-muted); font-weight: 700;">18%</span></div>
+                                <div style="text-align: center;"><span style="font-size: 1.3em;">⏱</span><br><span style="font-size: 0.75em; color: var(--text-muted); font-weight: 700;">17%</span></div>
                                 <div><strong style="color: var(--text-primary);">DTE (Time)</strong><br><span style="color: var(--text-secondary); font-size: 0.9em;">Days to expiration. More time = more flexibility. Under 7 days = gamma risk accelerates sharply.</span></div>
                             </div>
                             <div style="display: grid; grid-template-columns: 80px 1fr; gap: 12px; padding: 12px; border-radius: 6px; background: var(--dark-surface);">
-                                <div style="text-align: center;"><span style="font-size: 1.3em;">💰</span><br><span style="font-size: 0.75em; color: var(--text-muted); font-weight: 700;">18%</span></div>
+                                <div style="text-align: center;"><span style="font-size: 1.3em;">💰</span><br><span style="font-size: 0.75em; color: var(--text-muted); font-weight: 700;">17%</span></div>
                                 <div><strong style="color: var(--text-primary);">P&L Capture</strong><br><span style="color: var(--text-secondary); font-size: 0.9em;">How much premium you've captured. 50%+ = profit-taking zone. Negative = underwater.</span></div>
                             </div>
                             <div style="display: grid; grid-template-columns: 80px 1fr; gap: 12px; padding: 12px; border-radius: 6px; background: var(--dark-surface);">
-                                <div style="text-align: center;"><span style="font-size: 1.3em;">θ</span><br><span style="font-size: 0.75em; color: var(--text-muted); font-weight: 700;">13%</span></div>
+                                <div style="text-align: center;"><span style="font-size: 1.3em;">θ</span><br><span style="font-size: 0.75em; color: var(--text-muted); font-weight: 700;">12%</span></div>
                                 <div><strong style="color: var(--text-primary);">Theta Pace</strong><br><span style="color: var(--text-secondary); font-size: 0.9em;">Is premium decaying at the expected rate? ▲ = ahead, ▼ = behind. Behind pace often means the stock moved against you or IV expanded.</span></div>
                             </div>
                             <div style="display: grid; grid-template-columns: 80px 1fr; gap: 12px; padding: 12px; border-radius: 6px; background: var(--dark-surface);">
-                                <div style="text-align: center;"><span style="font-size: 1.3em;">📅</span><br><span style="font-size: 0.75em; color: var(--text-muted); font-weight: 700;">10%</span></div>
+                                <div style="text-align: center;"><span style="font-size: 1.3em;">📅</span><br><span style="font-size: 0.75em; color: var(--text-muted); font-weight: 700;">9%</span></div>
                                 <div><strong style="color: var(--text-primary);">Earnings Risk</strong><br><span style="color: var(--text-secondary); font-size: 0.9em;">Is an earnings report before your expiration? Earnings create binary gap risk that delta alone doesn't capture.</span></div>
                             </div>
                             <div style="display: grid; grid-template-columns: 80px 1fr; gap: 12px; padding: 12px; border-radius: 6px; background: var(--dark-surface);">
-                                <div style="text-align: center;"><span style="font-size: 1.3em;">📈</span><br><span style="font-size: 0.75em; color: var(--text-muted); font-weight: 700;">8%</span></div>
+                                <div style="text-align: center;"><span style="font-size: 1.3em;">📈</span><br><span style="font-size: 0.75em; color: var(--text-muted); font-weight: 700;">7%</span></div>
                                 <div><strong style="color: var(--text-primary);">IV Change</strong><br><span style="color: var(--text-secondary); font-size: 0.9em;">Has IV crushed (good for you) or expanded (bad) since entry? IV crush accelerates premium decay. IV expansion means the option isn't losing value as fast as theta models predict, and rolling will collect less premium.</span></div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 80px 1fr; gap: 12px; padding: 12px; border-radius: 6px; background: var(--dark-surface);">
+                                <div style="text-align: center;"><span style="font-size: 1.3em;">🏗️</span><br><span style="font-size: 0.75em; color: var(--text-muted); font-weight: 700;">7%</span></div>
+                                <div><strong style="color: var(--text-primary);">Concentration Risk</strong><br><span style="color: var(--text-secondary); font-size: 0.9em;">How much of your buying power sits in this one ticker or sector. A great trade in an over-concentrated name still dings your score — this factor exists so no single position can look "healthy" in isolation while quietly making your whole book fragile.</span></div>
                             </div>
                             <div style="display: grid; grid-template-columns: 80px 1fr; gap: 12px; padding: 12px; border-radius: 6px; background: var(--dark-surface);">
                                 <div style="text-align: center;"><span style="font-size: 1.3em;">📊</span><br><span style="font-size: 0.75em; color: var(--text-muted); font-weight: 700;">5%</span></div>
@@ -1627,7 +1693,15 @@
                         </div>
                     </div>
 
-                    <!-- When to Scan, Roll, or Close -->
+                        </div>
+                    </div>
+
+                    <div class="guide-acc-section" style="margin-bottom: 12px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+                        <div onclick="toggleGuideSection(4)" style="cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: var(--card-bg);">
+                            <span id="guideIcon4" style="font-size: 0.85em; color: var(--text-muted); transition: transform 0.15s;">▾</span>
+                            <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0; font-size: 1em;">🔍 When to Scan, Roll, or Close</h3>
+                        </div>
+                        <div id="guideBody4" style="display: block; padding: 0 20px 20px;">
                     <div style="background: var(--card-bg); border-radius: 12px; padding: 25px; margin-bottom: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
                         <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
                             <span style="font-size: 1.5em;">🔍</span> When to Scan, Roll, or Close
@@ -1636,24 +1710,32 @@
                         <div style="display: grid; gap: 16px;">
                             <div style="border: 2px solid var(--signal-teal); padding: 18px; border-radius: 8px;">
                                 <h4 style="color: var(--signal-teal); margin: 0 0 10px 0; font-weight: 700;">🔍 Scan (pulsing teal button)</h4>
-                                <p style="color: var(--text-secondary); margin: 0;">The Scan button pulses when the action logic thinks rolling is a viable path. Click it to pull the options chain and see actual net credit/debit numbers. <strong>Always scan before rolling</strong> — never roll blind.</p>
+                                <p style="color: var(--text-secondary); margin: 0;">The Scan button pulses when the action logic thinks rolling is a viable path. Click it to pull the options chain and see actual net credit/debit numbers, plus "The actual choice" panel comparing Close vs. the best available Roll side by side in real dollars. <strong>Always scan before rolling</strong> — never roll blind.</p>
                             </div>
                             <div style="border: 2px solid var(--success-color); padding: 18px; border-radius: 8px;">
-                                <h4 style="color: var(--success-color); margin: 0 0 10px 0; font-weight: 700;">✅ Roll when scanner shows:</h4>
-                                <p style="color: var(--text-secondary); margin: 0;">Net credit ≥ $0.30, delta under 0.30, annualized yield ≥ 10%. The scanner's verdict banner will say "✅ Roll viable" with the best candidate highlighted.</p>
+                                <h4 style="color: var(--success-color); margin: 0 0 10px 0; font-weight: 700;">✅ Roll when a candidate passes the Four-Part Test:</h4>
+                                <p style="color: var(--text-secondary); margin: 0;">Needs 3 of 4 — lower delta, more DTE, net credit, ATR buffer ≥1.0× — with ATR always required regardless of the other three. Passing candidates sort to the top of the table automatically and show a green count like "4/4" or "3/4."</p>
                             </div>
                             <div style="border: 2px solid var(--warning-color); padding: 18px; border-radius: 8px;">
                                 <h4 style="color: var(--warning-color); margin: 0 0 10px 0; font-weight: 700;">⚠️ Be skeptical of rolling when:</h4>
-                                <p style="color: var(--text-secondary); margin: 0;">Best credit candidate has delta above 0.35 (you're resetting the same problem), net credit is tiny ($0.05–0.10), open interest is under 500 (wide spreads), or IV Δ shows major expansion (rolling into weak premiums).</p>
+                                <p style="color: var(--text-secondary); margin: 0;">A candidate passes 3/4 but sits right at the 1.0× ATR floor (marginal, not safe), the net credit is tiny relative to the debit you'd need elsewhere in the chain, or the "Cash committed to this chain" figure in the actual-choice panel is climbing significantly with each roll — a sign you may be delaying rather than improving.</p>
                             </div>
                             <div style="border: 2px solid var(--danger-color); padding: 18px; border-radius: 8px;">
                                 <h4 style="color: var(--danger-color); margin: 0 0 10px 0; font-weight: 700;">🛑 Close instead of rolling when:</h4>
-                                <p style="color: var(--text-secondary); margin: 0;">Scanner shows all debits, IV has crushed since entry (IV Δ deeply negative = poor roll premiums), yield is under 3% (capital trap), or you're rolling into an earnings event. Cut the loss and free capital for a better trade.</p>
+                                <p style="color: var(--text-secondary); margin: 0;">Every candidate shows 🚫 Disqualified (earnings before expiration, illiquid, or — checked against your actual cost basis, not a guess — the candidate worsens what you're already exposed to), or the scanner says "No sound roll available." Cut the loss and free capital for a better trade rather than forcing a roll that only resets the clock.</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Smart Action Examples -->
+                        </div>
+                    </div>
+
+                    <div class="guide-acc-section" style="margin-bottom: 12px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+                        <div onclick="toggleGuideSection(5)" style="cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: var(--card-bg);">
+                            <span id="guideIcon5" style="font-size: 0.85em; color: var(--text-muted); transition: transform 0.15s;">▸</span>
+                            <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0; font-size: 1em;">🧠 Reading the Smart Action Column</h3>
+                        </div>
+                        <div id="guideBody5" style="display: none; padding: 0 20px 20px;">
                     <div style="background: var(--card-bg); border-radius: 12px; padding: 25px; margin-bottom: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
                         <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
                             <span style="font-size: 1.5em;">🧠</span> Reading the Smart Action Column
@@ -1710,7 +1792,15 @@
                         </div>
                     </div>
 
-                    <!-- Avoiding Common Mistakes -->
+                        </div>
+                    </div>
+
+                    <div class="guide-acc-section" style="margin-bottom: 12px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+                        <div onclick="toggleGuideSection(6)" style="cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: var(--card-bg);">
+                            <span id="guideIcon6" style="font-size: 0.85em; color: var(--text-muted); transition: transform 0.15s;">▸</span>
+                            <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0; font-size: 1em;">🛡️ Avoiding Common CSP Mistakes</h3>
+                        </div>
+                        <div id="guideBody6" style="display: none; padding: 0 20px 20px;">
                     <div style="background: var(--card-bg); border-radius: 12px; padding: 25px; margin-bottom: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
                         <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
                             <span style="font-size: 1.5em;">🛡️</span> Avoiding Common CSP Mistakes
@@ -1736,7 +1826,15 @@
                         </div>
                     </div>
 
-                    <!-- Advanced Safeguards & Intelligence -->
+                        </div>
+                    </div>
+
+                    <div class="guide-acc-section" style="margin-bottom: 12px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+                        <div onclick="toggleGuideSection(7)" style="cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: var(--card-bg);">
+                            <span id="guideIcon7" style="font-size: 0.85em; color: var(--text-muted); transition: transform 0.15s;">▸</span>
+                            <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0; font-size: 1em;">🔬 Built-in Safeguards & Intelligence</h3>
+                        </div>
+                        <div id="guideBody7" style="display: none; padding: 0 20px 20px;">
                     <div style="background: var(--card-bg); border-radius: 12px; padding: 25px; margin-bottom: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
                         <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
                             <span style="font-size: 1.5em;">🔬</span> Built-in Safeguards & Intelligence
@@ -1781,7 +1879,15 @@
                         </div>
                     </div>
 
-                    <!-- Position Sizing & Concentration -->
+                        </div>
+                    </div>
+
+                    <div class="guide-acc-section" style="margin-bottom: 12px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+                        <div onclick="toggleGuideSection(8)" style="cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: var(--card-bg);">
+                            <span id="guideIcon8" style="font-size: 0.85em; color: var(--text-muted); transition: transform 0.15s;">▸</span>
+                            <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0; font-size: 1em;">📐 Position Sizing & Sector Concentration</h3>
+                        </div>
+                        <div id="guideBody8" style="display: none; padding: 0 20px 20px;">
                     <div style="background: var(--card-bg); border-radius: 12px; padding: 25px; margin-bottom: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
                         <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
                             <span style="font-size: 1.5em;">📐</span> Position Sizing & Sector Concentration
@@ -1816,7 +1922,15 @@
                         </div>
                     </div>
 
-                    <!-- Covered Call Support -->
+                        </div>
+                    </div>
+
+                    <div class="guide-acc-section" style="margin-bottom: 12px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+                        <div onclick="toggleGuideSection(9)" style="cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: var(--card-bg);">
+                            <span id="guideIcon9" style="font-size: 0.85em; color: var(--text-muted); transition: transform 0.15s;">▸</span>
+                            <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0; font-size: 1em;">📞 Covered Call (CC) Decision Logic</h3>
+                        </div>
+                        <div id="guideBody9" style="display: none; padding: 0 20px 20px;">
                     <div style="background: var(--card-bg); border-radius: 12px; padding: 25px; margin-bottom: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
                         <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
                             <span style="font-size: 1.5em;">📞</span> Covered Call (CC) Decision Logic
@@ -1846,12 +1960,20 @@
 
                             <div style="padding: 16px; border-radius: 8px; background: var(--dark-surface); border-left: 3px solid var(--danger-color);">
                                 <strong style="color: var(--text-primary);">🔍 Roll Scanner — Works for Both</strong>
-                                <p style="color: var(--text-secondary); margin: 8px 0 0; font-size: 0.9em;">The roll scanner auto-detects call positions and fetches OTM call candidates. For CCs, "rolling" means moving to a higher strike and/or further expiration to avoid assignment while collecting a net credit. The same net credit / delta / yield criteria apply — you want a credit roll with reasonable delta.</p>
+                                <p style="color: var(--text-secondary); margin: 8px 0 0; font-size: 0.9em;">The roll scanner auto-detects call positions and fetches OTM call candidates. For CCs, "rolling" means moving to a higher strike and/or further expiration to avoid assignment. Every candidate goes through the same Four-Part Roll Test (lower delta, more time, net credit, ATR ≥1.0×) plus the three hard disqualifiers — earnings before expiration, illiquidity, and for CCs specifically, moving further from your shares' cost basis than your current position already sits. Candidates are sorted with passing ones first, and "The actual choice" panel at the top compares Close vs. the best available Roll in real dollars before you look at the raw table.</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Market Regime Indicator -->
+                        </div>
+                    </div>
+
+                    <div class="guide-acc-section" style="margin-bottom: 12px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+                        <div onclick="toggleGuideSection(10)" style="cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: var(--card-bg);">
+                            <span id="guideIcon10" style="font-size: 0.85em; color: var(--text-muted); transition: transform 0.15s;">▸</span>
+                            <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0; font-size: 1em;">🌡️ Market Regime Indicator</h3>
+                        </div>
+                        <div id="guideBody10" style="display: none; padding: 0 20px 20px;">
                     <div style="background: var(--card-bg); border-radius: 12px; padding: 25px; margin-bottom: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
                         <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
                             <span style="font-size: 1.5em;">🌡️</span> Market Regime Indicator
@@ -1886,7 +2008,15 @@
                         </div>
                     </div>
 
-                    <!-- Performance Analytics Guide -->
+                        </div>
+                    </div>
+
+                    <div class="guide-acc-section" style="margin-bottom: 12px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+                        <div onclick="toggleGuideSection(11)" style="cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: var(--card-bg);">
+                            <span id="guideIcon11" style="font-size: 0.85em; color: var(--text-muted); transition: transform 0.15s;">▸</span>
+                            <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0; font-size: 1em;">📊 Performance Analytics (Performance Tab)</h3>
+                        </div>
+                        <div id="guideBody11" style="display: none; padding: 0 20px 20px;">
                     <div style="background: var(--card-bg); border-radius: 12px; padding: 25px; margin-bottom: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
                         <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
                             <span style="font-size: 1.5em;">📊</span> Performance Analytics (Performance Tab)
@@ -1911,32 +2041,9 @@
                         </div>
                     </div>
 
-                    <!-- Column Reference -->
-                    <div style="background: var(--card-bg); border-radius: 12px; padding: 25px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
-                        <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 1.5em;">📖</span> Column Quick Reference
-                        </h3>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
-                            <div style="padding: 10px; border-radius: 6px; background: var(--dark-surface); font-size: 0.9em;">
-                                <strong style="color: var(--accent-gold);">θ Pace</strong> — <span style="color: var(--text-secondary);">▲▲ well ahead, ▲ on track, ● behind, ▼ well behind. Based on nonlinear decay curve.</span>
-                            </div>
-                            <div style="padding: 10px; border-radius: 6px; background: var(--dark-surface); font-size: 0.9em;">
-                                <strong style="color: var(--accent-gold);">Yield</strong> — <span style="color: var(--text-secondary);">Annualized return on cash secured. Green ≥ 15%, Teal ≥ 8%, Yellow ≥ 3%, Red < 3%.</span>
-                            </div>
-                            <div style="padding: 10px; border-radius: 6px; background: var(--dark-surface); font-size: 0.9em;">
-                                <strong style="color: var(--accent-gold);">IV Δ</strong> — <span style="color: var(--text-secondary);">Change from entry IV. Green = crush (good for short). Red = expansion (bad for short).</span>
-                            </div>
-                            <div style="padding: 10px; border-radius: 6px; background: var(--dark-surface); font-size: 0.9em;">
-                                <strong style="color: var(--accent-gold);">Earnings</strong> — <span style="color: var(--text-secondary);">⚡ = imminent (≤3d), ⚠️ = soon (≤7d), 📅 = approaching. Green = after expiration (safe).</span>
-                            </div>
-                            <div style="padding: 10px; border-radius: 6px; background: var(--dark-surface); font-size: 0.9em;">
-                                <strong style="color: var(--accent-gold);">🔍 Scan</strong> — <span style="color: var(--text-secondary);">Pulsing = recommended. Muted = optional. Dimmed = not relevant. Pulls live options chain.</span>
-                            </div>
-                            <div style="padding: 10px; border-radius: 6px; background: var(--dark-surface); font-size: 0.9em;">
-                                <strong style="color: var(--accent-gold);">Strike Δ%</strong> — <span style="color: var(--text-secondary);">Distance from stock price to strike. Green = stock above strike (safe). Red = stock below.</span>
-                            </div>
                         </div>
                     </div>
+
                 </div>
             </div>
 
@@ -2216,7 +2323,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.39 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.41 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2225,6 +2332,30 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.41 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.41</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    Guide usability pass, part 2 \u2014 audited all 12 accordion sections for redundancy. Honest finding: the content is genuinely well-tiered (Quick Reference summarizes, sections below expand into real depth), not lazily duplicated, so there wasn't much to prune. The real issue found was staleness instead:<br>
+                                    <span style="background: rgba(245,158,11,0.12); color: var(--warning-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> \u201cWhen to Scan, Roll, or Close\u201d and the CC section's roll-scanner blurb still described the old 3-part test with vague thresholds \u2014 rewritten to reference the real Four-Part Test, the three hard disqualifiers, and \u201cThe actual choice\u201d panel.<br>
+                                    <span style="background: rgba(245,158,11,0.12); color: var(--warning-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> \u201cThe 7 Factors Behind Your Score\u201d was actually missing an 8th factor (Concentration Risk, 7%) entirely, and every percentage shown didn't match the real weights in the code. Corrected to the real 8 factors with accurate weights (26/17/17/12/9/7/7/5%).
+                                </div>
+                            </div>
+
+                            <!-- v7.40 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.40</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">IMPROVED</span> Decision Guide restructured \u2014 13 sections previously rendered as one continuous scroll are now a collapsible accordion (Weekly Workflow and When to Scan/Roll/Close open by default, everything else collapsed). Added a Quick Reference cheat-sheet at the top for fast lookups without expanding anything. Pruned the Column Quick Reference section entirely \u2014 confirmed fully redundant with the infoTip() tooltips already on every relevant column header, right where the data actually is.
+                                </div>
+                            </div>
+
                             <!-- v7.39 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3417,7 +3548,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.39';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.41';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -9592,6 +9723,20 @@
         // P&L) always stays visible even when collapsed, so you still get the
         // at-a-glance summary without the full card list taking up scroll space.
         // State persists across reloads, same pattern as column visibility.
+        // Collapse/expand individual Decision Guide sections — same accordion
+        // pattern as the Assigned Shares section. State isn't persisted between
+        // visits since this is reference material, not a working view; every
+        // visit starts from the same sensible defaults (Weekly Workflow and
+        // When to Scan/Roll/Close open, everything else collapsed).
+        function toggleGuideSection(idx) {
+            const body = document.getElementById('guideBody' + idx);
+            const icon = document.getElementById('guideIcon' + idx);
+            if (!body || !icon) return;
+            const collapsed = body.style.display !== 'none';
+            body.style.display = collapsed ? 'none' : 'block';
+            icon.textContent = collapsed ? '▸' : '▾';
+        }
+
         function toggleSharesSection() {
             const body = document.getElementById('sharesCollapsibleBody');
             const icon = document.getElementById('sharesToggleIcon');
