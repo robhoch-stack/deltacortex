@@ -2325,7 +2325,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.44 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.45 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2334,6 +2334,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.45 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.45</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(59,130,246,0.15); color: #3b82f6; padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">IMPROVED</span> Price alert moved off the main card \u2014 the bulky two-line box was expanding every card vertically. Now a compact badge in the drawer, sitting between Notes and Copy Alert, matching the surrounding buttons\u2019 size. Full reasoning still available on tap/hover via tooltip.
+                                </div>
+                            </div>
+
                             <!-- v7.44 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3585,7 +3596,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.44';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.45';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -9577,7 +9588,8 @@
                         <button class="btn-ghost" data-action="editIV">✏️ Entry IV</button>
                         <button class="btn-ghost" data-action="editRollHistory">↻ Edit History</button>
                         <button class="btn-ghost" data-action="editNotes">${(pos.entryNotes || pos.exitNotes || pos.notes) ? '📝 Notes' : '📝 Add Notes'}</button>
-                        <button class="btn-ghost" data-action="copyAlertReminder">🔔 Copy Alert</button>
+                        <span class="btn-ghost" style="cursor: default; color: var(--warning-color); border-color: var(--warning-color);" title="Set this as a price alert at your broker or on your phone. Most platforms don't support alerting on delta directly, but delta and distance-to-strike move together — when the stock reaches the strike, delta lands near 0.50.">🔔 Alert $${pos.strike.toFixed(2)}</span>
+                        <button class="btn-ghost" data-action="copyAlertReminder">📋 Copy Alert</button>
                         <button class="btn-ghost destructive" data-action="delete">Delete</button>
                     </div>
                 </div>`;
@@ -9597,11 +9609,6 @@
                             ${otmPct !== null ? `<span class="m ${otmCls}">${otmLabel} <b>${otmPct >= 0 ? '+' : ''}${otmPct.toFixed(1)}%</b>${infoTip('How far the stock is from your strike, as a percent. OTM (out of the money) is safer; ITM (in the money) means real assignment risk.')}</span>` : ''}
                             <span class="m ${ef.cssClass === 'earnings-danger' || ef.cssClass === 'earnings-warn' ? 'bad' : ''}" title="${escapeHTML(ef.title)}">Earn <b>${ef.display}</b>${infoTip('Days until this ticker\u2019s next earnings report. Red means earnings fall before expiration — a gap-risk warning.')}</span>
                             ${(() => { const df = getDividendRiskFlag(pos); return df ? `<span class="m" style="color: ${df.color};" title="${escapeHTML(df.title)}">Div <b>${df.display}</b>${infoTip('Early assignment risk: this covered call is in the money with a dividend going ex before expiration. The holder may exercise early to capture it if there\u2019s little time value left to give up.')}</span>` : ''; })()}
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 8px; background: rgba(245, 158, 11, 0.1); border-radius: 7px; padding: 7px 10px; margin: 8px 0;">
-                            <span style="font-size: 0.85em; color: var(--warning-color); font-weight: 600;">🔔 Alert at $${pos.strike.toFixed(2)}</span>
-                            <span style="font-size: 0.78em; color: var(--text-muted);">Strike — delta reaches ~0.50 here</span>
-                            ${infoTip('Set this as a price alert at your broker or on your phone. Most platforms don\u2019t support alerting on delta directly, but delta and distance-to-strike move together \u2014 when the stock reaches the strike, delta lands near 0.50. This is the price where a position needs a human, not a resting order.')}
                         </div>
                         <div class="pos-pl ${plUp ? 'up' : (hs >= 60 ? 'down-mild' : 'down')}">
                             <div class="plv">${formatCurrency(pl)}${(!plUp && hs >= 60) ? infoTip('Down in dollars, but Health Score is ' + hs + ' (Healthy/Monitor) \u2014 delta, DTE, and theta pace all still look fine. Shown in amber, not red, so a normal early-stage drawdown doesn\u2019t read as urgent when nothing\u2019s actually wrong.') : ''}</div>
