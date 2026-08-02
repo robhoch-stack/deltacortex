@@ -1242,10 +1242,12 @@
             </div>
 
             <div id="closedPositionsView" style="display: none;">
-                <div style="padding: 20px 0; display: flex; gap: 15px; flex-wrap: wrap;">
+                <div style="padding: 20px 0; display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
                     <button class="btn-primary" onclick="openImportModal()">📥 Import Trades from CSV</button>
                     <button class="btn-success" onclick="exportClosedToCSV()">📤 Export Closed Positions</button>
                     <button class="btn-primary" onclick="openWeeklyAudit()" style="background: var(--signal-teal, #2aa6a1);">✅ Weekly Audit</button>
+                    <button class="btn-primary" onclick="openWeeklyReview()" style="background: #7c3aed;">📅 Weekly Review</button>
+                    <span id="weeklyReviewBadge" style="font-size: 0.8em; color: var(--text-muted);"></span>
                     <button class="btn-danger" onclick="clearAllClosedTrades()">🗑️ Clear All Trades</button>
                 </div>
                 
@@ -2323,7 +2325,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.41 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.43 · June 2026</p>
                             </div>
                         </div>
                         
@@ -2332,6 +2334,29 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.43 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.43</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Weekly Review (Performance tab) \u2014 a deliberate, periodic full accounting of EVERY open position, healthy ones included, distinct from Weekly Audit (new entries only) and Today's Decisions (reactive, always-current). Categorizes into On Track / Watch / Needs a Decision, and diffs each position against your last review (\ud83d\udd3a/\ud83d\udd3b band changes) so a position that just crossed a line stands out from one that's been stable for weeks. Includes a passive \u201cX days since last review\u201d badge \u2014 no push notifications yet (parked in the backlog), so this is the best available substitute. Known limitation, documented in code: positions are tracked by ticker+type since no persistent ID exists and entryDate resets on every roll \u2014 two simultaneous same-type positions on one ticker would collide in the diff.
+                                </div>
+                            </div>
+
+                            <!-- v7.42 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.42</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Roll Scanner now shows \u201cChain if $0\u201d per candidate \u2014 even in the BEST case (this candidate expiring completely worthless), would the whole chain still be underwater, including prior realized losses? Same formula already verified against a real NFLX position tonight. Deliberately informational, not a disqualifier \u2014 rolling for ongoing income while a chain carries old losses forward can be a legitimate choice, this just makes it visible up front instead of only discoverable after the fact.<br>
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">IMPROVED</span> Roll Scanner modal widened (1000px \u2192 1400px) to fit the now-larger column set (Type, IV, vs Basis, Chain if $0) without a horizontal scrollbar.
+                                </div>
+                            </div>
+
                             <!-- v7.41 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3548,7 +3573,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.41';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.43';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -4062,6 +4087,7 @@
                     closedBtn.style.background = 'var(--clarity-blue)';
                     renderClosedPositions();
                     updatePerformanceStats();
+                    updateWeeklyReviewBadge();
                 } else if (tab === 'guide') {
                     guideView.style.display = 'block';
                     guideBtn.style.background = 'var(--clarity-blue)';
@@ -4927,7 +4953,7 @@
             modal.style.position = 'static';
             modal.style.background = 'none';
             modal.style.width = '100%';
-            modal.style.maxWidth = '1000px';
+            modal.style.maxWidth = '1400px';
             overlay.appendChild(modal);
             document.body.appendChild(overlay);
             statusDiv.innerHTML = '<span style="color: var(--signal-teal);">⏳ Fetching expirations...</span>';
@@ -5028,6 +5054,15 @@
                         ? (sharesBasis !== null ? c.strike - sharesBasis : null)
                         : (currentBreakeven !== null ? (pos.strike - c.strike) + netCredit : null);
                     
+                    // Even in the BEST case — this candidate expiring completely
+                    // worthless — would the whole chain still be underwater?
+                    // Informational only, deliberately NOT a disqualifier: rolling
+                    // for ongoing income while a chain carries old losses forward
+                    // (exactly tonight's real NFLX decision) is a legitimate choice,
+                    // not something to block. This just makes it visible up front
+                    // instead of only discoverable after the fact.
+                    const chainIfWorthless = chainPLIfClosedNow + (newPremium * 100 * contracts);
+                    
                     return {
                         ...c,
                         newPremium,
@@ -5040,7 +5075,8 @@
                         annualizedYield,
                         atrDistance,
                         inATRBuffer,
-                        vsBasis
+                        vsBasis,
+                        chainIfWorthless
                     };
                 });
                 allAnalyzed = allAnalyzed.concat(analyzed);
@@ -5075,6 +5111,13 @@
             const currentDTE = calculateDTE(pos.expiration) || 0;
             const currentAbsDelta = Math.abs(pos.delta || 0);
             const currentVsBasis = sharesBasis !== null ? pos.strike - sharesBasis : null;
+
+            // Moved earlier so the candidate map below can use it — needed for
+            // the Chain if Worthless column (informational, not a disqualifier).
+            const rollHistoryForClose = Array.isArray(pos.rollHistory) ? pos.rollHistory : [];
+            const plRealizedForClose = rollHistoryForClose.reduce((sum, leg) => sum + (leg.realizedPL || 0), 0);
+            const plCurrentLegForClose = (pos.entryPrice - pos.currentPrice) * 100 * contracts;
+            const chainPLIfClosedNow = plCurrentLegForClose + plRealizedForClose;
             
             const analyzedWithTest = analyzed.map(c => {
                 const candDelta = Math.abs(c.delta || 1);
@@ -5154,10 +5197,6 @@
             // synthesize yourself. This directly answers "what am I actually
             // choosing between," which the raw candidate table alone doesn't.
             // ═══════════════════════════════════════════════════
-            const rollHistoryForClose = Array.isArray(pos.rollHistory) ? pos.rollHistory : [];
-            const plRealizedForClose = rollHistoryForClose.reduce((sum, leg) => sum + (leg.realizedPL || 0), 0);
-            const plCurrentLegForClose = (pos.entryPrice - pos.currentPrice) * 100 * contracts;
-            const chainPLIfClosedNow = plCurrentLegForClose + plRealizedForClose;
             const collateralFreed = pos.strike * 100 * contracts;
 
             let choiceHTML = `
@@ -5275,6 +5314,7 @@
                             <th style="padding: 8px 6px;" title="Roll type — how this candidate compares to your current strike">Type</th>
                             <th style="padding: 8px 6px;" title="Implied volatility on this candidate. Higher IV = richer roll pricing.">IV</th>
                             ${(sharesBasis !== null || currentBreakeven !== null) ? `<th style="padding: 8px 6px;" title="${isThisCC ? 'This strike minus your shares cost basis of $' + sharesBasis.toFixed(2) + '. Positive = protects/beats basis if called. Negative = locks in a loss.' : 'How this candidate compares to the breakeven your CURRENT position already has if assigned ($' + currentBreakeven.toFixed(2) + '). Positive = improves on what you already have. Negative = quietly worsens it, even if delta/DTE/credit look fine.'}">vs Basis</th>` : ''}
+                            <th style="padding: 8px 6px;" title="Even in the BEST case \u2014 this candidate expiring completely worthless \u2014 would the whole chain still be underwater? Includes prior realized losses. Informational only, not a disqualifier: rolling for income while carrying old losses forward can be a legitimate choice.">Chain if $0</th>
                             <th style="padding: 8px 6px;" title="Candidate expires after earnings event">Earn</th>
                             <th style="padding: 8px 6px;">Roll Test</th>
                             <th style="padding: 8px 6px;"></th>
@@ -5336,6 +5376,11 @@
                                     basisCell = `<td style="padding: 6px; font-weight: 700; color: ${vbColor}; white-space: nowrap;" title="${vbTitle}">${vbSign}$${c.vsBasis.toFixed(2)}</td>`;
                                 }
                             }
+
+                            // Chain if Worthless — best-case outcome for this candidate,
+                            // including prior chain history. Informational, not gated.
+                            const cwColor = c.chainIfWorthless >= 0 ? 'var(--success-color)' : 'var(--danger-color)';
+                            const chainWorthlessCell = `<td style="padding: 6px; font-weight: 700; color: ${cwColor}; white-space: nowrap;" title="Closing today realizes ${formatCurrency(chainPLIfClosedNow)} on the chain so far. If this candidate later expires completely worthless, you'd additionally keep its full ${formatCurrency(c.newPremium * 100 * contracts)} premium.">${formatCurrency(c.chainIfWorthless)}</td>`;
                             
                             // Earnings warning display
                             let earningsCell;
@@ -5376,6 +5421,7 @@
                                     ${typeCell}
                                     ${ivCell}
                                     ${basisCell}
+                                    ${chainWorthlessCell}
                                     ${earningsCell}
                                     <td style="padding: 6px; white-space: nowrap; font-size: 0.85em;">
                                         ${testBadge1} ${testBadge2} ${testBadge3} ${testBadge4} ${passLabel}
@@ -11559,6 +11605,140 @@
             document.body.appendChild(overlay);
             document.getElementById('auditCloseBtn').onclick = () => overlay.remove();
             overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // WEEKLY REVIEW — a deliberate, periodic full accounting of EVERY
+        // open position, healthy ones included. Different question than
+        // Weekly Audit (which only checks new entries against entry rules)
+        // or Today's Decisions (reactive, always-current urgency). This one
+        // asks: "did anything change that I should know about, across
+        // everything I hold" — and specifically diffs against last time,
+        // since a position sitting in the same band two weeks running is a
+        // much weaker signal than one that just crossed a line.
+        //
+        // Known limitation: positions are tracked by ticker+type composite
+        // key (not a persistent ID, since none exists) so the diff survives
+        // a roll — entryDate resets on every roll, so it can't be used as
+        // part of the key. This means two simultaneous positions of the
+        // same type on the same ticker (e.g. two CCs on the same stock)
+        // would collide in the diff. Rare in practice for this strategy,
+        // not solved here.
+        // ═══════════════════════════════════════════════════════════════
+        function getWeeklyReviewKey(pos) {
+            if (pos.positionType === 'shares') return `${pos.ticker.toUpperCase()}-shares`;
+            return `${pos.ticker.toUpperCase()}-${pos.optionType}-${pos.position}`;
+        }
+
+        function openWeeklyReview() {
+            const prevRaw = localStorage.getItem('deltaCortex_weeklyReviewSnapshot');
+            const prev = prevRaw ? JSON.parse(prevRaw) : null;
+            const prevPositions = prev ? prev.positions : {};
+
+            const allOpen = positions; // shares + options, all open positions in one array
+            if (allOpen.length === 0) {
+                alert('No open positions to review.');
+                return;
+            }
+
+            const current = {};
+            const rows = allOpen.map(pos => {
+                const m = pos._metrics || computePositionMetrics(pos);
+                const key = getWeeklyReviewKey(pos);
+                const band = m.healthDisplay ? m.healthDisplay.band : 'Unknown';
+                const score = m.healthDisplay ? m.healthDisplay.display : null;
+                current[key] = { band, score, ticker: pos.ticker, delta: pos.delta || null };
+
+                const priorEntry = prevPositions[key];
+                let diffHTML = '';
+                if (!priorEntry) {
+                    diffHTML = `<span style="color: var(--text-muted); font-size: 0.8em;">New since last review</span>`;
+                } else if (priorEntry.band !== band) {
+                    const isOptions = pos.positionType !== 'shares';
+                    const bandOrder = isOptions ? ['Act Now', 'Act Soon', 'Attention', 'Monitor', 'Healthy'] : ['Below basis', 'Above basis'];
+                    const improved = bandOrder.indexOf(band) > bandOrder.indexOf(priorEntry.band);
+                    diffHTML = `<span style="color: ${improved ? 'var(--success-color)' : 'var(--danger-color)'}; font-size: 0.8em; font-weight: 700;">${improved ? '🔺' : '🔻'} ${escapeHTML(priorEntry.band)} → ${escapeHTML(band)}</span>`;
+                } else {
+                    diffHTML = `<span style="color: var(--text-muted); font-size: 0.8em;">Unchanged since last review</span>`;
+                }
+
+                return { pos, band, score, diffHTML };
+            });
+
+            // Categorize — options use the standard 5-band scale, shares use
+            // their own Above/Below basis framing (they don't carry the same
+            // forced-timeline urgency an option position does).
+            const bucket = (r) => {
+                if (r.pos.positionType === 'shares') {
+                    return r.band === 'Above basis' ? 'onTrack' : 'watch';
+                }
+                if (r.band === 'Healthy' || r.band === 'Monitor') return 'onTrack';
+                if (r.band === 'Attention') return 'watch';
+                return 'needsDecision';
+            };
+
+            const onTrack = rows.filter(r => bucket(r) === 'onTrack');
+            const watch = rows.filter(r => bucket(r) === 'watch');
+            const needsDecision = rows.filter(r => bucket(r) === 'needsDecision');
+
+            const renderGroup = (title, color, list) => {
+                if (list.length === 0) return '';
+                const items = list.map(r => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--dark-surface); border-radius: 6px; margin-bottom: 6px;">
+                        <div><strong>${escapeHTML(r.pos.ticker)}</strong> <span style="color: var(--text-muted); font-size: 0.85em;">${r.pos.positionType === 'shares' ? 'Shares' : (r.pos.position === 'Short' ? (r.pos.optionType === 'Call' ? 'CC' : 'CSP') : r.pos.optionType)}</span></div>
+                        <div style="text-align: right;">${r.score !== null ? `<span style="font-weight: 700; margin-right: 8px;">${r.score}</span>` : ''}${r.diffHTML}</div>
+                    </div>`).join('');
+                return `
+                    <div style="margin-bottom: 18px;">
+                        <div style="font-weight: 700; color: ${color}; margin-bottom: 8px; font-size: 0.95em;">${title} (${list.length})</div>
+                        ${items}
+                    </div>`;
+            };
+
+            let overlay = document.getElementById('weeklyReviewOverlay');
+            if (overlay) overlay.remove();
+            overlay = document.createElement('div');
+            overlay.id = 'weeklyReviewOverlay';
+            overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 100000; background: rgba(8,10,16,0.85); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;';
+
+            const modal = document.createElement('div');
+            modal.style.cssText = 'background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; max-width: 640px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5);';
+
+            const lastReviewedStr = prev ? new Date(prev.timestamp).toLocaleDateString() : 'never';
+            modal.innerHTML = `
+                <div style="font-weight: 700; font-size: 1.1em; margin-bottom: 4px;">📅 Weekly Review</div>
+                <p style="font-size: 0.85em; color: var(--text-muted); margin: 0 0 16px;">${allOpen.length} position${allOpen.length === 1 ? '' : 's'} reviewed. ${onTrack.length} on track · ${watch.length} watch · ${needsDecision.length} needs a decision. Last reviewed: ${lastReviewedStr}.</p>
+                ${renderGroup('🛑 Needs a decision this week', 'var(--danger-color)', needsDecision)}
+                ${renderGroup('⚠️ Watch', 'var(--warning-color)', watch)}
+                ${renderGroup('✅ On track', 'var(--success-color)', onTrack)}
+                <button id="weeklyReviewMarkBtn" class="btn-primary" style="margin-top: 10px; width: 100%;">✓ Mark Reviewed</button>
+                <button id="weeklyReviewCloseBtn" class="btn-ghost" style="margin-top: 8px; width: 100%;">Close without marking</button>
+            `;
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            const close = () => overlay.remove();
+            document.getElementById('weeklyReviewCloseBtn').onclick = close;
+            overlay.onclick = (e) => { if (e.target === overlay) close(); };
+            document.getElementById('weeklyReviewMarkBtn').onclick = () => {
+                localStorage.setItem('deltaCortex_weeklyReviewSnapshot', JSON.stringify({ timestamp: Date.now(), positions: current }));
+                close();
+                updateWeeklyReviewBadge();
+            };
+        }
+
+        // Passive nudge — no push notifications yet (parked in the backlog),
+        // so this is the best available substitute: a small "X days since"
+        // badge near the button. Doesn't remind you; makes the habit easier
+        // to see once you're already looking.
+        function updateWeeklyReviewBadge() {
+            const el = document.getElementById('weeklyReviewBadge');
+            if (!el) return;
+            const raw = localStorage.getItem('deltaCortex_weeklyReviewSnapshot');
+            if (!raw) { el.textContent = 'Never reviewed'; return; }
+            const prev = JSON.parse(raw);
+            const days = Math.floor((Date.now() - prev.timestamp) / 86400000);
+            el.textContent = days === 0 ? 'Reviewed today' : `${days} day${days === 1 ? '' : 's'} since last review`;
         }
 
 
