@@ -2353,7 +2353,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.48 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.49 · June 2026</p>
                             </div>
                         </div>
                         <div id="settingsBody4" style="display: none;">
@@ -2363,6 +2363,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.49 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.49</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(239,68,68,0.12); color: var(--danger-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> Roll Scanner threw "Cannot access 'chainPLIfClosedNow' before initialization" on every scan \u2014 the Chain if $0 column (v7.42) referenced this variable inside the candidate-building loop, but its declaration sat further down, after that loop had already run. Moved the declaration to before the loop, alongside the other pre-loop variables it depends on.
+                                </div>
+                            </div>
+
                             <!-- v7.48 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3661,7 +3672,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.48';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.49';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -5074,6 +5085,13 @@
             rollHistoryForBasis.forEach(leg => { currentChainPrem += (leg.entryPrice || 0) - (leg.exitPrice || 0); });
             const currentBreakeven = !isThisCC ? (pos.strike - currentChainPrem) : null;
 
+            // Needed by the candidate-building loop below (Chain if Worthless
+            // column) — must be declared before that loop runs, not after.
+            const rollHistoryForClose = Array.isArray(pos.rollHistory) ? pos.rollHistory : [];
+            const plRealizedForClose = rollHistoryForClose.reduce((sum, leg) => sum + (leg.realizedPL || 0), 0);
+            const plCurrentLegForClose = (pos.entryPrice - pos.currentPrice) * 100 * contracts;
+            const chainPLIfClosedNow = plCurrentLegForClose + plRealizedForClose;
+
             // Step 1: Get expirations and ATR in parallel
             const [expirations, atrData] = await Promise.all([
                 fetchExpirations(pos.ticker),
@@ -5198,13 +5216,6 @@
             const currentAbsDelta = Math.abs(pos.delta || 0);
             const currentVsBasis = sharesBasis !== null ? pos.strike - sharesBasis : null;
 
-            // Moved earlier so the candidate map below can use it — needed for
-            // the Chain if Worthless column (informational, not a disqualifier).
-            const rollHistoryForClose = Array.isArray(pos.rollHistory) ? pos.rollHistory : [];
-            const plRealizedForClose = rollHistoryForClose.reduce((sum, leg) => sum + (leg.realizedPL || 0), 0);
-            const plCurrentLegForClose = (pos.entryPrice - pos.currentPrice) * 100 * contracts;
-            const chainPLIfClosedNow = plCurrentLegForClose + plRealizedForClose;
-            
             const analyzedWithTest = analyzed.map(c => {
                 const candDelta = Math.abs(c.delta || 1);
                 const reducesRisk = candDelta < currentAbsDelta;
