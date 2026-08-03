@@ -1192,6 +1192,11 @@
                 <button onclick="setStrategyFilter('csp')" id="filterCSP" style="padding: 5px 12px; font-size: 0.78em; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; background: transparent; color: var(--text-muted);">CSP</button>
                 <button onclick="setStrategyFilter('cc')" id="filterCC" style="padding: 5px 12px; font-size: 0.78em; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; background: transparent; color: var(--text-muted);">CC</button>
             </div>
+            <div class="button-group" id="paperFilterGroup" style="background: var(--dark-surface); border-radius: 6px; padding: 2px; display: inline-flex; gap: 2px;" title="Paper trades never count toward buying power or concentration limits, regardless of this filter">
+                <button onclick="setPaperFilter('real')" id="filterReal" style="padding: 5px 12px; font-size: 0.78em; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; background: var(--clarity-blue); color: white;">💰 Real</button>
+                <button onclick="setPaperFilter('paper')" id="filterPaper" style="padding: 5px 12px; font-size: 0.78em; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; background: transparent; color: var(--text-muted);">📝 Paper</button>
+                <button onclick="setPaperFilter('all')" id="filterPaperAll" style="padding: 5px 12px; font-size: 0.78em; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; background: transparent; color: var(--text-muted);">Both</button>
+            </div>
             <!-- Column Picker Dropdown -->
             <div id="columnPicker" style="display: none; position: absolute; z-index: 500; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; box-shadow: var(--shadow-lg); max-height: 400px; overflow-y: auto; min-width: 200px;">
                 <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 8px; font-size: 0.85em;">Show/Hide Columns</div>
@@ -2353,7 +2358,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.50 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.52 · June 2026</p>
                             </div>
                         </div>
                         <div id="settingsBody4" style="display: none;">
@@ -2363,6 +2368,29 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.52 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.52</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Closed paper trades now show the same \ud83d\udcdd PAPER badge in the Performance tab's history table as they do on the main board \u2014 verified this holds for rolled chains too, since the badge reads from the chain head's own record, which always carries the flag through however many rolls happened.
+                                </div>
+                            </div>
+
+                            <!-- v7.51 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.51</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Paper trading support \u2014 a \ud83d\udcdd toggle on the Add Position form marks a position as paper (not real money). Paper positions show a distinct badge on the card. New \ud83d\udcb0 Real / \ud83d\udcdd Paper / Both filter in the main toolbar, defaulting to Real \u2014 paper trades are opt-in to view, never accidentally blending into what looks like real P&L.<br>
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Paper trades excluded unconditionally from buying-power and concentration math (dashboard utilization, Smart Action's concentration scoring, Add Position live sizing), Weekly Audit, Weekly Review, and Performance tab stats \u2014 regardless of the view filter, so simulated positions can never distort real portfolio limits or real performance numbers. isPaper propagates through CSP assignment to the resulting shares position, and is included as a column in CSV export.
+                                </div>
+                            </div>
+
                             <!-- v7.50 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3225,6 +3253,10 @@
             <span class="close" onclick="closeAddModal()" aria-label="Close dialog" role="button" tabindex="0">&times;</span>
             <h2 id="addModalTitle">Add New Position</h2>
             <form id="addPositionForm">
+                <div class="form-group" style="background: rgba(124, 58, 237, 0.08); border: 1px solid rgba(124, 58, 237, 0.3); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="isPaperInput" style="width: 18px; height: 18px; cursor: pointer;">
+                    <label for="isPaperInput" style="margin: 0; cursor: pointer; color: #a78bfa; font-weight: 600;">📝 Paper trade (not real money)</label>
+                </div>
                 <div class="form-group">
                     <label>Option Symbol (e.g., -TGT260417P115 or TGT260417P00115000)</label>
                     <input type="text" id="optionSymbol" placeholder="Fidelity: -TGT260417P115 or OCC: TGT260417P00115000" oninput="updateSizingFromSymbol()">
@@ -3683,13 +3715,20 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.50';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.52';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
         let currentTab = 'active';
         let uploadedFileData = null;
         let strategyFilter = 'all'; // 'all', 'csp', 'cc'
+        // Defaults to 'real' — paper trades are opt-in to view, not opt-out,
+        // so they can never accidentally blend into what looks like real P&L
+        // at a glance. This is purely a VIEW filter; buying-power and
+        // concentration math exclude paper trades unconditionally regardless
+        // of what this is set to (see generateSmartAction and the Add
+        // Position sizing panel, which filter on !p.isPaper directly).
+        let paperFilter = 'real'; // 'all', 'real', 'paper'
         // Expiration grouping is now always on (previously an opt-in toggle).
         // Each group can still collapse/expand independently — state persists
         // across sessions the same way the Assigned Shares section does.
@@ -3844,8 +3883,27 @@
             renderTable();
         }
 
+        function setPaperFilter(filter) {
+            paperFilter = filter;
+            const filters = { all: 'filterPaperAll', real: 'filterReal', paper: 'filterPaper' };
+            Object.entries(filters).forEach(([key, id]) => {
+                const btn = document.getElementById(id);
+                if (!btn) return;
+                if (key === filter) {
+                    btn.style.background = filter === 'paper' ? '#7c3aed' : 'var(--clarity-blue)';
+                    btn.style.color = 'white';
+                } else {
+                    btn.style.background = 'transparent';
+                    btn.style.color = 'var(--text-muted)';
+                }
+            });
+            renderTable();
+        }
+
         function getFilteredPositions() {
-            const nonShares = positions.filter(p => p.positionType !== 'shares');
+            let nonShares = positions.filter(p => p.positionType !== 'shares');
+            if (paperFilter === 'real') nonShares = nonShares.filter(p => !p.isPaper);
+            else if (paperFilter === 'paper') nonShares = nonShares.filter(p => p.isPaper);
             if (strategyFilter === 'csp') {
                 return nonShares.filter(p => p.position === 'Short' && p.optionType === 'Put');
             } else if (strategyFilter === 'cc') {
@@ -6097,7 +6155,7 @@
             const positionSizes = {};
             const sectorExposure = {};
 
-            positions.forEach(pos => {
+            positions.filter(p => !p.isPaper).forEach(pos => {
                 const contracts = pos.contracts || 1;
                 const isCC = pos.position === 'Short' && pos.optionType === 'Call';
                 const isShares = pos.positionType === 'shares';
@@ -6923,7 +6981,8 @@
                 delta: null,
                 iv: null,
                 entryIV: null,
-                expiration: '9999-12-31' // No expiration for shares
+                expiration: '9999-12-31', // No expiration for shares
+                isPaper: pos.isPaper || false
             };
             
             // Replace CSP with shares
@@ -7592,6 +7651,7 @@
                                 <div class="sym">${escapeHTML(optionSymbol)}
                                     ${isChain ? `<span class="chain-tag" style="background: linear-gradient(135deg, rgba(139,92,246,0.25), rgba(34,211,238,0.25)); color: #c4b5fd;">↻ ROLLED ${group.rollCount}x</span>` : ''}
                                     ${isWheel ? `<span class="chain-tag" style="background: rgba(124,58,237,0.2); color: #a78bfa;">🎡 ${(pos.ccHistory || []).length} CCs</span>` : ''}
+                                    ${pos.isPaper ? `<span class="chain-tag" style="background: rgba(124,58,237,0.2); color: #a78bfa;" title="Paper trade — not real money">📝 PAPER</span>` : ''}
                                 </div>
                                 <div class="sub">${escapeHTML(pos.ticker)} · ${contracts}x · ${entryDate.toLocaleDateString()} → ${closedDate.toLocaleDateString()} · ${daysHeld}d held</div>
                             </div>
@@ -7786,7 +7846,10 @@
                 const weeklyPerformance = {};
                 
                 // Use grouped positions for accurate roll P&L calculation
-                const grouped = groupRolledPositions(closedPositions);
+                // Paper trades excluded — this tab reports real performance,
+                // and a simulated win/loss shouldn't blend into real stats.
+                const realClosedPositions = closedPositions.filter(p => !p.isPaper);
+                const grouped = groupRolledPositions(realClosedPositions);
                 console.log('Grouped positions:', grouped.length);
 
                 grouped.forEach((group, index) => {
@@ -8687,7 +8750,7 @@
                 let sectorExposure = 0;
                 const tickerSector = getSector(ticker);
                 
-                positions.forEach(pos => {
+                positions.filter(p => !p.isPaper).forEach(pos => {
                     const isCC = pos.position === 'Short' && pos.optionType === 'Call';
                     const cashReq = isCC 
                         ? (pos.underlyingPrice || pos.strike) * 100 * (pos.contracts || 1)
@@ -9698,7 +9761,7 @@
                 <div class="pos-card prio-${escapeHTML(priority)}" data-pos-index="${index}" data-hash="${escapeHTML(positionHash(pos))}">
                     <div class="pos-main" data-action="toggleDrawer">
                         <div class="pos-id">
-                            <div class="sym">${safeTicker} $${pos.strike} ${escapeHTML((pos.optionType || '').toUpperCase())}${chainLegs > 0 ? `<span class="chain-tag">↻ chain ${chainLegs + 1}</span>` : ''}</div>
+                            <div class="sym">${safeTicker} $${pos.strike} ${escapeHTML((pos.optionType || '').toUpperCase())}${chainLegs > 0 ? `<span class="chain-tag">↻ chain ${chainLegs + 1}</span>` : ''}${pos.isPaper ? `<span class="chain-tag" style="background: rgba(124,58,237,0.2); color: #a78bfa;" title="Paper trade — not real money">📝 PAPER</span>` : ''}</div>
                             <div class="sub">${stratLabel} · ${contracts}x · ${expFmt} · ${dte} DTE</div>
                         </div>
                         <div class="pos-metrics">
@@ -10320,7 +10383,7 @@
             let sectorExposure = 0;
             const sector = tickerVal ? getSector(tickerVal) : 'Unknown';
             
-            positions.forEach(pos => {
+            positions.filter(p => !p.isPaper).forEach(pos => {
                 const posIsCC = pos.position === 'Short' && pos.optionType === 'Call';
                 const posIsShares = pos.positionType === 'shares';
                 
@@ -11454,7 +11517,7 @@
                 return;
             }
 
-            const headers = ['Closed Date', 'Symbol', 'Ticker', 'Contracts', 'Strike', 'Type', 'Position', 'Entry Date', 'Days Held', 'Entry Price', 'Exit Price', 'P&L', 'P&L%', 'Result'];
+            const headers = ['Closed Date', 'Symbol', 'Ticker', 'Contracts', 'Strike', 'Type', 'Position', 'Entry Date', 'Days Held', 'Entry Price', 'Exit Price', 'P&L', 'P&L%', 'Result', 'Paper Trade'];
             const rows = closedPositions.map(pos => {
                 const contracts = pos.contracts || 1;
                 const pl = pos.finalPL;
@@ -11478,7 +11541,8 @@
                     pos.exitPrice.toFixed(2),
                     pl.toFixed(2),
                     plPercent.toFixed(2),
-                    result
+                    result,
+                    pos.isPaper ? 'YES' : 'NO'
                 ];
             });
 
@@ -11557,7 +11621,8 @@
                 iv,
                 entryIV: iv,   // Store IV at entry for crush/expansion tracking
                 entryDate: document.getElementById('entryDateInput').value || new Date().toISOString().split('T')[0],
-                lastUpdated: new Date().toISOString()
+                lastUpdated: new Date().toISOString(),
+                isPaper: document.getElementById('isPaperInput') ? document.getElementById('isPaperInput').checked : false
             };
 
             positions.push(newPosition);
@@ -11723,7 +11788,7 @@
             const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
             const allPositions = [...positions, ...closedPositions];
             const recentPositions = allPositions.filter(p => {
-                if (p.positionType === 'shares') return false;
+                if (p.positionType === 'shares' || p.isPaper) return false;
                 const entryTime = p.entryDate ? new Date(p.entryDate + (p.entryDate.length === 10 ? 'T00:00:00' : '')).getTime() : null;
                 return entryTime && entryTime >= sevenDaysAgo;
             });
@@ -11850,7 +11915,7 @@
             const prev = prevRaw ? JSON.parse(prevRaw) : null;
             const prevPositions = prev ? prev.positions : {};
 
-            const allOpen = positions; // shares + options, all open positions in one array
+            const allOpen = positions.filter(p => !p.isPaper); // shares + options, real positions only
             if (allOpen.length === 0) {
                 alert('No open positions to review.');
                 return;
