@@ -2356,7 +2356,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.46 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.47 · June 2026</p>
                             </div>
                         </div>
                         <div id="settingsBody4" style="display: none;">
@@ -2366,6 +2366,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.47 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.47</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Capital turnover note in the Close vs Hold panel \u2014 fires when a position is profitable but short of its target with \u226421 DTE remaining. Deliberately informational and separate from the existing "let safe winners ride" DTE-scaling: that logic optimizes for per-trade capture, this note surfaces the opposing, equally legitimate optimization (more cycles per year on the same capital) as a genuine trade-off to weigh, not a recommendation overriding the other.
+                                </div>
+                            </div>
+
                             <!-- v7.46 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3641,7 +3652,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.46';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.47';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -9560,6 +9571,20 @@
                 const assignVsBasis = hasBasisCompare ? (basisValue - cardSharesBasis) * 100 * contracts : null;
                 const assignProbPct = Math.round(absD * 100);
 
+                // 21-DTE capital-turnover nudge — deliberately separate from and
+                // NOT overriding the "let safe winners ride" DTE-scaling already
+                // built into calculateProfitTarget. That logic optimizes for
+                // per-trade capture; this note surfaces the opposite, equally
+                // legitimate optimization — capital velocity (more cycles per
+                // year on the same capital) — as a genuine trade-off for you to
+                // weigh, not a recommendation this tool is making for you.
+                const currentTargetPct = gtcTargetPct * 100;
+                const showTurnoverNudge = pl > 0 && dte <= 21 && plPercent < currentTargetPct;
+                const turnoverNudge = showTurnoverNudge ? `
+                        <div style="margin-top: 10px; padding: 9px 12px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 6px; font-size: 0.8em; color: var(--text-secondary);">
+                            💡 <strong style="color: #3b82f6;">Capital turnover note:</strong> profitable (${plPercent.toFixed(0)}%) but short of the ${currentTargetPct.toFixed(0)}% target with ${dte}d left. Closing now redeploys this capital sooner — more cycles per year can outweigh squeezing out the last bit of one trade. Separate consideration from "let it ride" — your call, not a recommendation.${infoTip('Two legitimate, opposing strategies on the same position: this tool\u2019s profit target may be raised for safe positions near expiration to maximize per-trade capture. Capital turnover optimizes the opposite way \u2014 more total cycles per year on the same money. Neither is wrong; this just makes sure you see the trade-off rather than only one side of it.')}
+                        </div>` : '';
+
                 const closeVsHoldPanel = `
                     <div class="drawer-group" style="grid-column: 1 / -1;">
                         <div class="drawer-title">Close vs Hold${infoTip('The same real comparison built for the Roll Scanner \u2014 now on every card. What you lock in by closing today, versus the two ways holding to expiration can actually play out.')}</div>
@@ -9580,6 +9605,7 @@
                                 </div>
                             </div>
                         </div>
+                        ${turnoverNudge}
                     </div>
                 `;
                 
