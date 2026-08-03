@@ -1192,9 +1192,6 @@
                 <button onclick="setStrategyFilter('csp')" id="filterCSP" style="padding: 5px 12px; font-size: 0.78em; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; background: transparent; color: var(--text-muted);">CSP</button>
                 <button onclick="setStrategyFilter('cc')" id="filterCC" style="padding: 5px 12px; font-size: 0.78em; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; background: transparent; color: var(--text-muted);">CC</button>
             </div>
-            <div class="button-group" style="background: var(--dark-surface); border-radius: 6px; padding: 2px; display: inline-flex; gap: 2px;">
-                <button onclick="toggleGroupByExpiration()" id="groupByBtn" style="padding: 5px 12px; font-size: 0.78em; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; background: transparent; color: var(--text-muted);" title="Group positions by expiration date">📅 Group</button>
-            </div>
             <!-- Column Picker Dropdown -->
             <div id="columnPicker" style="display: none; position: absolute; z-index: 500; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; box-shadow: var(--shadow-lg); max-height: 400px; overflow-y: auto; min-width: 200px;">
                 <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 8px; font-size: 0.85em;">Show/Hide Columns</div>
@@ -2356,7 +2353,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.47 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.48 · June 2026</p>
                             </div>
                         </div>
                         <div id="settingsBody4" style="display: none;">
@@ -2366,6 +2363,18 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.48 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.48</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">IMPROVED</span> Expiration grouping is now always on \u2014 removed the manual \ud83d\udcc5 Group toggle button, since grouping by expiration is the natural default view, not an opt-in.<br>
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Each expiration group now collapses/expands independently \u2014 tap the group header to hide positions you don't need to look at right now. State persists across sessions the same way Assigned Shares already does.
+                                </div>
+                            </div>
+
                             <!-- v7.47 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3652,26 +3661,23 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.47';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.48';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
         let currentTab = 'active';
         let uploadedFileData = null;
         let strategyFilter = 'all'; // 'all', 'csp', 'cc'
-        let groupByExpiration = false;
+        // Expiration grouping is now always on (previously an opt-in toggle).
+        // Each group can still collapse/expand independently — state persists
+        // across sessions the same way the Assigned Shares section does.
+        let collapsedExpGroups = new Set(JSON.parse(localStorage.getItem('deltaCortex_collapsedExpGroups') || '[]'));
         const openDrawers = new Set(); // Tracks expanded card drawers by option symbol
 
-        function toggleGroupByExpiration() {
-            groupByExpiration = !groupByExpiration;
-            const btn = document.getElementById('groupByBtn');
-            if (groupByExpiration) {
-                btn.style.background = 'var(--clarity-blue)';
-                btn.style.color = 'white';
-            } else {
-                btn.style.background = 'transparent';
-                btn.style.color = 'var(--text-muted)';
-            }
+        function toggleExpirationGroup(expDate) {
+            if (collapsedExpGroups.has(expDate)) collapsedExpGroups.delete(expDate);
+            else collapsedExpGroups.add(expDate);
+            localStorage.setItem('deltaCortex_collapsedExpGroups', JSON.stringify([...collapsedExpGroups]));
             renderTable();
         }
 
@@ -9704,8 +9710,10 @@
                 `;
             }
 
-            // ── Rendering: grouped or flat ──
-            if (groupByExpiration) {
+            // ── Rendering: always grouped by expiration, each group independently
+            // collapsible. Previously an opt-in toggle; grouping is now the only
+            // mode, matching the accordion treatment used elsewhere tonight.
+            {
                 // Sort by expiration date, then by health score within each group
                 const sorted = [...filteredWithIndex].sort((a, b) => {
                     const expCmp = a.pos.expiration.localeCompare(b.pos.expiration);
@@ -9739,8 +9747,11 @@
                     const dteColor = dte <= 7 ? 'var(--danger-color)' : dte <= 14 ? 'var(--warning-color)' : dte <= 21 ? '#f97316' : 'var(--text-primary)';
                     const healthColor = avgHealth >= 70 ? 'var(--success-color)' : avgHealth >= 50 ? 'var(--warning-color)' : 'var(--danger-color)';
                     const plColor = totalPL >= 0 ? 'var(--success-color)' : 'var(--danger-color)';
+                    const isCollapsed = collapsedExpGroups.has(expDate);
+                    const groupId = 'expGroup_' + expDate.replace(/[^0-9]/g, '');
                     
-                    html += `<div class="group-header-card expiration-group-header">
+                    html += `<div class="group-header-card expiration-group-header" onclick="toggleExpirationGroup('${expDate}')" style="cursor: pointer;">
+                        <span style="color: var(--text-muted); margin-right: 4px;">${isCollapsed ? '▸' : '▾'}</span>
                         <span style="color: var(--clarity-blue); font-weight: 700;">📅 ${escapeHTML(expFormatted)}</span>
                         <span style="color: ${dteColor}; margin-left: 12px;">${dte}d to expiry</span>
                         <span style="color: var(--text-muted); margin-left: 12px;">${items.length} position${items.length > 1 ? 's' : ''}</span>
@@ -9749,14 +9760,14 @@
                         <span style="color: ${healthColor}; margin-left: 12px;">Avg Score: ${avgHealth}</span>
                     </div>`;
                     
+                    html += `<div id="${groupId}" style="display: ${isCollapsed ? 'none' : ''};">`;
                     items.forEach(({ pos, idx: index }) => {
                         html += buildRowHTML(pos, index);
                     });
+                    html += `</div>`;
                 });
                 
                 tbody.innerHTML = html;
-            } else {
-                tbody.innerHTML = filteredWithIndex.map(({ pos, idx: index }) => buildRowHTML(pos, index)).join('');
             }
 
             updateStats();
