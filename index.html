@@ -896,7 +896,7 @@
         }
 
         /* ═══ Phase 1: Dashboard cards ═══ */
-        .dash { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+        .dash { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
         .dash-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 14px 16px; }
         .dash-label { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
         .dash-value { font-size: 1.5rem; font-weight: 800; margin: 2px 0; }
@@ -1171,6 +1171,11 @@
                 <div class="dash-label">Available BP <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">Buying power not currently locked as collateral — what you could use for a new trade right now.</span>ⓘ</span></div>
                 <div class="dash-value" id="availableBP" style="color: var(--success-color);">$0</div>
                 <div class="dash-sub">Cash locked: <span id="totalCash">$0</span></div>
+            </div>
+            <div class="dash-card" onclick="openCoverageGapsModal()" style="cursor: pointer;" title="Tap for the week-by-week breakdown">
+                <div class="dash-label">Coverage Gaps <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">Of the next 8 weeks, how many currently have zero CSP cash collateral covering them — meaning if nothing changes, that capital just sits in cash that week instead of working. Doesn't count CCs or shares, since they don't lock new cash beyond what's already in the stock.</span>ⓘ</span></div>
+                <div class="dash-value" id="coverageGapsDisplay">—</div>
+                <div class="dash-sub" id="coverageGapsSub">next 8 weeks</div>
             </div>
             <div class="dash-card">
                 <div class="dash-label">Monthly Yield <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">Premium captured from closed trades this month, as a percent of buying power. Target 1–2% monthly — the wheel’s income goal.</span>ⓘ</span></div>
@@ -2372,7 +2377,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.53 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.54 · June 2026</p>
                             </div>
                         </div>
                         <div id="settingsBody4" style="display: none;">
@@ -2382,6 +2387,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.54 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.54</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> New Coverage Gaps dashboard card, between Available BP and Monthly Yield \u2014 the forward-looking complement to Available BP's snapshot. Checks the next 8 weeks for CSP cash collateral coverage (continuous date-range overlap, not just expiration-week bucketing) \u2014 a week with zero coverage from anything currently open is a real gap, capital that would sit idle in cash if nothing changes. Tap the card for the full week-by-week breakdown, including the FDRXX-rate opportunity cost of each idle week. Only CSPs count \u2014 CCs and shares don't lock new cash beyond what's already in the stock, same logic used everywhere else tonight. Sanity-checked the date-overlap math against real scenarios (a 21-DTE position, and a deliberate gap between two non-adjacent positions) before shipping.
+                                </div>
+                            </div>
+
                             <!-- v7.53 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3740,7 +3756,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.53';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.54';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -3754,6 +3770,9 @@
         // of what this is set to (see generateSmartAction and the Add
         // Position sizing panel, which filter on !p.isPaper directly).
         let paperFilter = 'real'; // 'all', 'real', 'paper'
+        // Set by updatePortfolioRiskDashboard() each refresh; read by the
+        // Coverage Gaps modal so it doesn't need to recompute independently.
+        let latestWeeklyCoverage = null;
         // Expiration grouping is now always on (previously an opt-in toggle).
         // Each group can still collapse/expand independently — state persists
         // across sessions the same way the Assigned Shares section does.
@@ -6180,6 +6199,22 @@
             const positionSizes = {};
             const sectorExposure = {};
 
+            // Weekly coverage — for each of the next 8 weeks, how much CSP cash
+            // collateral has a position whose [entry, expiration] range actually
+            // spans that week. Shares and CCs don't lock NEW cash (bpImpact=0,
+            // same logic as everywhere else tonight — the capital was already
+            // spent buying the shares), so only CSPs count here. A week where
+            // this stays at 0 across everything currently open is a real gap:
+            // capital that would just sit in cash that week if nothing changes.
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            const weeklyLocked = new Array(8).fill(0);
+            const weekBounds = [];
+            for (let w = 0; w < 8; w++) {
+                const weekStart = new Date(today); weekStart.setDate(today.getDate() + w * 7);
+                const weekEnd = new Date(today); weekEnd.setDate(today.getDate() + (w + 1) * 7);
+                weekBounds.push({ weekStart, weekEnd });
+            }
+
             positions.filter(p => !p.isPaper).forEach(pos => {
                 const contracts = pos.contracts || 1;
                 const isCC = pos.position === 'Short' && pos.optionType === 'Call';
@@ -6209,6 +6244,20 @@
                 
                 const sector = getSector(ticker);
                 sectorExposure[sector] = (sectorExposure[sector] || 0) + exposure;
+
+                // Only CSPs lock new cash — bucket this position's coverage
+                // across whichever of the next 8 weeks its date range overlaps.
+                if (!isShares && !isCC && bpImpact > 0 && pos.expiration) {
+                    const entryD = new Date((pos.entryDate || pos.lastUpdated || '').slice(0, 10) + 'T00:00:00');
+                    const expD = new Date(pos.expiration + 'T00:00:00');
+                    if (!isNaN(entryD) && !isNaN(expD)) {
+                        weekBounds.forEach((wb, w) => {
+                            if (entryD < wb.weekEnd && expD >= wb.weekStart) {
+                                weeklyLocked[w] += bpImpact;
+                            }
+                        });
+                    }
+                }
             });
 
             // Utilization = cash collateral only (what's locked for options)
@@ -6256,6 +6305,20 @@
             if (availEl) {
                 availEl.textContent = formatCurrency(Math.max(available, 0));
                 availEl.style.color = available > 0 ? 'var(--success-color)' : 'var(--danger-color)';
+            }
+
+            // Coverage Gaps card — save the data for the modal, then update
+            // the compact dashboard stat.
+            latestWeeklyCoverage = { weeklyLocked, weekBounds, availableAtCalc: Math.max(available, 0), bp };
+            const gapWeeks = weeklyLocked.filter(amt => amt === 0).length;
+            const gapEl = document.getElementById('coverageGapsDisplay');
+            const gapSub = document.getElementById('coverageGapsSub');
+            if (gapEl) {
+                gapEl.textContent = gapWeeks === 0 ? 'None' : `${gapWeeks} of 8`;
+                gapEl.style.color = gapWeeks === 0 ? 'var(--success-color)' : gapWeeks >= 4 ? 'var(--danger-color)' : 'var(--warning-color)';
+            }
+            if (gapSub) {
+                gapSub.textContent = gapWeeks === 0 ? 'All weeks covered' : 'weeks idle — tap for detail';
             }
             
             // Deployed capital indicator — target 60%
@@ -11933,6 +11996,67 @@
         function getWeeklyReviewKey(pos) {
             if (pos.positionType === 'shares') return `${pos.ticker.toUpperCase()}-shares`;
             return `${pos.ticker.toUpperCase()}-${pos.optionType}-${pos.position}`;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // COVERAGE GAPS — the forward-looking complement to Available BP.
+        // That card is a snapshot of right now; this answers "which of the
+        // next 8 weeks will have capital sitting idle if nothing changes."
+        // Only CSP cash collateral counts (shares/CCs don't lock NEW cash —
+        // same bpImpact logic as everywhere else tonight). Ties back to the
+        // FDRXX/hurdle framing this whole tool is built around: idle weeks
+        // aren't just a scheduling gap, they have a real, quantifiable cost.
+        // ═══════════════════════════════════════════════════════════════
+        function openCoverageGapsModal() {
+            if (!latestWeeklyCoverage) { updatePortfolioRiskDashboard(); }
+            const { weeklyLocked, weekBounds, availableAtCalc, bp } = latestWeeklyCoverage || {};
+            if (!weeklyLocked) return;
+
+            const fdrxxRate = (portfolioConfig.fdrxxRate || 3.98) / 100;
+            const fmtWeek = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+            const rows = weeklyLocked.map((locked, w) => {
+                const { weekStart, weekEnd } = weekBounds[w];
+                const isGap = locked === 0;
+                const idleAmount = isGap ? availableAtCalc : Math.max(0, availableAtCalc - locked);
+                const weeklyOppCost = idleAmount * fdrxxRate / 52;
+                return `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--dark-surface); border-radius: 6px; margin-bottom: 6px; border-left: 3px solid ${isGap ? 'var(--danger-color)' : 'var(--success-color)'};">
+                        <div>
+                            <strong>${w === 0 ? 'This week' : 'Week ' + (w + 1)}</strong>
+                            <span style="color: var(--text-muted); font-size: 0.82em; margin-left: 8px;">${fmtWeek(weekStart)} – ${fmtWeek(new Date(weekEnd - 86400000))}</span>
+                        </div>
+                        <div style="text-align: right;">
+                            ${isGap
+                                ? `<span style="color: var(--danger-color); font-weight: 700;">🔴 Nothing scheduled</span><br><span style="color: var(--text-muted); font-size: 0.75em;">≈${formatCurrency(weeklyOppCost)}/wk idle</span>`
+                                : `<span style="color: var(--success-color); font-weight: 700;">${formatCurrency(locked)} locked</span>`}
+                        </div>
+                    </div>`;
+            }).join('');
+
+            const gapCount = weeklyLocked.filter(a => a === 0).length;
+            const summaryColor = gapCount === 0 ? 'var(--success-color)' : gapCount >= 4 ? 'var(--danger-color)' : 'var(--warning-color)';
+
+            let overlay = document.getElementById('coverageGapsOverlay');
+            if (overlay) overlay.remove();
+            overlay = document.createElement('div');
+            overlay.id = 'coverageGapsOverlay';
+            overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 100000; background: rgba(8,10,16,0.85); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;';
+
+            const modal = document.createElement('div');
+            modal.style.cssText = 'background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; max-width: 560px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5);';
+
+            modal.innerHTML = `
+                <div style="font-weight: 700; font-size: 1.1em; margin-bottom: 4px;">📅 Weekly Capital Coverage</div>
+                <p style="font-size: 0.85em; color: ${summaryColor}; margin: 0 0 16px; font-weight: 600;">${gapCount === 0 ? 'All 8 weeks have CSP collateral covering them.' : `${gapCount} of the next 8 weeks currently have nothing scheduled.`}</p>
+                ${rows}
+                <p style="font-size: 0.78em; color: var(--text-muted); margin-top: 14px; line-height: 1.5;">Gap weeks assume today's Available BP (${formatCurrency(availableAtCalc)}) stays idle in cash at your ${(fdrxxRate * 100).toFixed(2)}% FDRXX rate — roughly ${formatCurrency(availableAtCalc * fdrxxRate / 52)}/week either way, working or not. This only tracks CSP cash collateral; CCs and shares don't lock new cash beyond what's already in the stock.</p>
+                <button id="coverageGapsCloseBtn" class="btn-primary" style="margin-top: 10px; width: 100%;">Close</button>
+            `;
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            document.getElementById('coverageGapsCloseBtn').onclick = () => overlay.remove();
+            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
         }
 
         function openWeeklyReview() {
