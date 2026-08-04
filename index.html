@@ -2381,7 +2381,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.57 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.58 · June 2026</p>
                             </div>
                         </div>
                         <div id="settingsBody4" style="display: none;">
@@ -2391,6 +2391,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.58 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.58</strong>
+                                    <span style="color: var(--danger-color); font-size: 0.82em; font-weight: 700;">CRITICAL FIX</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(239,68,68,0.15); color: var(--danger-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> The displayed GTC price was computing entry \u00d7 target instead of entry \u00d7 (1 \u2212 target) \u2014 correct only by coincidence at exactly 50% (its own complement), silently wrong for every other dynamic target since v7.35/v7.42. A card showing \u201860% GTC $1.89\u201d on a $3.15 entry was actually only capturing 40% profit if closed there, not 60% \u2014 the real number for a genuine 60% target is $1.26. Verified the fix against real numbers before shipping: closing at the new displayed price now genuinely captures the labeled percentage. If you've placed any broker GTC orders using a non-50% target since those versions, worth double-checking them against this fix.
+                                </div>
+                            </div>
+
                             <!-- v7.57 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3794,7 +3805,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.57';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.58';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -9771,7 +9782,13 @@
                 // matches what the tool is evaluating against, including the short-DTE
                 // gamma-risk tightening (35-40% target under 15 DTE).
                 const gtcTargetPct = calculateProfitTarget(dte, absD, thetaPace) / 100;
-                const gtcPrice = effEntry > 0 ? effEntry * gtcTargetPct : Math.max(0, pos.entryPrice - Math.abs(rollLossPerShare));
+                // profit% (as computed everywhere else in this app) = (entry -
+                // closePrice) / entry. Solving for closePrice at a given target
+                // requires the COMPLEMENT, not the target itself: entry * (1 -
+                // target). Using entry * target directly was only ever correct
+                // by coincidence at exactly 50% (its own complement) — every
+                // other dynamic target (37.5%-80%) was silently wrong.
+                const gtcPrice = effEntry > 0 ? effEntry * (1 - gtcTargetPct) : Math.max(0, pos.entryPrice - Math.abs(rollLossPerShare));
                 const rollHistory = Array.isArray(pos.rollHistory) ? pos.rollHistory : [];
                 // Eject price: buy-to-close price at which the CHAIN hits -200% of TOTAL
                 // premium ever collected across the whole chain — matches the corrected
