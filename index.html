@@ -2381,7 +2381,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.55 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.56 · June 2026</p>
                             </div>
                         </div>
                         <div id="settingsBody4" style="display: none;">
@@ -2391,6 +2391,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.56 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.56</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(59,130,246,0.15); color: #3b82f6; padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">REDESIGNED</span> Weekly Goal modal replaced its text-row list with an actual bar chart \u2014 8 bars, one per real calendar week (Monday\u2013Sunday, not a rolling 7-day window from today), with a dashed goal-line overlay. Three distinct states now, not two: green (on pace), red (open but under goal), and gray (nothing open at all \u2014 the real gap, and the clearest signal for where to deploy new capital). Verified the calendar-week math directly (today correctly resolves into the current Mon\u2013Sun week regardless of which weekday it is) and the chart's scaling proportions (an at-goal week lands exactly on the goal line) before shipping.
+                                </div>
+                            </div>
+
                             <!-- v7.55 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3772,7 +3783,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.55';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.56';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -6219,19 +6230,23 @@
             const positionSizes = {};
             const sectorExposure = {};
 
-            // Weekly coverage — for each of the next 8 weeks, how much CSP cash
-            // collateral has a position whose [entry, expiration] range actually
-            // spans that week. Shares and CCs don't lock NEW cash (bpImpact=0,
-            // same logic as everywhere else tonight — the capital was already
-            // spent buying the shares), so only CSPs count here. A week where
-            // this stays at 0 across everything currently open is a real gap:
-            // capital that would just sit in cash that week if nothing changes.
+            // Weekly goal pace — for each of the next 8 real calendar weeks
+            // (Monday-Sunday, not a rolling 7-day window from today), how much
+            // estimated premium run-rate is currently covering it, and whether
+            // ANYTHING is open at all. Three states matter, not two: no position
+            // open (gray — nothing scheduled, the actual gap to fill), position
+            // open but under goal (red), and on pace (green).
             const today = new Date(); today.setHours(0, 0, 0, 0);
+            const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon, ... 6=Sat
+            const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            const thisMonday = new Date(today);
+            thisMonday.setDate(today.getDate() - daysSinceMonday);
             const weeklyRunRateTotals = new Array(8).fill(0);
+            const weeklyHasPosition = new Array(8).fill(false);
             const weekBounds = [];
             for (let w = 0; w < 8; w++) {
-                const weekStart = new Date(today); weekStart.setDate(today.getDate() + w * 7);
-                const weekEnd = new Date(today); weekEnd.setDate(today.getDate() + (w + 1) * 7);
+                const weekStart = new Date(thisMonday); weekStart.setDate(thisMonday.getDate() + w * 7);
+                const weekEnd = new Date(thisMonday); weekEnd.setDate(thisMonday.getDate() + (w + 1) * 7);
                 weekBounds.push({ weekStart, weekEnd });
             }
 
@@ -6282,6 +6297,7 @@
                         weekBounds.forEach((wb, w) => {
                             if (entryD < wb.weekEnd && expD >= wb.weekStart) {
                                 weeklyRunRateTotals[w] += weeklyRunRate;
+                                weeklyHasPosition[w] = true;
                             }
                         });
                     }
@@ -6336,19 +6352,21 @@
             }
 
             // Weekly Goal card — save the data for the modal, then update
-            // the compact dashboard stat. "On track" = estimated run-rate
-            // meets or exceeds the user's own flat weekly goal.
-            latestWeeklyCoverage = { weeklyRunRateTotals, weekBounds, availableAtCalc: Math.max(available, 0), bp };
+            // the compact dashboard stat. Empty-week count (nothing open at
+            // all) is the primary actionable number — that's the real "where
+            // do I deploy new capital" signal, distinct from "open but light."
+            latestWeeklyCoverage = { weeklyRunRateTotals, weeklyHasPosition, weekBounds, availableAtCalc: Math.max(available, 0), bp };
             const weeklyGoal = portfolioConfig.weeklyIncomeGoal || 500;
+            const emptyWeeks = weeklyHasPosition.filter(has => !has).length;
             const onTrackWeeks = weeklyRunRateTotals.filter(amt => amt >= weeklyGoal).length;
             const gapEl = document.getElementById('coverageGapsDisplay');
             const gapSub = document.getElementById('coverageGapsSub');
             if (gapEl) {
-                gapEl.textContent = `${onTrackWeeks} of 8`;
-                gapEl.style.color = onTrackWeeks === 8 ? 'var(--success-color)' : onTrackWeeks <= 4 ? 'var(--danger-color)' : 'var(--warning-color)';
+                gapEl.textContent = emptyWeeks === 0 ? `${onTrackWeeks} of 8` : `${emptyWeeks} empty`;
+                gapEl.style.color = emptyWeeks > 0 ? 'var(--text-muted)' : (onTrackWeeks === 8 ? 'var(--success-color)' : onTrackWeeks <= 4 ? 'var(--danger-color)' : 'var(--warning-color)');
             }
             if (gapSub) {
-                gapSub.textContent = onTrackWeeks === 8 ? `all on pace for ${formatCurrency(weeklyGoal)}` : 'on pace — tap for detail';
+                gapSub.textContent = emptyWeeks > 0 ? 'weeks with nothing open — tap to see' : `all on pace for ${formatCurrency(weeklyGoal)}`;
             }
             
             // Deployed capital indicator — target 60%
@@ -12038,33 +12056,48 @@
         // ═══════════════════════════════════════════════════════════════
         function openCoverageGapsModal() {
             if (!latestWeeklyCoverage) { updatePortfolioRiskDashboard(); }
-            const { weeklyRunRateTotals, weekBounds } = latestWeeklyCoverage || {};
+            const { weeklyRunRateTotals, weeklyHasPosition, weekBounds } = latestWeeklyCoverage || {};
             if (!weeklyRunRateTotals) return;
 
             const weeklyGoal = portfolioConfig.weeklyIncomeGoal || 500;
             const fmtWeek = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const fmtDow = (d) => d.toLocaleDateString('en-US', { weekday: 'short' });
 
-            const rows = weeklyRunRateTotals.map((runRate, w) => {
-                const { weekStart, weekEnd } = weekBounds[w];
+            // Chart scale — goal line sits at a consistent, meaningful height;
+            // bars scale relative to whatever the tallest week actually is, so
+            // one big position doesn't make every other bar disappear.
+            const chartMax = Math.max(weeklyGoal * 1.3, ...weeklyRunRateTotals, 1);
+            const goalLinePct = Math.min(96, (weeklyGoal / chartMax) * 100);
+            const chartHeight = 150;
+
+            const bars = weeklyRunRateTotals.map((runRate, w) => {
+                const { weekStart } = weekBounds[w];
+                const hasPosition = weeklyHasPosition[w];
                 const onTrack = runRate >= weeklyGoal;
-                const pct = weeklyGoal > 0 ? Math.round((runRate / weeklyGoal) * 100) : 0;
-                const shortfall = Math.max(0, weeklyGoal - runRate);
+                const barPct = Math.min(100, (runRate / chartMax) * 100);
+                // Empty weeks get a nominal sliver so they're visible as a bar
+                // slot at all, not just blank space indistinguishable from margin.
+                const displayPct = hasPosition ? barPct : 3;
+                const color = !hasPosition ? 'var(--text-muted)' : onTrack ? 'var(--success-color)' : 'var(--danger-color)';
+                const tooltip = !hasPosition
+                    ? `Week of ${fmtWeek(weekStart)}: nothing open — $0 toward your ${formatCurrency(weeklyGoal)} goal`
+                    : `Week of ${fmtWeek(weekStart)}: ${formatCurrency(runRate)} est. run-rate (${Math.round(runRate/weeklyGoal*100)}% of goal)`;
                 return `
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--dark-surface); border-radius: 6px; margin-bottom: 6px; border-left: 3px solid ${onTrack ? 'var(--success-color)' : 'var(--danger-color)'};">
-                        <div>
-                            <strong>${w === 0 ? 'This week' : 'Week ' + (w + 1)}</strong>
-                            <span style="color: var(--text-muted); font-size: 0.82em; margin-left: 8px;">${fmtWeek(weekStart)} – ${fmtWeek(new Date(weekEnd - 86400000))}</span>
+                    <div style="display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0;" title="${tooltip}">
+                        <div style="display: flex; align-items: flex-end; height: ${chartHeight}px; width: 100%; justify-content: center;">
+                            <div style="width: 60%; height: ${displayPct}%; background: ${color}; border-radius: 3px 3px 0 0; opacity: ${hasPosition ? 1 : 0.35}; transition: height 0.3s;"></div>
                         </div>
-                        <div style="text-align: right;">
-                            ${onTrack
-                                ? `<span style="color: var(--success-color); font-weight: 700;">✓ ${formatCurrency(runRate)}</span><br><span style="color: var(--text-muted); font-size: 0.75em;">${pct}% of goal</span>`
-                                : `<span style="color: var(--danger-color); font-weight: 700;">${formatCurrency(runRate)} of ${formatCurrency(weeklyGoal)}</span><br><span style="color: var(--text-muted); font-size: 0.75em;">short by ${formatCurrency(shortfall)}</span>`}
-                        </div>
+                        <div style="font-size: 0.68em; color: var(--text-muted); margin-top: 4px; text-align: center; line-height: 1.3;">${fmtDow(weekStart)}<br>${fmtWeek(weekStart)}</div>
                     </div>`;
             }).join('');
 
+            const emptyWeeks = weeklyHasPosition.filter(h => !h).length;
+            const belowGoalWeeks = weeklyRunRateTotals.filter((r, w) => weeklyHasPosition[w] && r < weeklyGoal).length;
             const onTrackCount = weeklyRunRateTotals.filter(r => r >= weeklyGoal).length;
-            const summaryColor = onTrackCount === 8 ? 'var(--success-color)' : onTrackCount <= 4 ? 'var(--danger-color)' : 'var(--warning-color)';
+            const summaryColor = emptyWeeks > 0 ? 'var(--text-muted)' : onTrackCount === 8 ? 'var(--success-color)' : 'var(--warning-color)';
+            const summaryText = emptyWeeks > 0
+                ? `${emptyWeeks} week${emptyWeeks === 1 ? '' : 's'} with nothing open — deploy new capital there first.`
+                : (onTrackCount === 8 ? `All 8 weeks on pace for ${formatCurrency(weeklyGoal)}.` : `${belowGoalWeeks} week${belowGoalWeeks === 1 ? '' : 's'} open but under goal.`);
 
             let overlay = document.getElementById('coverageGapsOverlay');
             if (overlay) overlay.remove();
@@ -12073,13 +12106,25 @@
             overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 100000; background: rgba(8,10,16,0.85); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;';
 
             const modal = document.createElement('div');
-            modal.style.cssText = 'background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; max-width: 560px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5);';
+            modal.style.cssText = 'background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; max-width: 620px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5);';
 
             modal.innerHTML = `
                 <div style="font-weight: 700; font-size: 1.1em; margin-bottom: 4px;">📅 Weekly Goal Pace</div>
-                <p style="font-size: 0.85em; color: ${summaryColor}; margin: 0 0 16px; font-weight: 600;">${onTrackCount} of the next 8 weeks are on pace for your ${formatCurrency(weeklyGoal)} weekly goal.</p>
-                ${rows}
-                <p style="font-size: 0.78em; color: var(--text-muted); margin-top: 14px; line-height: 1.5;">Each week's figure is an estimated run-rate — every currently open CSP and CC's entry premium, spread evenly across the weeks it spans, summed for whichever weeks that position's date range actually touches. Not realized P&L; a forward-looking pace check. Change your goal in Settings → Portfolio Configuration.</p>
+                <p style="font-size: 0.85em; color: ${summaryColor}; margin: 0 0 16px; font-weight: 600;">${summaryText}</p>
+                <div style="position: relative; padding: 10px 6px 0; background: var(--dark-surface); border-radius: 8px;">
+                    <div style="position: absolute; left: 6px; right: 6px; bottom: ${34 + goalLinePct * chartHeight / 100}px; border-top: 2px dashed var(--accent-gold); z-index: 1;">
+                        <span style="position: absolute; right: 0; top: -18px; font-size: 0.68em; color: var(--accent-gold); background: var(--dark-surface); padding: 0 4px;">Goal: ${formatCurrency(weeklyGoal)}</span>
+                    </div>
+                    <div style="display: flex; gap: 4px; padding-top: 20px;">
+                        ${bars}
+                    </div>
+                </div>
+                <div style="display: flex; gap: 16px; margin-top: 12px; font-size: 0.75em; color: var(--text-muted); justify-content: center;">
+                    <span><span style="display: inline-block; width: 9px; height: 9px; background: var(--success-color); border-radius: 2px; margin-right: 4px;"></span>On pace</span>
+                    <span><span style="display: inline-block; width: 9px; height: 9px; background: var(--danger-color); border-radius: 2px; margin-right: 4px;"></span>Open, under goal</span>
+                    <span><span style="display: inline-block; width: 9px; height: 9px; background: var(--text-muted); opacity: 0.35; border-radius: 2px; margin-right: 4px;"></span>Nothing open</span>
+                </div>
+                <p style="font-size: 0.78em; color: var(--text-muted); margin-top: 16px; line-height: 1.5;">Weeks run Monday–Sunday. Bar height is estimated run-rate — every currently open CSP and CC's entry premium, spread evenly across the weeks it spans. Gray weeks are the real gap: nothing scheduled at all, the clearest target for a new position. Change your goal in Settings → Portfolio Configuration.</p>
                 <button id="coverageGapsCloseBtn" class="btn-primary" style="margin-top: 10px; width: 100%;">Close</button>
             `;
             overlay.appendChild(modal);
