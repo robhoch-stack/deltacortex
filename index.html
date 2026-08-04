@@ -2381,7 +2381,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.56 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.57 · June 2026</p>
                             </div>
                         </div>
                         <div id="settingsBody4" style="display: none;">
@@ -2391,6 +2391,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.57 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.57</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">IMPROVED</span> Weekly Goal reframed after reviewing how professional traders actually think about profit targets \u2014 the psychology research is consistent that a target creating pressure to force a trade \u201ctoday\u201d is a real, well-documented failure mode. The card now reads \u201cX open\u201d instead of \u201cX empty,\u201d the modal's summary describes capacity rather than a shortfall to fill, and a permanent guardrail note now sits in the modal itself: a gap week is information, not an emergency \u2014 forcing a low-quality trade to fill it usually costs more than the gap itself. Same underlying data and visual; the framing no longer works against the discipline the rest of this tool is built to reinforce.
+                                </div>
+                            </div>
+
                             <!-- v7.56 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3783,7 +3794,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.56';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.57';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -6362,11 +6373,13 @@
             const gapEl = document.getElementById('coverageGapsDisplay');
             const gapSub = document.getElementById('coverageGapsSub');
             if (gapEl) {
-                gapEl.textContent = emptyWeeks === 0 ? `${onTrackWeeks} of 8` : `${emptyWeeks} empty`;
+                // "Open" rather than "empty" — this is available capacity to
+                // plan around, not a shortfall to feel behind on.
+                gapEl.textContent = emptyWeeks === 0 ? `${onTrackWeeks} of 8` : `${emptyWeeks} open`;
                 gapEl.style.color = emptyWeeks > 0 ? 'var(--text-muted)' : (onTrackWeeks === 8 ? 'var(--success-color)' : onTrackWeeks <= 4 ? 'var(--danger-color)' : 'var(--warning-color)');
             }
             if (gapSub) {
-                gapSub.textContent = emptyWeeks > 0 ? 'weeks with nothing open — tap to see' : `all on pace for ${formatCurrency(weeklyGoal)}`;
+                gapSub.textContent = emptyWeeks > 0 ? 'weeks with capacity — tap to see' : `all on pace for ${formatCurrency(weeklyGoal)}`;
             }
             
             // Deployed capital indicator — target 60%
@@ -12096,7 +12109,7 @@
             const onTrackCount = weeklyRunRateTotals.filter(r => r >= weeklyGoal).length;
             const summaryColor = emptyWeeks > 0 ? 'var(--text-muted)' : onTrackCount === 8 ? 'var(--success-color)' : 'var(--warning-color)';
             const summaryText = emptyWeeks > 0
-                ? `${emptyWeeks} week${emptyWeeks === 1 ? '' : 's'} with nothing open — deploy new capital there first.`
+                ? `${emptyWeeks} week${emptyWeeks === 1 ? '' : 's'} with open capacity — no pressure to fill them on any particular timeline.`
                 : (onTrackCount === 8 ? `All 8 weeks on pace for ${formatCurrency(weeklyGoal)}.` : `${belowGoalWeeks} week${belowGoalWeeks === 1 ? '' : 's'} open but under goal.`);
 
             let overlay = document.getElementById('coverageGapsOverlay');
@@ -12124,7 +12137,10 @@
                     <span><span style="display: inline-block; width: 9px; height: 9px; background: var(--danger-color); border-radius: 2px; margin-right: 4px;"></span>Open, under goal</span>
                     <span><span style="display: inline-block; width: 9px; height: 9px; background: var(--text-muted); opacity: 0.35; border-radius: 2px; margin-right: 4px;"></span>Nothing open</span>
                 </div>
-                <p style="font-size: 0.78em; color: var(--text-muted); margin-top: 16px; line-height: 1.5;">Weeks run Monday–Sunday. Bar height is estimated run-rate — every currently open CSP and CC's entry premium, spread evenly across the weeks it spans. Gray weeks are the real gap: nothing scheduled at all, the clearest target for a new position. Change your goal in Settings → Portfolio Configuration.</p>
+                <p style="font-size: 0.78em; color: var(--text-muted); margin-top: 16px; line-height: 1.5;">Weeks run Monday–Sunday. Bar height is estimated run-rate — every currently open CSP and CC's entry premium, spread evenly across the weeks it spans. Gray weeks simply have nothing scheduled yet. Change your goal in Settings → Portfolio Configuration.</p>
+                <div style="margin-top: 10px; padding: 9px 12px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 6px; font-size: 0.78em; color: var(--text-secondary); line-height: 1.5;">
+                    💡 A gap week is information, not an emergency. Forcing a low-quality trade to fill it usually costs more than the gap itself.
+                </div>
                 <button id="coverageGapsCloseBtn" class="btn-primary" style="margin-top: 10px; width: 100%;">Close</button>
             `;
             overlay.appendChild(modal);
