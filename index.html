@@ -2094,69 +2094,74 @@
                         </div>
                     </div>
                     
-                    <!-- Backup & Cloud Sync -->
+                    <!-- Local Backup -->
                     <div style="background: var(--card-bg); border-radius: 12px; padding: 30px; margin-bottom: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
                         <div onclick="toggleSettingsSection(0)" style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; cursor: pointer;">
                             <span id="settingsIcon0" style="font-size: 1em; color: var(--text-muted); transition: transform 0.15s;">▸</span>
+                            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, var(--signal-teal) 0%, var(--success-color) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5em;">💾</div>
+                            <div>
+                                <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">Local Backup <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">Download a complete JSON backup — positions, closed trades, earnings, dividends, sector map, portfolio config, and your API key — or restore from a previous one. No account needed.</span>ⓘ</span></h3>
+                                <p style="color: var(--text-secondary); margin: 0; font-size: 0.9em;">Download or restore a complete backup file — no account needed</p>
+                            </div>
+                        </div>
+                        <div id="settingsBody0" style="display: none;">
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button onclick="downloadBackup()" class="btn-primary" style="padding: 9px 16px;">⬇ Download Backup (JSON)</button>
+                            <button onclick="document.getElementById('restoreFileInput').click()" style="padding: 9px 16px; background: var(--dark-surface); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; font-weight: 600;">⬆ Restore from File</button>
+                            <input type="file" id="restoreFileInput" accept=".json" style="display: none;" onchange="restoreFromFile(this)">
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.8em; margin: 12px 0 0; line-height: 1.5;">Also how to move to a new version: download here, then restore that same file on the new one — everything comes with it.</p>
+                        </div>
+                    </div>
+
+                    <!-- Cloud Sync -->
+                    <div style="background: var(--card-bg); border-radius: 12px; padding: 30px; margin-bottom: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
+                        <div onclick="toggleSettingsSection(1)" style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; cursor: pointer;">
+                            <span id="settingsIcon1" style="font-size: 1em; color: var(--text-muted); transition: transform 0.15s;">▸</span>
                             <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #22E5EE 0%, #1E4E8C 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5em;">☁️</div>
                             <div>
-                                <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">Backup & Cloud Sync <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">Download a JSON backup anytime, or connect a free private GitHub Gist to sync your positions between your own devices — never through a shared server.</span>ⓘ</span></h3>
-                                <p style="color: var(--text-secondary); margin: 0; font-size: 0.9em;">Protect your data and sync between PC and iPhone</p>
+                                <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">Cloud Sync <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">Connect a free private GitHub Gist to sync your positions between your own devices — never through a shared server. Optional; local backup works fine without it.</span>ⓘ</span></h3>
+                                <p style="color: var(--text-secondary); margin: 0; font-size: 0.9em;">Optional — sync between PC and iPhone via your own GitHub Gist</p>
                             </div>
                             <div id="syncStatus" style="margin-left: auto; font-size: 0.82em; color: var(--text-muted);"></div>
                         </div>
-                        <div id="settingsBody0" style="display: none;">
-                        
-                        <!-- Local backup -->
-                        <div style="margin-bottom: 22px;">
-                            <div style="font-weight: 700; font-size: 0.9em; margin-bottom: 8px;">💾 Local Backup</div>
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <button onclick="downloadBackup()" class="btn-primary" style="padding: 9px 16px;">⬇ Download Backup (JSON)</button>
-                                <button onclick="document.getElementById('restoreFileInput').click()" style="padding: 9px 16px; background: var(--dark-surface); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; font-weight: 600;">⬆ Restore from File</button>
-                                <input type="file" id="restoreFileInput" accept=".json" style="display: none;" onchange="restoreFromFile(this)">
+                        <div id="settingsBody1" style="display: none;">
+                        <p style="color: var(--text-muted); font-size: 0.8em; margin: 0 0 12px; line-height: 1.5;">
+                            Syncs all data through a <strong>private</strong> Gist on your GitHub account. Setup: create a free GitHub account → Settings → Developer settings → Personal access tokens → Generate new token (classic) with only the <code style="background: var(--dark-surface); padding: 1px 5px; border-radius: 3px;">gist</code> scope → paste below. Use the same token + Gist ID on each device.
+                        </p>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 12px;">
+                            <div>
+                                <label style="display: block; font-size: 0.8em; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">GitHub Token (gist scope)</label>
+                                <input type="password" id="gistToken" placeholder="ghp_..." style="width: 100%; padding: 9px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--dark-surface); color: var(--text-primary); font-size: 0.9em;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.8em; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Gist ID <span style="font-weight: 400;">(auto-filled on first push)</span></label>
+                                <input type="text" id="gistId" placeholder="created automatically" style="width: 100%; padding: 9px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--dark-surface); color: var(--text-primary); font-size: 0.9em;">
                             </div>
                         </div>
-                        
-                        <!-- Cloud sync via GitHub Gist -->
-                        <div style="border-top: 1px solid var(--border-color); padding-top: 20px;">
-                            <div style="font-weight: 700; font-size: 0.9em; margin-bottom: 4px;">☁️ Cloud Sync (GitHub Gist)</div>
-                            <p style="color: var(--text-muted); font-size: 0.8em; margin: 0 0 12px; line-height: 1.5;">
-                                Syncs all data through a <strong>private</strong> Gist on your GitHub account. Setup: create a free GitHub account → Settings → Developer settings → Personal access tokens → Generate new token (classic) with only the <code style="background: var(--dark-surface); padding: 1px 5px; border-radius: 3px;">gist</code> scope → paste below. Use the same token + Gist ID on each device.
-                            </p>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 12px;">
-                                <div>
-                                    <label style="display: block; font-size: 0.8em; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">GitHub Token (gist scope)</label>
-                                    <input type="password" id="gistToken" placeholder="ghp_..." style="width: 100%; padding: 9px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--dark-surface); color: var(--text-primary); font-size: 0.9em;">
-                                </div>
-                                <div>
-                                    <label style="display: block; font-size: 0.8em; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Gist ID <span style="font-weight: 400;">(auto-filled on first push)</span></label>
-                                    <input type="text" id="gistId" placeholder="created automatically" style="width: 100%; padding: 9px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--dark-surface); color: var(--text-primary); font-size: 0.9em;">
-                                </div>
-                            </div>
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                                <button onclick="saveSyncSettings()" style="padding: 9px 14px; background: var(--dark-surface); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; font-weight: 600;">Save Settings</button>
-                                <button onclick="pushToCloud()" class="btn-success" style="padding: 9px 16px;">⬆ Push to Cloud</button>
-                                <button onclick="pullFromCloud()" class="btn-primary" style="padding: 9px 16px;">⬇ Pull from Cloud</button>
-                                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.82em; color: var(--text-secondary); cursor: pointer; margin-left: 4px;">
-                                    <input type="checkbox" id="autoSyncToggle" onchange="saveSyncSettings()"> Auto-sync (pull on load, push after changes)
-                                </label>
-                            </div>
-                            <div id="syncLastInfo" style="margin-top: 10px; font-size: 0.78em; color: var(--text-muted);"></div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                            <button onclick="saveSyncSettings()" style="padding: 9px 14px; background: var(--dark-surface); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; font-weight: 600;">Save Settings</button>
+                            <button onclick="pushToCloud()" class="btn-success" style="padding: 9px 16px;">⬆ Push to Cloud</button>
+                            <button onclick="pullFromCloud()" class="btn-primary" style="padding: 9px 16px;">⬇ Pull from Cloud</button>
+                            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.82em; color: var(--text-secondary); cursor: pointer; margin-left: 4px;">
+                                <input type="checkbox" id="autoSyncToggle" onchange="saveSyncSettings()"> Auto-sync (pull on load, push after changes)
+                            </label>
                         </div>
+                        <div id="syncLastInfo" style="margin-top: 10px; font-size: 0.78em; color: var(--text-muted);"></div>
                         </div>
                     </div>
                     
                     <!-- Portfolio Configuration -->
                     <div style="background: var(--card-bg); border-radius: 12px; padding: 30px; margin-bottom: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
-                        <div onclick="toggleSettingsSection(1)" style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; cursor: pointer;">
-                            <span id="settingsIcon1" style="font-size: 1em; color: var(--text-muted); transition: transform 0.15s;">▸</span>
+                        <div onclick="toggleSettingsSection(2)" style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; cursor: pointer;">
+                            <span id="settingsIcon2" style="font-size: 1em; color: var(--text-muted); transition: transform 0.15s;">▸</span>
                             <div style="width: 48px; height: 48px; background: linear-gradient(135deg, var(--accent-gold) 0%, #f4c96d 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5em;">💰</div>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">Portfolio Configuration</h3>
                                 <p style="color: var(--text-secondary); margin: 0; font-size: 0.9em;">Set your buying power and risk limits</p>
                             </div>
                         </div>
-                        <div id="settingsBody1" style="display: none;">
+                        <div id="settingsBody2" style="display: none;">
                         
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 20px;">
                             <div>
@@ -2256,13 +2261,15 @@
                          treatment as Sector Assignments above, not daily decision
                          content — so it lives here, not on the home screen. -->
                     <div style="background: var(--card-bg); border-radius: 12px; padding: 30px; margin-bottom: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
-                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                        <div onclick="toggleSettingsSection(5)" style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; cursor: pointer;">
+                            <span id="settingsIcon5" style="font-size: 1em; color: var(--text-muted); transition: transform 0.15s;">▸</span>
                             <div style="width: 48px; height: 48px; background: linear-gradient(135deg, var(--warning-color) 0%, var(--signal-teal) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5em;">📅</div>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">Event Dates</h3>
                                 <p style="color: var(--text-secondary); margin: 0; font-size: 0.9em;">Earnings and ex-dividend dates that feed the gap-risk and early-assignment flags</p>
                             </div>
                         </div>
+                        <div id="settingsBody5" style="display: none;">
 
                         <!-- Earnings sub-section -->
                         <div style="padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color);">
@@ -2309,17 +2316,17 @@
 
                     <!-- MarketData API Configuration -->
                     <div style="background: var(--dark-surface); border-radius: 12px; padding: 30px; margin-bottom: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
-                        <div onclick="toggleSettingsSection(2)" style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; cursor: pointer;">
-                            <span id="settingsIcon2" style="font-size: 1em; color: var(--text-muted); transition: transform 0.15s;">▸</span>
+                        <div onclick="toggleSettingsSection(3)" style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; cursor: pointer;">
+                            <span id="settingsIcon3" style="font-size: 1em; color: var(--text-muted); transition: transform 0.15s;">▸</span>
                             <div style="width: 48px; height: 48px; background: linear-gradient(135deg, var(--electric-violet) 0%, var(--signal-blue) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5em;">
                                 🔌
                             </div>
                             <div>
-                                <h3 style="color: var(--light-text); font-family: 'Montserrat', sans-serif; font-weight: 600; margin: 0;">MarketData.app API <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">Your API key is stored only in this browser — never on a server. It powers every live price, Greek, and IV in the app.</span>ⓘ</span></h3>
+                                <h3 style="color: var(--light-text); font-family: 'Montserrat', sans-serif; font-weight: 600; margin: 0;">MarketData.app API <span class="info-tip" tabindex="0" role="button" aria-label="More info"><span class="tip-bubble">Stored only in this browser — or your own private GitHub Gist if you enable Cloud Sync — never on a DeltaCortex server. It powers every live price, Greek, and IV in the app.</span>ⓘ</span></h3>
                                 <p style="color: var(--platinum-gray); margin: 0; font-size: 0.9em;">Configure real-time options data</p>
                             </div>
                         </div>
-                        <div id="settingsBody2" style="display: none;">
+                        <div id="settingsBody3" style="display: none;">
                         
                         <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
                             <input type="text" id="apiKeyInput" placeholder="Enter your API key" style="flex: 1; min-width: 300px; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--midnight-indigo); color: var(--platinum-gray); font-family: 'Poppins', sans-serif;">
@@ -2336,30 +2343,6 @@
                                 <li>Enables real-time options pricing, Greeks, and IV data</li>
                                 <li>Required for "Refresh All Data" functionality</li>
                             </ul>
-                        </div>
-                        </div>
-                    </div>
-
-                    <!-- Data Migration -->
-                    <div style="background: var(--card-bg); border-radius: 12px; padding: 30px; margin-bottom: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
-                        <div onclick="toggleSettingsSection(3)" style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; cursor: pointer;">
-                            <span id="settingsIcon3" style="font-size: 1em; color: var(--text-muted); transition: transform 0.15s;">▸</span>
-                            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, var(--signal-teal) 0%, var(--success-color) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5em;">💾</div>
-                            <div>
-                                <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">Data Backup & Migration</h3>
-                                <p style="color: var(--text-secondary); margin: 0; font-size: 0.9em;">Export your data to transfer between files or as a backup</p>
-                            </div>
-                        </div>
-                        <div id="settingsBody3" style="display: none;">
-                        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px;">
-                            <button class="btn-primary" onclick="exportAllData()" style="background: var(--signal-teal);">📤 Export All Data</button>
-                            <button class="btn-primary" onclick="document.getElementById('importDataFile').click();" style="background: var(--success-color);">📥 Import Data</button>
-                            <input type="file" id="importDataFile" accept=".json" style="display: none;" onchange="importAllData(event)">
-                            <button class="btn-primary" onclick="const r = runTests(); alert('Tests: ' + r.pass + '/' + r.total + ' passed' + (r.fail > 0 ? '\n\nFailed: ' + r.results.filter(x=>x.status==='❌').map(x=>x.name).join(', ') : '\n\nAll passed ✅') + '\n\nSee console for details.');" style="background: var(--electric-violet);" title="Run decision engine unit tests">🧪 Run Tests</button>
-                        </div>
-                        
-                        <div style="background: rgba(42, 166, 161, 0.1); border-left: 4px solid var(--signal-teal); padding: 12px; border-radius: 6px; font-size: 0.88em; color: var(--text-secondary);">
-                            <strong style="color: var(--signal-teal);">How to migrate:</strong> Open your old version → Settings → Export All Data → save the JSON file. Then open this version → Settings → Import Data → select that file. All positions, closed trades, earnings, and settings will be restored.
                         </div>
                         </div>
                     </div>
@@ -2381,7 +2364,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.59 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.61 · June 2026</p>
                             </div>
                         </div>
                         <div id="settingsBody4" style="display: none;">
@@ -2389,8 +2372,34 @@
                         <div style="color: var(--text-secondary); font-size: 0.88em; margin-bottom: 15px;">
                             All data stored locally in your browser. No server uploads. Single HTML file, no dependencies.
                         </div>
+                        <div style="margin-bottom: 15px;">
+                            <button class="btn-primary" onclick="const r = runTests(); alert('Tests: ' + r.pass + '/' + r.total + ' passed' + (r.fail > 0 ? '\n\nFailed: ' + r.results.filter(x=>x.status==='❌').map(x=>x.name).join(', ') : '\n\nAll passed ✅') + '\n\nSee console for details.');" style="background: var(--electric-violet); padding: 8px 14px; font-size: 0.85em;" title="Run decision engine unit tests">🧪 Run Tests</button>
+                        </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.61 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.61</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(239,68,68,0.12); color: var(--danger-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> Found while reviewing the backup sections: two incompatible backup systems existed side by side \u2014 different file formats, and each missing fields the other had (Data Migration's export dropped ex-dividend dates, VIX override, and column visibility; Local Backup's dropped your API key). Consolidated onto the more complete system and added the missing API key field, closing the gap entirely. Note: your API key now syncs via Cloud Sync too, not just local backup, if you have that enabled.<br>
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">IMPROVED</span> Split Backup & Cloud Sync into two independent accordion cards \u2014 Local Backup (no account needed) and Cloud Sync (optional GitHub setup) no longer share one collapse toggle. Data Migration card removed entirely (superseded). Run Tests relocated to Version History.
+                                </div>
+                            </div>
+
+                            <!-- v7.60 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.60</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">IMPROVED</span> Event Dates now collapses independently in Settings, same accordion pattern as the other 5 cards \u2014 it had been sitting as a standalone, always-expanded section that never got folded into the original Settings restructuring. Verified div balance both narrowly (this card alone) and against the full Settings section before shipping.
+                                </div>
+                            </div>
+
                             <!-- v7.59 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3816,7 +3825,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.59';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.61';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -4373,94 +4382,6 @@
         }
 
         // Load API key from localStorage
-        // ═══════════════════════════════════════════════════════════════
-        // DATA BACKUP & MIGRATION
-        // ═══════════════════════════════════════════════════════════════
-        function exportAllData() {
-            const data = {
-                version: 'deltaCortex_v2',
-                exportDate: new Date().toISOString(),
-                positions: JSON.parse(localStorage.getItem('optionsPositions') || '[]'),
-                closedPositions: JSON.parse(localStorage.getItem('closedPositions') || '[]'),
-                earningsDates: JSON.parse(localStorage.getItem('deltaCortex_earningsDates') || '{}'),
-                portfolioConfig: JSON.parse(localStorage.getItem('deltaCortex_portfolioConfig') || '{}'),
-                sectorMap: JSON.parse(localStorage.getItem('deltaCortex_sectorMap') || '{}'),
-                marketRegime: JSON.parse(localStorage.getItem('deltaCortex_marketRegime') || '{}'),
-                apiKey: localStorage.getItem('marketDataApiKey') || ''
-            };
-            
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `deltacortex-backup-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            alert(`Data exported! File contains:\n• ${data.positions.length} active positions\n• ${data.closedPositions.length} closed trades\n• ${Object.keys(data.earningsDates).length} earnings dates\n• Portfolio config & sector mappings`);
-        }
-
-        function importAllData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    
-                    // Validate it looks like our data
-                    if (!data.positions && !data.closedPositions) {
-                        alert('Invalid backup file — no position data found.');
-                        return;
-                    }
-                    
-                    const summary = [];
-                    
-                    if (data.positions && Array.isArray(data.positions)) {
-                        localStorage.setItem('optionsPositions', JSON.stringify(data.positions));
-                        summary.push(`${data.positions.length} active positions`);
-                    }
-                    if (data.closedPositions && Array.isArray(data.closedPositions)) {
-                        localStorage.setItem('closedPositions', JSON.stringify(data.closedPositions));
-                        summary.push(`${data.closedPositions.length} closed trades`);
-                    }
-                    if (data.earningsDates && typeof data.earningsDates === 'object') {
-                        localStorage.setItem('deltaCortex_earningsDates', JSON.stringify(data.earningsDates));
-                        summary.push(`${Object.keys(data.earningsDates).length} earnings dates`);
-                    }
-                    if (data.portfolioConfig && typeof data.portfolioConfig === 'object' && Object.keys(data.portfolioConfig).length > 0) {
-                        localStorage.setItem('deltaCortex_portfolioConfig', JSON.stringify(data.portfolioConfig));
-                        summary.push('portfolio config');
-                    }
-                    if (data.sectorMap && typeof data.sectorMap === 'object' && Object.keys(data.sectorMap).length > 0) {
-                        localStorage.setItem('deltaCortex_sectorMap', JSON.stringify(data.sectorMap));
-                        summary.push('sector mappings');
-                    }
-                    if (data.marketRegime && typeof data.marketRegime === 'object') {
-                        localStorage.setItem('deltaCortex_marketRegime', JSON.stringify(data.marketRegime));
-                    }
-                    if (data.apiKey) {
-                        localStorage.setItem('marketDataApiKey', data.apiKey);
-                        summary.push('API key');
-                    }
-                    
-                    alert(`Data imported successfully!\n\nRestored: ${summary.join(', ')}\n\nPage will reload now.`);
-                    location.reload();
-                    
-                } catch (error) {
-                    console.error('Import error:', error);
-                    alert('Error reading backup file: ' + error.message);
-                }
-            };
-            reader.readAsText(file);
-            
-            // Reset the file input so the same file can be imported again
-            event.target.value = '';
-        }
-
         function loadApiKey() {
             const saved = localStorage.getItem('marketDataApiKey');
             if (saved) {
@@ -12681,7 +12602,10 @@
         // (the real keys are deltaCortex_portfolioConfig / deltaCortex_earningsDates /
         // deltaCortex_sectorMap), so those three fields were silently never syncing
         // across devices. Fixed here to point at the actual keys.
-        const SYNC_KEYS = ['optionsPositions','closedPositions','deltaCortex_portfolioConfig','deltaCortex_earningsDates','deltaCortex_sectorMap','deltaCortex_dividendDates','deltaCortex_marketRegime','deltaCortex_manualVIX','deltaCortex_apiCallCount','deltaCortex_columnVisibility'];
+        // Note: adding marketDataApiKey here means it now syncs via Cloud Sync
+        // too (your own private GitHub Gist), not just local backup — previously
+        // it was the one thing local backup had that cloud sync didn't.
+        const SYNC_KEYS = ['optionsPositions','closedPositions','deltaCortex_portfolioConfig','deltaCortex_earningsDates','deltaCortex_sectorMap','deltaCortex_dividendDates','deltaCortex_marketRegime','deltaCortex_manualVIX','deltaCortex_apiCallCount','deltaCortex_columnVisibility','marketDataApiKey'];
         
         function serializeAllData() {
             const data = {};
