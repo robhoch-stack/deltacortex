@@ -2381,7 +2381,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.58 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.59 · June 2026</p>
                             </div>
                         </div>
                         <div id="settingsBody4" style="display: none;">
@@ -2391,6 +2391,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.59 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.59</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(239,68,68,0.12); color: var(--danger-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> Found while porting to the customer file: updateAdvancedAnalytics() was never updated for paper-trade exclusion during the original safety audit \u2014 same gap as updatePerformanceStats had before it was fixed, just missed in a different function. Paper trades no longer blend into the Performance tab's deeper analytics (win rate by delta, etc.). Also did a full audit of the customer file, which turned out to be missing several features that predated its last version bump \u2014 Today's Decisions group-expand, the mobile toolbar fix, and the entire paper trading system \u2014 all now genuinely in sync.
+                                </div>
+                            </div>
+
                             <!-- v7.58 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3805,7 +3816,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.58';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.59';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -8422,7 +8433,11 @@
         // ADVANCED ANALYTICS — #8 Delta Win Rate, #9 Hold Time, #10 Roll Chains
         // ═══════════════════════════════════════════════════════════════
         function updateAdvancedAnalytics() {
-            const grouped = groupRolledPositions(closedPositions);
+            // Paper trades excluded — same reasoning as updatePerformanceStats,
+            // a simulated result shouldn't blend into real analytics. Missed
+            // during the original paper-trading safety audit; caught while
+            // porting to the customer file and fixed here first.
+            const grouped = groupRolledPositions(closedPositions.filter(p => !p.isPaper));
             
             // ── #8: Win Rate by Entry Delta ──
             const deltaBuckets = {
