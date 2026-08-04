@@ -1016,11 +1016,25 @@
             /* Each button-group wraps; tab group scrolls horizontally if tight */
             .controls .button-group { flex-wrap: wrap; gap: 6px; }
             .controls .button-group button { min-height: 44px; padding: 9px 14px; font-size: 0.9rem; line-height: 1; }
+            /* The filter pill buttons (All/CSP/CC, Real/Paper/Both) carry hardcoded
+               inline font-size/padding, which normally beats any class-based rule
+               regardless of media query nesting — the line above never actually
+               reached them. !important is the only way to win that fight without
+               rewriting every place these buttons get their style set from JS. */
+            #strategyFilterGroup button, #paperFilterGroup button {
+                font-size: 0.85rem !important;
+                padding: 9px 13px !important;
+                min-height: 44px !important;
+            }
             /* Add/trash row buttons size to content, not full width */
             .controls .button-group button { width: auto; flex: 0 1 auto; }
-            /* Nav tabs (first group): fit within viewport, no horizontal overflow */
-            .controls .button-group:first-child { flex-wrap: nowrap; width: 100%; gap: 5px; }
-            .controls .button-group:first-child button { flex: 1 1 0; min-width: 0; white-space: nowrap; padding: 9px 6px; font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; }
+            /* Nav tabs (first group): with 6 buttons now (Weekly Audit and Weekly
+               Review are recent, longer additions), nowrap + ellipsis was silently
+               truncating labels at iPhone widths — roughly 57px available per
+               button but "✅ Weekly Audit" alone needs ~98px. Wrap to a second
+               row instead of cutting text off. */
+            .controls .button-group:first-child { flex-wrap: wrap; width: 100%; gap: 6px; }
+            .controls .button-group:first-child button { flex: 1 1 auto; min-width: fit-content; white-space: nowrap; padding: 9px 10px; font-size: 0.82rem; }
 
             /* ── Remaining tables (Performance drawer legs, earnings mgr) scroll ── */
             .table-container, .perf-table-wrap, #closedPositionsBody { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -2358,7 +2372,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.52 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.53 · June 2026</p>
                             </div>
                         </div>
                         <div id="settingsBody4" style="display: none;">
@@ -2368,6 +2382,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.53 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.53</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(239,68,68,0.12); color: var(--danger-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> Mobile toolbar buttons unreadable on iPhone \u2014 two compounding causes, both from tonight's additions. (1) The main nav's nowrap+ellipsis rule was sized for the original 4 buttons; with Weekly Audit and Weekly Review added, 6 buttons squeezed into one row left roughly 57px each while \u201c\u2705 Weekly Audit\u201d needs ~98px \u2014 verified the math, labels were being silently truncated. Now wraps to a second row instead. (2) The CSP/CC and new Real/Paper/Both filter pills carry hardcoded inline font-size, which beats any class-based mobile rule regardless of media query nesting \u2014 the intended larger touch-friendly sizing never actually reached them. Added a targeted !important override.
+                                </div>
+                            </div>
+
                             <!-- v7.52 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3715,7 +3740,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.52';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.53';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
