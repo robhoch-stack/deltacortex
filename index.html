@@ -2381,6 +2381,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.64 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.64</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">August 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(239,68,68,0.12); color: var(--danger-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">FIXED</span> Performance tab: clicking "Assigned" or "Delete" on a rolled-chain closed position could act on the wrong chain (e.g. confirming a different ticker than the row you clicked). The list re-sorts chains by close date for display but the button handlers were re-grouping from scratch without that same sort, so the row index no longer lined up. Both now share one sorted grouping so the index always matches what's on screen.
+                                </div>
+                            </div>
+
                             <!-- v7.63 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3865,7 +3876,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.63';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.64';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -7692,10 +7703,26 @@
             return grouped;
         }
 
+        // Groups + sorts closed positions exactly as rendered, so that a groupIndex
+        // captured from the rendered list (buttons' onclick handlers) always resolves
+        // to the same chain here. groupRolledPositions() alone returns natural/insertion
+        // order, not display order — indexing into an unsorted re-group with a
+        // display-order index was the cause of a past bug (wrong chain acted on).
+        function getSortedGroupedClosedPositions() {
+            const grouped = groupRolledPositions(closedPositions);
+            return grouped.sort((a, b) => {
+                try {
+                    const dateA = new Date(a.closedDate || a.position.closedDate);
+                    const dateB = new Date(b.closedDate || b.position.closedDate);
+                    return dateB - dateA;
+                } catch (e) { return 0; }
+            });
+        }
+
         function renderClosedPositions() {
             const tbody = document.getElementById('closedPositionsBody');
             const emptyState = document.getElementById('emptyStateClosed');
-            
+
             if (closedPositions.length === 0) {
                 tbody.innerHTML = '';
                 emptyState.style.display = 'block';
@@ -7703,18 +7730,10 @@
             }
 
             emptyState.style.display = 'none';
-            
+
             try {
-                const grouped = groupRolledPositions(closedPositions);
-                
-                const sorted = grouped.sort((a, b) => {
-                    try {
-                        const dateA = new Date(a.closedDate || a.position.closedDate);
-                        const dateB = new Date(b.closedDate || b.position.closedDate);
-                        return dateB - dateA;
-                    } catch (e) { return 0; }
-                });
-                
+                const sorted = getSortedGroupedClosedPositions();
+
                 tbody.innerHTML = sorted.map((group, groupIndex) => {
                     const pos = group.position;
                     const contracts = pos.contracts || 1;
@@ -7839,9 +7858,9 @@
             }
             
             try {
-                const grouped = groupRolledPositions(closedPositions);
+                const grouped = getSortedGroupedClosedPositions();
                 const group = grouped[groupIndex];
-                
+
                 if (group && group.isRollChain && group.chain) {
                     // Remove all positions in the chain from closedPositions
                     group.chain.forEach(leg => {
@@ -7867,9 +7886,9 @@
 
         function markChainAssigned(groupIndex) {
             try {
-                const grouped = groupRolledPositions(closedPositions);
+                const grouped = getSortedGroupedClosedPositions();
                 const group = grouped[groupIndex];
-                
+
                 if (!group) { alert('Chain not found.'); return; }
                 
                 const ticker = group.position.ticker;
