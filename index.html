@@ -1203,7 +1203,7 @@
                 <button class="btn-primary" onclick="openWeeklyReview()" style="background: #7c3aed;">📅 Weekly Review</button>
                 <span id="weeklyReviewBadge" style="font-size: 0.75em; color: var(--text-muted); align-self: center;"></span>
                 <button class="btn-primary" onclick="showTab('closed')" id="closedTab" style="background: #6c757d;">📈 Performance</button>
-                <button class="btn-primary" onclick="showTab('guide')" id="guideTab" style="background: #6c757d;">📋 Guide</button>
+                <button class="btn-primary" onclick="showTab('guide')" id="guideTab" style="background: #6c757d;">📋 Decision Guide</button>
                 <button class="btn-primary" onclick="showTab('settings')" id="settingsTab" style="background: #6c757d;">⚙️</button>
             </div>
             <div class="button-group" id="strategyFilterGroup" style="background: var(--dark-surface); border-radius: 6px; padding: 2px; display: inline-flex; gap: 2px;">
@@ -1243,7 +1243,10 @@
 
         <div class="table-container">
             <div id="activePositionsView">
-                <div id="triagePanel" style="display: none;"></div>
+                <div id="decisionsRow" style="display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap;">
+                    <div id="triagePanel" style="display: none; flex: 2 1 480px;"></div>
+                    <div id="weeklyPlanPanel" style="flex: 1 1 280px;"></div>
+                </div>
                 <div id="positionsTable"><div id="positionsBody"></div></div>
                 
                 <!-- Assigned Shares Table -->
@@ -2365,11 +2368,11 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.61 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.62 · June 2026</p>
                             </div>
                         </div>
                         <div id="settingsBody4" style="display: none;">
-                        
+
                         <div style="color: var(--text-secondary); font-size: 0.88em; margin-bottom: 15px;">
                             All data stored locally in your browser. No server uploads. Single HTML file, no dependencies.
                         </div>
@@ -2378,6 +2381,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.62 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.62</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">ADDED</span> Weekly Trading Plan — a free-text notepad next to Today's Decisions for this week's macro-calendar rules (e.g. "no new risk before 10am Wednesday"). Purely a personal reminder, syncs like everything else via Cloud Sync/Local Backup.
+                                </div>
+                            </div>
+
                             <!-- v7.61 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3358,6 +3372,20 @@
         </div>
     </div>
 
+    <!-- Weekly Trading Plan Modal -->
+    <div id="weeklyPlanModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="weeklyPlanModalTitle">
+        <div class="modal-content" style="max-width: 640px;">
+            <span class="close" onclick="closeWeeklyPlanModal()" aria-label="Close dialog" role="button" tabindex="0">&times;</span>
+            <h2 id="weeklyPlanModalTitle">📋 Weekly Trading Plan</h2>
+            <p style="margin-bottom: 15px; color: var(--text-secondary);">Notes to yourself for this week — macro calendar, days to avoid opening risk, days to favor call sales or put sales. Purely a personal reminder; nothing here feeds the decision engine.</p>
+            <textarea id="weeklyPlanTextarea" rows="12" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--dark-surface); color: var(--text-primary); font-family: inherit; font-size: 0.9em; resize: vertical; margin-bottom: 16px;" placeholder="e.g.&#10;1. Consider placing your call sales early — no rate-moving releases Mon/Tue.&#10;2. Wednesday morning is a no-new-risk zone — wait until after 10:00 AM.&#10;3. Thursday: do nothing new, use it to close short-dated positions.&#10;4. Friday is the decision day — wait for the 8:30 AM reaction to settle."></textarea>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn-ghost" onclick="closeWeeklyPlanModal()">Cancel</button>
+                <button class="btn-primary" onclick="saveWeeklyPlan()">Save</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Add Position Modal -->
     <div id="addModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
         <div class="modal-content">
@@ -3826,7 +3854,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.61';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.62';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
@@ -10060,7 +10088,84 @@
                     ${rows}
                 </div>`;
         }
-        
+
+        // ═══════════════════════════════════════════════════════════════
+        // WEEKLY TRADING PLAN — a free-text notepad next to Today's
+        // Decisions for macro-calendar rules ("no new risk before 10am
+        // Wednesday", "Friday is the decision day"). Purely a personal
+        // reminder, stored locally like everything else — does not feed
+        // the decision engine. Synced via SYNC_KEYS like other settings.
+        // ═══════════════════════════════════════════════════════════════
+        function getWeeklyPlan() {
+            try {
+                const raw = localStorage.getItem('deltaCortex_weeklyPlan');
+                return raw ? JSON.parse(raw) : { text: '', updatedAt: null };
+            } catch (e) {
+                return { text: '', updatedAt: null };
+            }
+        }
+
+        function renderWeeklyPlanPanel() {
+            const panel = document.getElementById('weeklyPlanPanel');
+            if (!panel) return;
+            const plan = getWeeklyPlan();
+            const updatedLabel = plan.updatedAt ? `Updated ${new Date(plan.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}` : '';
+            const body = plan.text
+                ? `<div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; white-space: pre-wrap;">${escapeHTML(plan.text)}</div>`
+                : `<div style="font-size: 0.85rem; color: var(--text-muted);">No plan set for this week — click Edit to add your rules.</div>`;
+            panel.innerHTML = `
+                <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; height: 100%; box-sizing: border-box;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <span style="font-size: 1.05rem; font-weight: 800; flex: 1;">📋 Weekly Trading Plan</span>
+                        <span style="font-size: 0.72rem; color: var(--text-muted);">${updatedLabel}</span>
+                        <button class="btn-ghost" onclick="openWeeklyPlanModal()">Edit</button>
+                    </div>
+                    ${body}
+                </div>`;
+        }
+
+        function openWeeklyPlanModal() {
+            const plan = getWeeklyPlan();
+            const modal = document.getElementById('weeklyPlanModal');
+            document.getElementById('weeklyPlanTextarea').value = plan.text || '';
+            let overlay = document.getElementById('weeklyPlanModalOverlay');
+            if (overlay) overlay.remove();
+            overlay = document.createElement('div');
+            overlay.id = 'weeklyPlanModalOverlay';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99998;background:rgba(0,0,0,0.75);display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;';
+            overlay.onclick = function(e) { if (e.target === overlay) closeWeeklyPlanModal(); };
+            modal.style.display = 'block';
+            modal.style.position = 'static';
+            modal.style.background = 'none';
+            modal.style.width = '100%';
+            modal.style.maxWidth = '640px';
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            setTimeout(() => document.getElementById('weeklyPlanTextarea')?.focus(), 50);
+        }
+
+        function closeWeeklyPlanModal() {
+            const overlay = document.getElementById('weeklyPlanModalOverlay');
+            const modal = document.getElementById('weeklyPlanModal');
+            if (overlay && modal) {
+                overlay.removeChild(modal);
+                document.body.appendChild(modal);
+                modal.style.display = 'none';
+                modal.style.position = '';
+                modal.style.background = '';
+                modal.style.width = '';
+                modal.style.maxWidth = '';
+                overlay.remove();
+            } else if (modal) modal.style.display = 'none';
+        }
+
+        function saveWeeklyPlan() {
+            const text = document.getElementById('weeklyPlanTextarea').value;
+            localStorage.setItem('deltaCortex_weeklyPlan', JSON.stringify({ text, updatedAt: new Date().toISOString() }));
+            closeWeeklyPlanModal();
+            renderWeeklyPlanPanel();
+        }
+
         // Collapse the whole Assigned Shares section — the header (count + total
         // P&L) always stays visible even when collapsed, so you still get the
         // at-a-glance summary without the full card list taking up scroll space.
@@ -12606,7 +12711,7 @@
         // Note: adding marketDataApiKey here means it now syncs via Cloud Sync
         // too (your own private GitHub Gist), not just local backup — previously
         // it was the one thing local backup had that cloud sync didn't.
-        const SYNC_KEYS = ['optionsPositions','closedPositions','deltaCortex_portfolioConfig','deltaCortex_earningsDates','deltaCortex_sectorMap','deltaCortex_dividendDates','deltaCortex_marketRegime','deltaCortex_manualVIX','deltaCortex_apiCallCount','deltaCortex_columnVisibility','marketDataApiKey'];
+        const SYNC_KEYS = ['optionsPositions','closedPositions','deltaCortex_portfolioConfig','deltaCortex_earningsDates','deltaCortex_sectorMap','deltaCortex_dividendDates','deltaCortex_marketRegime','deltaCortex_manualVIX','deltaCortex_apiCallCount','deltaCortex_columnVisibility','marketDataApiKey','deltaCortex_weeklyPlan'];
         
         function serializeAllData() {
             const data = {};
@@ -12994,6 +13099,7 @@
         loadColumnVisibility();
         applyColumnVisibility();
         loadPositions();
+        renderWeeklyPlanPanel();
         updateWeeklyReviewBadge();
         backfillRollHistory();
         renderEarningsManager();
