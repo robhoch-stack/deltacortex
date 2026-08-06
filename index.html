@@ -1244,8 +1244,8 @@
         <div class="table-container">
             <div id="activePositionsView">
                 <div id="decisionsRow" style="display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap;">
-                    <div id="triagePanel" style="display: none; flex: 2 1 480px;"></div>
-                    <div id="weeklyPlanPanel" style="flex: 1 1 280px;"></div>
+                    <div id="triagePanel" style="display: none; flex: 1 1 400px;"></div>
+                    <div id="weeklyPlanPanel" style="flex: 1 1 400px;"></div>
                 </div>
                 <div id="positionsTable"><div id="positionsBody"></div></div>
                 
@@ -2368,7 +2368,7 @@
                             </svg>
                             <div>
                                 <h3 style="color: var(--text-primary); font-family: 'Manrope', sans-serif; font-weight: 700; margin: 0;">DeltaCortex — Version History</h3>
-                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.62 · June 2026</p>
+                                <p style="color: var(--accent-gold); margin: 0; font-size: 0.9em;">Current: v7.63 · June 2026</p>
                             </div>
                         </div>
                         <div id="settingsBody4" style="display: none;">
@@ -2381,6 +2381,17 @@
                         </div>
 
                         <div id="changelogContainer" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+                            <!-- v7.63 -->
+                            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <strong style="color: var(--accent-gold); font-size: 1.05em;">v7.63</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.82em;">June 2026</span>
+                                </div>
+                                <div style="line-height: 1.7;">
+                                    <span style="background: rgba(16,185,129,0.15); color: var(--success-color); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 600;">IMPROVED</span> Today's Decisions and Weekly Trading Plan now split their row evenly (was a 2:1 weighting favoring Today's Decisions).
+                                </div>
+                            </div>
+
                             <!-- v7.62 -->
                             <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3854,7 +3865,7 @@
         window.addEventListener('scroll', hideInfoTip, true);
         window.addEventListener('resize', hideInfoTip);
 
-        const APP_VERSION = 'v7.62';  // ← single source of truth; shown in header badge & changelog
+        const APP_VERSION = 'v7.63';  // ← single source of truth; shown in header badge & changelog
         let positions = [];
         let closedPositions = [];
         let apiKey = '';
